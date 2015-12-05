@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>JavaScript to JavaScript template language | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Live demo showing strict content security policy banning inlined source
+yet having dynamic variable injection into separate JavaScript files is
+at js-to-js.herokuapp.com.
+ProblemI have shown the benef">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript to JavaScript template language">
+<meta property="og:url" content="http://glebbahmutov.com/blog/javascript-to-javascript-template-engine/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Live demo showing strict content security policy banning inlined source
+yet having dynamic variable injection into separate JavaScript files is
+at js-to-js.herokuapp.com.
+ProblemI have shown the benef">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/js-to-js/master/images/js-to-js.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JavaScript to JavaScript template language">
+<meta name="twitter:description" content="Live demo showing strict content security policy banning inlined source
+yet having dynamic variable injection into separate JavaScript files is
+at js-to-js.herokuapp.com.
+ProblemI have shown the benef">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-javascript-to-javascript-template-engine" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-11-22T05:00:00.000Z" itemprop="datePublished">Nov 22 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      JavaScript to JavaScript template language
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Generating JavaScript configurtion snippets from templates to be used with the Content-Security-Policy and disabled inline scripts.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Live demo showing strict content security policy banning inlined source
+yet having dynamic variable injection into separate JavaScript files is
+at <a href="http://js-to-js.herokuapp.com/" target="_blank" rel="external">js-to-js.herokuapp.com</a>.</p>
+<h2 id="problem">Problem</h2><p>I have shown the benefits of disabling inline JavaScript in the
+previous blog post <a href="../disable-inline-javascript-for-security/">Disable inline JavaScript for security</a>.
+See these two demos: <a href="http://glebbahmutov.com/disable-inline-javascript-tutorial/index.html" target="_blank" rel="external">unprotected</a> and <a href="http://glebbahmutov.com/disable-inline-javascript-tutorial/index-secure.html" target="_blank" rel="external">protected</a>
+to see the common script injection attack and the protection in action.</p>
+<p>Unfortunately, the shown method has a big obstacle preventing using it
+right out of the box.</p>
+<blockquote>
+<p>Most of the variables are injected by the server into the page using
+inline scripts.</p>
+</blockquote>
+<p>For example, an <a href="http://expressjs.com/" target="_blank" rel="external">ExpressJS</a> using Jade template engine
+could render a page from a view like this</p>
+<figure class="highlight js"><figcaption><span>server code</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">app.get(<span class="string">&apos;/&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, reqs</span>) </span>{</span><br><span class="line">  res.render(<span class="string">&apos;index&apos;</span>, {</span><br><span class="line">    title: <span class="string">&apos;Example&apos;</span>,</span><br><span class="line">    analyticsId: <span class="string">&apos;4xy-0123456&apos;</span></span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>The Jade page can use the variables <code>title</code> and <code>analyticsIds</code> to set the
+corresponding values in the HTML text or JavaScript code</p>
+<figure class="highlight"><figcaption><span>index.jade</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">head
+  title #{ title }
+  script.
+    var analyticsId = &apos;#{ analyticsId }&apos;;
+  script.
+    // use variable analyticsId to init page analytics</span><br></pre></td></tr></table></figure>
+<p>I described a typical example like these in <a href="../server-side-constants-injection-into-angular-modules/">Server-side constants injection into Angular modules</a>,
+and if we disable the inline scripts, our code will stop working. How do we solve this problem?</p>
+<p>Assume we only disable the inlined scripts. Thus our page cannot have any <code>script</code> tags with code in
+them. We still can have the code in the separate source files. For example we could generate on the fly
+a JavaScript file with our <code>var analyticsId = ...</code> code and include the reference in the page.
+It should look something like this</p>
+<figure class="highlight js"><figcaption><span>generated analytics-config.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> analyticsId = <span class="string">&apos;4xy-0123456&apos;</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><figcaption><span>analytics.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// included after analytics-config.js</span></span><br><span class="line"><span class="comment">// use variable analyticsId to init page analytics</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight"><figcaption><span>index.jade</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">head
+  meta(http-equiv=&quot;Content-Security-Policy&quot;,
+    content=&quot;script-src &apos;self&apos;;&quot;)
+  title #{ title }
+  script(src=&quot;js/analytics-config.js&quot;)
+  script(src=&quot;js/analytics.js&quot;)</span><br></pre></td></tr></table></figure>
+<p>This approach will work - we do allow non-inlined scripts to run.</p>
+<p>How should we generate a JavaScript file dynamically? It is interesting, but searching wide
+I could not find any template engine whose output would be JavaScript. Even a good (if obsolete)
+source with lots of <a href="https://garann.github.io/template-chooser/" target="_blank" rel="external">template engines</a> did not list any. I really want to have
+a source JavaScript or JSON file, with default options for simplicity and then
+substitute run-time values from a middleware or response callback.</p>
+<p>This is why I wrote <a href="https://github.com/bahmutov/js-to-js" target="_blank" rel="external">js-to-js</a> - a simple JavaScript to JavaScript template engine
+middleware, mostly for working with <a href="http://expressjs.com/" target="_blank" rel="external">ExpressJS</a> and the like.</p>
+<h2 id="javascript-to-javascript-rendering">JavaScript to JavaScript rendering</h2><p>It feels a little weird to read JavaScript and render another JavaScript - but this is necessary
+because we need dynamic server-side rendered scripts. For the example above, we can now do the
+following steps.</p>
+<p>Write a CommonJS module with default configuration and place it in the <code>views</code> folder of
+the server. For example, we can place the following in <code>views/js/analytics-config.js</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = {</span><br><span class="line">  analyticsId: <span class="string">&apos;default-id&apos;</span></span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<p>At runtime, the server will transform this file by substituting the actual analytics ID
+(taken from config or environment, I recommend using <a href="https://www.npmjs.com/package/nconf" target="_blank" rel="external">nconf</a> for this) and producing
+another file on the fly that will be returned to the client.</p>
+<p>The server is setup like this</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> express = <span class="built_in">require</span>(<span class="string">&apos;express&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> app = express();</span><br><span class="line"><span class="keyword">var</span> viewsFolder = join(__dirname, <span class="string">&apos;views&apos;</span>);</span><br><span class="line">app.set(<span class="string">&apos;views&apos;</span>, viewsFolder);</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> jsToJs = <span class="built_in">require</span>(<span class="string">&apos;js-to-js&apos;</span>);</span><br><span class="line">app.engine(<span class="string">&apos;js&apos;</span>, jsToJs);</span><br><span class="line"></span><br><span class="line">app.get(<span class="string">&apos;/js/analytics-config.js&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>{</span><br><span class="line">  <span class="comment">// use this for correct content-type -</span></span><br><span class="line">  <span class="comment">// Express will think it is text/html by default</span></span><br><span class="line">  res.setHeader(<span class="string">&apos;content-type&apos;</span>, <span class="string">&apos;application/javascript&apos;</span>);</span><br><span class="line">  <span class="comment">// this path is WRT views folder</span></span><br><span class="line">  res.render(<span class="string">&apos;js/analytics-config.js&apos;</span>, {</span><br><span class="line">    <span class="comment">// use any run-time values, for example from config</span></span><br><span class="line">    analyticsId: <span class="string">&apos;4xx-xxxxx&apos;</span></span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Our page requests <code>js/analytics-config.js</code> before request actual analytics script</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;js/analytics-config.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;js/analytics.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>and at runtime, the client will receive</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// generated for js/analytics-config.js</span></span><br><span class="line"><span class="keyword">var</span> analyticsConfig = {</span><br><span class="line">  <span class="string">&quot;analyticsId&quot;</span>: <span class="string">&quot;4xx-xxxxx&quot;</span></span><br><span class="line">};</span><br><span class="line"><span class="comment">// source for static &quot;js/analytics.js&quot; follows</span></span><br></pre></td></tr></table></figure>
+<p>Notice that the basename of file <code>js/analytics-config.js</code> was taken (&apos;analytics-config&apos;)
+and then transformed using <a href="https://lodash.com/docs#kebabCase" target="_blank" rel="external">kebab case</a> to the new variable name inside
+<code>var analyticsConfig = ...</code> statement;</p>
+<h2 id="fixing-other-code-snippets">Fixing other code snippets</h2><p>A lot of code snippets from 3rd parties are distributed by default using inline script commands,
+for example, here is the default Google Analytics code snippet given to the website admins
+to insert into their HTML</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript"></span><br><span class="line">  (<span class="function"><span class="keyword">function</span>(<span class="params">i,s,o,g,r,a,m</span>)</span>{i[<span class="string">&apos;GoogleAnalyticsObject&apos;</span>]=r;i[r]=i[r]||<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{</span><br><span class="line">  (i[r].q=i[r].q||[]).push(<span class="built_in">arguments</span>)},i[r].l=<span class="number">1</span>*<span class="keyword">new</span> <span class="built_in">Date</span>();a=s.createElement(o),</span><br><span class="line">  m=s.getElementsByTagName(o)[<span class="number">0</span>];a.async=<span class="number">1</span>;a.src=g;m.parentNode.insertBefore(a,m)</span><br><span class="line">  })(<span class="built_in">window</span>,<span class="built_in">document</span>,<span class="string">&apos;script&apos;</span>,<span class="string">&apos;//www.google-analytics.com/analytics.js&apos;</span>,<span class="string">&apos;ga&apos;</span>);</span><br><span class="line">  <span class="comment">// &apos;UA-<span class="label">xxxxxxxx-x&apos; is our unique tracking id</span></span></span><br><span class="line">  ga(<span class="string">&apos;create&apos;</span>, <span class="string">&apos;UA-xxxxxxxx-x&apos;</span>, <span class="string">&apos;auto&apos;</span>);</span><br><span class="line">  ga(<span class="string">&apos;send&apos;</span>, <span class="string">&apos;pageview&apos;</span>);</span><br><span class="line"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>This script will no longer execute directly from our page! What do we do? Well, first
+of all, our server should inject the tracking id dynamically. Second, there is nothing
+magical about this snippet, and nothing prevents us from placing in its entirety
+into the <code>views</code> script to function as the input. The <a href="https://github.com/bahmutov/js-to-js" target="_blank" rel="external">js-to-js</a> rendering
+engine will detect if this is a function and will call it with options argument.</p>
+<p>We can wrap the above 3rd party snippet in a function expecting an object, but now
+instead of hard coded tracking id, it will use the property of the <code>options</code> argument.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">initGoogleAnalytics</span>(<span class="params">options</span>) </span>{</span><br><span class="line">  (<span class="function"><span class="keyword">function</span>(<span class="params">i,s,o,g,r,a,m</span>)</span>{i[<span class="string">&apos;GoogleAnalyticsObject&apos;</span>]=r;i[r]=i[r]||<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{</span><br><span class="line">  (i[r].q=i[r].q||[]).push(<span class="built_in">arguments</span>)},i[r].l=<span class="number">1</span>*<span class="keyword">new</span> <span class="built_in">Date</span>();a=s.createElement(o),</span><br><span class="line">  m=s.getElementsByTagName(o)[<span class="number">0</span>];a.async=<span class="number">1</span>;a.src=g;m.parentNode.insertBefore(a,m)</span><br><span class="line">  })(<span class="built_in">window</span>,<span class="built_in">document</span>,<span class="string">&apos;script&apos;</span>,<span class="string">&apos;https://www.google-analytics.com/analytics.js&apos;</span>,<span class="string">&apos;ga&apos;</span>);</span><br><span class="line">  <span class="comment">// use the provided options.googleAnalyticsId instead of hard coded value</span></span><br><span class="line">  ga(<span class="string">&apos;create&apos;</span>, options.googleAnalyticsId, <span class="string">&apos;auto&apos;</span>);</span><br><span class="line">  ga(<span class="string">&apos;send&apos;</span>, <span class="string">&apos;pageview&apos;</span>);</span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<p>Then store this snippet in the <code>views/js</code> folder and render it in response to
+a request, providing a the actual tracking id as a property</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// express server</span></span><br><span class="line">app.get(<span class="string">&apos;/js/google-analytics.js&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>{</span><br><span class="line">  res.setHeader(<span class="string">&apos;content-type&apos;</span>, <span class="string">&apos;application/javascript&apos;</span>);</span><br><span class="line">  res.render(<span class="string">&apos;js/google-analytics.js&apos;</span>, {</span><br><span class="line">    googleAnalyticsId: <span class="string">&apos;this-is-a-demo&apos;</span></span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>The <a href="https://github.com/bahmutov/js-to-js" target="_blank" rel="external">js-to-js</a> template engine automatically treats functions differently and
+wraps them in a closure passing the runtime options. Thus the google analytics script
+will execute something like this when the client requests this page</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">;((<span class="function"><span class="keyword">function</span> <span class="title">initGoogleAnalytics</span>(<span class="params">options</span>) </span>{</span><br><span class="line">  (<span class="function"><span class="keyword">function</span>(<span class="params">i,s,o,g,r,a,m</span>)</span>{i[<span class="string">&apos;GoogleAnalyticsObject&apos;</span>]=r;i[r]=i[r]||<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{</span><br><span class="line">  (i[r].q=i[r].q||[]).push(<span class="built_in">arguments</span>)},i[r].l=<span class="number">1</span>*<span class="keyword">new</span> <span class="built_in">Date</span>();a=s.createElement(o),</span><br><span class="line">  m=s.getElementsByTagName(o)[<span class="number">0</span>];a.async=<span class="number">1</span>;a.src=g;m.parentNode.insertBefore(a,m)</span><br><span class="line">  })(<span class="built_in">window</span>,<span class="built_in">document</span>,<span class="string">&apos;script&apos;</span>,<span class="string">&apos;https://www.google-analytics.com/analytics.js&apos;</span>,<span class="string">&apos;ga&apos;</span>);</span><br><span class="line">  <span class="comment">// use the provided options.googleAnalyticsId</span></span><br><span class="line">  ga(<span class="string">&apos;create&apos;</span>, options.googleAnalyticsId, <span class="string">&apos;auto&apos;</span>);</span><br><span class="line">  ga(<span class="string">&apos;send&apos;</span>, <span class="string">&apos;pageview&apos;</span>);</span><br><span class="line">})({ googleAnalyticsId: <span class="string">&apos;this-is-a-demo&apos;</span> }));</span><br></pre></td></tr></table></figure>
+<p>Do not forget to add the <code>https://www.google-analytics.com</code> to the list of allowed
+script sources in the &apos;Content-Security-Policy script-src&apos; list.</p>
+<p>I like using the options object. It is a lot more manageable in the long run than
+passing separate arguments. If you need schema validation with the options, take a look
+at <a href="https://github.com/kensho/check-more-types#checkschema" target="_blank" rel="external">check-more-types.schema</a> method. If you need partial application that works
+with objects, take a look at <a href="https://github.com/bahmutov/obind" target="_blank" rel="external">obind</a> function.</p>
+<h2 id="conclusions">Conclusions</h2><p>You can see the live result at <a href="http://js-to-js.herokuapp.com/" target="_blank" rel="external">js-to-js.herokuapp.com</a>.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/js-to-js/master/images/js-to-js.png" alt="demo screenshot"></p>
+<p>As you can see, the inline script that tried to overwrite the config was disabled,
+while we could inject dynamic values in two ways. First, we injected an object and changed
+a property before the second script ran, using the <code>{&quot;analyticsId&quot;:&quot;4xx-xxxxx&quot;}</code> object.</p>
+<p>Second, the Google Analytics injection worked by wrapping their snippet and executing
+with an options object that passed a dynamic value for property <code>googleAnalyticsId</code>.
+This worked fine, because we can see the tracking call to the <code>https://www.google-analytics.com/collect</code>
+endpoint. If you inspect this GET request, you will see the id we injected being used:
+<code>id=this-is-a-demo</code> is part of the query.</p>
+<p>Using the approach explained in this blog post we can keep unsafe inline JavaScript turned
+off on our pages, while still relatively easily injecting dynamic configuration into
+our scripts.</p>
+<p>As the last note, remember that this injection is only necessary for JavaScript fragments.
+You can still inject regular values directly into the page. For example, you can still inject dynamic
+title using Jade template or the list of allowed CDN hosts</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">head
+  meta=(http-equiv=&quot;Content-Security-Policy&quot;,
+    content=&quot;script-src #{ external-cdns } &apos;self&apos;;&quot;)
+  title #{ pageTitle }</span><br></pre></td></tr></table></figure>
+<p>Only the script code has to be external to the page.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/javascript-to-javascript-template-engine/" data-id="cihtr6w5700jhl3uravoe0qlo" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/javascript-to-javascript-template-engine/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/">javascript</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/security/">security</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../the-great-conference-tour-of-october-2015/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          The great conference tour of October 2015
+        
+      </div>
+    </a>
+  
+  
+    <a href="../disable-inline-javascript-for-security/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Disable inline JavaScript for security</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/javascript-to-javascript-template-engine/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

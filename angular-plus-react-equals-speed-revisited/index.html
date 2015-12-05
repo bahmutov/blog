@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Angular plus React equals Speed revisited | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Recently I was lucky to attend ng-conf 2015 where I watched an interesting
+presentation by Dave Smith @djsmith42 &amp;quot;Angular + React = Speed&amp;quot;. You can watch the presentation
+online at https://y">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Angular plus React equals Speed revisited">
+<meta property="og:url" content="http://glebbahmutov.com/blog/angular-plus-react-equals-speed-revisited/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Recently I was lucky to attend ng-conf 2015 where I watched an interesting
+presentation by Dave Smith @djsmith42 &amp;quot;Angular + React = Speed&amp;quot;. You can watch the presentation
+online at https://y">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/vanilla-angular-directive.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/vanilla-angular-profile.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/react-update.gif">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/react-update-cpu-profile.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/local-digest-profile.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/desired-paths.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/digest-flow.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Angular plus React equals Speed revisited">
+<meta name="twitter:description" content="Recently I was lucky to attend ng-conf 2015 where I watched an interesting
+presentation by Dave Smith @djsmith42 &amp;quot;Angular + React = Speed&amp;quot;. You can watch the presentation
+online at https://y">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-angular-plus-react-equals-speed-revisited" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-03-25T04:00:00.000Z" itemprop="datePublished">Mar 25 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Angular plus React equals Speed revisited
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Speeding up Angular 1.x demo to be on par with React
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Recently I was lucky to attend <a href="http://www.ng-conf.org/" target="_blank" rel="external">ng-conf 2015</a> where I watched an interesting
+presentation by Dave Smith <a href="https://twitter.com/djsmith42" target="_blank" rel="external">@djsmith42</a> &quot;Angular + React = Speed&quot;. You can watch the presentation
+online at <a href="https://youtu.be/XQM0K6YG18s" target="_blank" rel="external">https://youtu.be/XQM0K6YG18s</a>. During the presentation
+Dave was live programming and forgot to take average delay of 250ms from the Angular 1.x and React demos,
+making it unintentionally appear as if React is slower than the third Angular 2.0 implementation.
+The comments under the video explain the mistake, and you can play with Angular 1.x / React implementation
+by trying the <a href="https://github.com/djsmith42/angular_react_directive_example/" target="_blank" rel="external">code yourself</a>.</p>
+<p>I downloaded the code and took a quick look. The example has 2 calendars, first implemented using Angular 1.x,
+and the second using React widget included from an Angular wrapper.</p>
+<p><strong>TL;DR</strong> I measured each application&apos;s performance and optimized the Angular 1.x performance; 
+the improved version runs in 700ms (compared to original 15 seconds), making it comparable to React.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/vanilla-angular-directive.png" alt="Calendar screenshot"></p>
+<p>Each of the 2 examples shows the same feature: a table implemented as a custom widget that shows a calendar.
+Each cell of the calendar is a custom cell widget. You can click on a cell and it simulates an AJAX request 
+to the server to fetch number of available time slots. For example I clicked on 3 cells.</p>
+<h2 id="plan-of-attack">Plan of attack</h2><p>During the presentation, the React blew Angular 1.x implementation out of the water. 
+I was <a href="../improving-angular-web-app-performance-example/">very successful</a> 
+in my work improving an angular app&apos;s speed and  wanted to investigate this very bad performance a little closer. 
+In this blog post I will:</p>
+<ul>
+<li>describe the Angular 1.x application</li>
+<li>measure its performance and will point some obvious bottlenecks</li>
+<li>measure the React implementation&apos;s performance</li>
+<li>improve the Angular 1.x application performance by removing the global digest cycle</li>
+</ul>
+<p>To better compare the implementation I clamped the synthetic timeout delay to 0ms, instead of the
+initial 10 seconds. This makes the model (scopes) and view updates the main application bottlenecks.</p>
+<h2 id="angular-1x-code">Angular 1.x code</h2><p>The code to render vanilla Angular 1.x custom directive is below (the code uses ES6 string templates)</p>
+<pre><code>angular.<span class="built_in">module</span>(<span class="string">&apos;myapp&apos;</span>, [])
+  .directive(<span class="string">&quot;myCalendar&quot;</span>, <span class="function"><span class="keyword">function</span><span class="params">()</span></span> {
+    <span class="keyword">return</span> {
+        restrict: <span class="string">&apos;E&apos;</span>,
+        scope: <span class="keyword">true</span>,
+        replace: <span class="keyword">true</span>,
+        template:`
+          &lt;div&gt;
+           &lt;button class=<span class="string">&quot;btn&quot;</span> ng-hide=<span class="string">&quot;loaded&quot;</span> ng-click=<span class="string">&quot;load()&quot;</span>&gt;Load&lt;/button&gt;
+           &lt;button class=<span class="string">&quot;btn&quot;</span> ng-show=<span class="string">&quot;loaded&quot;</span> ng-click=<span class="string">&quot;searchAll()&quot;</span>&gt;Search all month&lt;/button&gt;
+           &lt;<span class="built_in">table</span> ng-<span class="keyword">if</span>=<span class="string">&quot;loaded&quot;</span>&gt;
+            &lt;tr&gt;
+             &lt;th ng-<span class="keyword">repeat</span>=<span class="string">&quot;day in days&quot;</span> class=<span class="string">&quot;day-header&quot;</span>&gt;
+               &lt;!<span class="comment">--&#xFFFC;7--&gt;</span>
+             &lt;/th&gt;
+            &lt;/tr&gt;
+            &lt;tr ng-<span class="keyword">repeat</span>=<span class="string">&quot;hour in hours&quot;</span>&gt;
+             &lt;td ng-<span class="keyword">repeat</span>=<span class="string">&quot;day in days&quot;</span> class=<span class="string">&quot;hour-cell&quot;</span>&gt;
+               &lt;my-calendar-cell hour=<span class="string">&quot;&quot;</span> day=<span class="string">&quot;&quot;</span>&gt;&lt;/my-calendar-cell&gt;
+             &lt;/td&gt;
+            &lt;/tr&gt;
+           &lt;/<span class="built_in">table</span>&gt;
+         &lt;/button&gt;
+         `,
+        link: <span class="function"><span class="keyword">function</span><span class="params">(scope, element, attrs)</span></span> {
+            scope.loaded = <span class="keyword">false</span>;
+            scope.hours = _.range(<span class="number">24</span>);
+            scope.days = DAYS;
+            scope.searchAll = <span class="function"><span class="keyword">function</span><span class="params">()</span></span> {
+              scope.$broadcast(<span class="string">&apos;allSearchRequested&apos;</span>);
+            }
+            scope.<span class="built_in">load</span> = <span class="function"><span class="keyword">function</span><span class="params">()</span></span> {
+              scope.loaded = <span class="keyword">true</span>;
+            }
+        }
+    }
+})
+</code></pre><p>The calendar is simply a nested <code>ng-repeat</code> list</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">tr</span> <span class="attribute">ng-repeat</span>=<span class="value">&quot;hour in hours&quot;</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;<span class="title">td</span> <span class="attribute">ng-repeat</span>=<span class="value">&quot;day in days&quot;</span> <span class="attribute">class</span>=<span class="value">&quot;hour-cell&quot;</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="title">my-calendar-cell</span> <span class="attribute">hour</span>=<span class="value">&quot;{{hour}}&quot;</span> <span class="attribute">day</span>=<span class="value">&quot;{{day}}&quot;</span>&gt;</span><span class="tag">&lt;/<span class="title">my-calendar-cell</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;/<span class="title">td</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">tr</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>The &quot;Search all month&quot; button executes a broadcast to all cells</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">scope.searchAll = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span><br><span class="line">  scope.$broadcast(<span class="string">&apos;allSearchRequested&apos;</span>);</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>The individual calendar cell code is similarly simple</p>
+<pre><code>directive(<span class="string">&quot;myCalendarCell&quot;</span>, <span class="keyword">function</span>() {
+  return {
+    restrict: <span class="string">&apos;E&apos;</span>,
+    replace: true,
+    scope: true,
+    template: `
+      &lt;div ng-click=<span class="string">&quot;cellClicked(day, hour)&quot;</span> ng-class=<span class="string">&quot;cellClass()&quot;</span>&gt;
+        &lt;div ng-if=<span class="string">&quot;showHour()&quot;</span> class=<span class="string">&quot;time&quot;</span>&gt;
+          &lt;!--&#xFFFC;<span class="number">10</span>--&gt;:<span class="number">00</span>
+        &lt;/div&gt;
+        &lt;div ng-if=<span class="string">&quot;showSpinner()&quot;</span>&gt;
+          ...
+        &lt;/div&gt;
+        &lt;div ng-if=<span class="string">&quot;showSearchResults()&quot;</span>&gt;
+          &lt;div&gt;&lt;!--&#xFFFC;<span class="number">11</span>--&gt;&lt;/div&gt;
+          &lt;div class=<span class="string">&quot;result-label&quot;</span>&gt;results&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      `,
+    link: function(scope, element, attrs) {
+      scope.day = attrs.day;
+      scope.hour = attrs.hour;
+      scope.status = {};
+    },
+    controller: function(<span class="variable">$scope</span>, <span class="variable">$rootScope</span>, <span class="variable">$timeout</span>) {
+      <span class="variable">$scope</span>.showSpinner = function() {
+        return <span class="variable">$scope</span>.status.isSearching;
+      }
+      <span class="variable">$scope</span>.showHour = function() {
+        return !<span class="variable">$scope</span>.status.isSearching &amp;&amp; !<span class="variable">$scope</span>.status.searchResults;
+      }
+      <span class="variable">$scope</span>.showSearchResults = function() {
+        return <span class="variable">$scope</span>.status.searchResults;
+      }
+      <span class="variable">$scope</span>.cellClass = function() {
+        if (<span class="variable">$scope</span>.status.isSearching) {
+          return <span class="string">&apos;searching&apos;</span>;
+        } else if (<span class="variable">$scope</span>.status.searchResults) {
+          if (<span class="variable">$scope</span>.status.searchResults.options &gt; <span class="number">3</span>) {
+            return <span class="string">&apos;good-results&apos;</span>
+          } else if (<span class="variable">$scope</span>.status.searchResults.options &gt; <span class="number">1</span>) {
+            return <span class="string">&apos;weak-results&apos;</span>
+          } else {
+            return <span class="string">&apos;bad-results&apos;</span>
+          }
+        }
+      }
+      <span class="variable">$scope</span>.cellClicked = function() {
+        delete <span class="variable">$scope</span>.status.searchResults;
+        <span class="variable">$scope</span>.status.isSearching = true;
+        // Simulate an AJAX request:
+        <span class="variable">$timeout</span>(function() {
+          <span class="variable">$scope</span>.status.isSearching = false;
+          <span class="variable">$scope</span>.status.searchResults = {options: Math.floor(Math.random() * <span class="number">5</span>)};
+        }, randomMillis());
+      }
+      <span class="variable">$scope</span>.<span class="variable">$on</span>(<span class="string">&apos;allSearchRequested&apos;</span>, function() {
+        <span class="variable">$scope</span>.cellClicked();
+      });
+    }
+  }
+})
+</code></pre><p>We can trigger the search by clicking the cell or by receiving an even <code>allSearchRequested</code></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">ng-click</span>=<span class="value">&quot;cellClicked(day, hour)&quot;</span> <span class="attribute">ng-class</span>=<span class="value">&quot;cellClass()&quot;</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line"><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$scope.cellClicked = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">delete</span> $scope.status.searchResults;</span><br><span class="line">  $scope.status.isSearching = <span class="literal">true</span>;</span><br><span class="line">  <span class="comment">// Simulate an AJAX request:</span></span><br><span class="line">  $timeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span><br><span class="line">    $scope.status.isSearching = <span class="literal">false</span>;</span><br><span class="line">    $scope.status.searchResults = {options: <span class="built_in">Math</span>.floor(<span class="built_in">Math</span>.random() * <span class="number">5</span>)};</span><br><span class="line">  }, randomMillis());</span><br><span class="line">}</span><br><span class="line">$scope.$on(<span class="string">&apos;allSearchRequested&apos;</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span><br><span class="line">  $scope.cellClicked();</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<h3 id="angular-1x-performance">Angular 1.x performance</h3><p>I am running the examples using angular 1.4.0-beta.6. The calendar&apos;s performance is atrocious. The &quot;Search all month&quot;
+takes around 15 seconds!</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/vanilla-angular-profile.png" alt="Angular 1.x cpu profile"></p>
+<p>Using <a href="https://github.com/bahmutov/code-snippets/blob/master/ng-count-watchers.js" target="_blank" rel="external">ng-count-watchers</a> code snippet I counted 5272 watchers in this page. The majority come
+from this Angular 1.x calendar. </p>
+<figure class="highlight html"><figcaption><span>individual cell template</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">ng-click</span>=<span class="value">&quot;cellClicked(day, hour)&quot;</span> <span class="attribute">ng-class</span>=<span class="value">&quot;cellClass()&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">ng-if</span>=<span class="value">&quot;showHour()&quot;</span> <span class="attribute">class</span>=<span class="value">&quot;time&quot;</span>&gt;</span></span><br><span class="line">    {{hour}}:00</span><br><span class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">ng-if</span>=<span class="value">&quot;showSpinner()&quot;</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">ng-if</span>=<span class="value">&quot;showSearchResults()&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">div</span>&gt;</span>{{status.searchResults.options}}<span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">&quot;result-label&quot;</span>&gt;</span>results<span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>The watchers are created for these expressions</p>
+<ul>
+<li><code>ng-class=&quot;cellClass()&quot;</code></li>
+<li><code>ng-if=&quot;showHour()&quot;</code></li>
+<li><code>:00</code></li>
+<li><code>ng-if=&quot;showSpinner()&quot;</code></li>
+<li><code>ng-if=&quot;showSearchResults()&quot;</code></li>
+<li><code></code></li>
+</ul>
+<p>Each cell has 6 watch expressions, and there are 720 cells, making it every expensive table to update. 
+The idle digest cycle runs for about 14ms measured using <a href="https://github.com/bahmutov/code-snippets/blob/master/ng-idle-apply-timing.js" target="_blank" rel="external">ng-idle-apply-timing.js</a>.</p>
+<p>While this is not too bad, the fact that we have to rerun it on every cell update means we are running
+the entire digest cycle many times. Using <a href="https://github.com/bahmutov/code-snippets/blob/master/ng-count-digest-cycles.js" target="_blank" rel="external">ng-count-digest-cycles.js</a> code snippet I observed
+1490 digest cycles during the calendar computation.</p>
+<h2 id="react-performance">React performance</h2><p>React implementation takes around 700ms to generate the values and update the calendar. You can
+see how fast it performs from the screen capture below</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/react-update.gif" alt="React update"></p>
+<p>Here is the CPU profile</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/react-update-cpu-profile.png" alt="React update CPU profile"></p>
+<h2 id="improving-angular-1x-performance-by-removing-global-scope-apply">Improving Angular 1.x performance by removing global scope apply</h2><p>The simplest bottleneck to remove was to stop rechecking all cells whenever single cell fetched its own
+data. The current code simulated an Ajax request using <code>$timeout</code> call that triggers global digest cycle.
+Angular 1.4 has a new parameter in <a href="https://docs.angularjs.org/api/ng/service/$timeout" target="_blank" rel="external">$timeout</a>, and we simply pass <code>false</code> to avoid automatic
+<code>$rootScope.$apply()</code> after we get fake data back.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$scope.cellClicked = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">delete</span> $scope.status.searchResults;</span><br><span class="line">  $scope.status.isSearching = <span class="literal">true</span>;</span><br><span class="line">  <span class="comment">// Simulate an AJAX request:</span></span><br><span class="line">  $timeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span><br><span class="line">    $scope.status.isSearching = <span class="literal">false</span>;</span><br><span class="line">    $scope.status.searchResults = {options: <span class="built_in">Math</span>.floor(<span class="built_in">Math</span>.random() * <span class="number">5</span>)};</span><br><span class="line">    $scope.$digest();</span><br><span class="line">  }, randomMillis(), <span class="literal">false</span>); <span class="comment">// false - do not invoke $scope.$apply</span></span><br><span class="line">}</span><br><span class="line">$scope.$on(<span class="string">&apos;allSearchRequested&apos;</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span><br><span class="line">  $scope.cellClicked();</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Instead of automatically calling <code>$rootScope.$apply()</code> at the end of the <code>$timeout</code> we manually
+call <code>$scope.$digest()</code> that only updates the current cell&apos;s scope (any any children scopes). </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$timeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span><br><span class="line">  ...</span><br><span class="line">  $scope.$digest();</span><br><span class="line">}, delay, <span class="literal">false</span>);</span><br></pre></td></tr></table></figure>
+<p>This is  a LOT <a href="../local-angular-scopes/">more efficient</a>.
+Let us measure the performance of this change. Remember, at the end of each request we do NOT
+check every watch expression in the <em>entire calendar</em>. Instead we update the scope object and run the digest
+cycle in the current cell and update its DOM via two-way binding.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/local-digest-profile.png" alt="Local digest CPU profile"></p>
+<p><strong>BOOM!</strong> 650ms. The calendar updates as quick as the React version. 3 word change. The global digest
+cycle ran only twice.</p>
+<h2 id="discussion">Discussion</h2><p>The original example repo has a pull request <a href="https://github.com/djsmith42/angular_react_directive_example/pull/2" target="_blank" rel="external">#2</a>
+where Lucas Galfas&#xF3; uses the same approach (local digest cycle) + one time bindings to speed up the
+Angular 1.x version. Dave Smith rejects running the local digest cycle because this is not an option when
+executing <code>$http</code> requests.</p>
+<blockquote>
+<p>Your most significant change is the localApply = false for the call to $timeout with a local digest. 
+I specifically chose not to do that for this demo because this was meant to simulate an AJAX request with $http, 
+which does not provide a localApply feature.</p>
+</blockquote>
+<p>First, the current beta version of Angular 1.4 already adds something similar to this in the way of
+<code>$http.useApplyAsync(true)</code> that combines multiple <code>scope.$apply</code> calls from <code>$http</code> service into one. 
+I feel a full support option for skipping the root scope apply call could be added next.</p>
+<p>Second, Angular is a pretty flexible framework. Any data fetch mechanism used from a React
+application (remember, React is just a View library, so it needs something extra to actually fetch the data)
+could be easily used from an Angular app too. For example you can use <a href="https://fetch.spec.whatwg.org/" target="_blank" rel="external">fetch API</a>,
+which replaced the painful XMLHttpRequest mechanism.</p>
+<p>I always find two bottlenecks in my angular applications: my code and the digest cycle. I can optimize
+the problems in my code using CPU profiler, Chrome DevTools for example warns me about functions that
+cannot be optimized for some reason (like having try-catch block). To improve the digest cycle I can
+minimize number of expensive watchers, for example by precomputing filtered results, or by using
+one way data binding.</p>
+<h3 id="angular-digest-cycle-and-the-prototyping-speed">Angular digest cycle and the prototyping speed</h3><p>In general I believe that Angular gives me a great power to develop any application in three simple steps</p>
+<ul>
+<li>Create static page prototype with most HTML layout and CSS styles applied<ul>
+<li>I can show the page to other people to get feedback and quickly get to the look I need.</li>
+<li>Most of this is done by the designer more familiar with the HTML / CSS tools rather than web programming.</li>
+</ul>
+</li>
+<li>Add several directives to get live data via two-way binding.<ul>
+<li>The static page suddenly becomes a live web application. </li>
+<li>The built-in scopes and directives are simple enough for people without programming experience to use</li>
+<li>This step is used again to refine the desired application features</li>
+</ul>
+</li>
+<li>Improve the performance by removing some degrees of freedom<ul>
+<li>This is where I would come in as a developer</li>
+<li>Replace the flexibility of two-way data binding with more performance one-way binding</li>
+<li>Replace global application digest cycle with local ones. The data flow is known and individual
+pieces can be isolated</li>
+<li>Stop attaching everything to the scope and use controller instances instead, see 
+<a href="../separate-model-from-view-in-angular/">Separate model from view</a></li>
+</ul>
+</li>
+</ul>
+<p>The beauty of step 1 and 2 is the simplicity and the fact that it just works. Yes, comparing plain scope
+objects when performing dirty checking is slow. But optimizing this operation before knowing what the final
+features seems a little premature to me, just like putting a concrete path before one knows where the
+people would walk.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/desired-paths.png" alt="desired paths"></p>
+<p>Angular team is working on replacing the plain scope objects with their graphs of relationships
+with trees of data, where the data flows are acyclical (watch Victor Savkin&apos;s 
+<a href="https://youtu.be/jvKGQSFQf10" target="_blank" rel="external">Change detection reinvented</a> talk).
+While this will lead to faster performance we will loose some of the &quot;it just works&quot; magic I 
+like about using Angular to prototype. Instead I would prefer to be able to isolate the digest cycle
+to subcomponents. Imagine the follow data flow</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-plus-react/digest-flow.png" alt="combined digest flow"></p>
+<p>Inside the custom directives we have the current dirty checking because a scope property is allowed
+to access any other <em>local</em> scope property. Between the components we can use unidirectional
+data flow without cycles (for example by broadcasting events). Each custom directive&apos;s scope 
+is isolated from other directives&apos; scopes.
+This should speed up the global digest cycle while leaving each directive simple to program.</p>
+<p><strong>Disclaimer:</strong> When talking about the application development speed in the steps 1 and 2, 
+I am talking about a prototype coded by a design-inclined web developer. I love the 
+immutable data and functional javascript myself (as a proof, see all my blog posts on 
+<a href="../tags/functional/">functional programming</a>). I just think that creating a live web app
+using Angular provides a more visual and intuitive path than writing JSX code!
+For example, see <a href="http://onehungrymind.com/just-enough-angular-for-designers/" target="_blank" rel="external">Just Enough Angular for Designers</a>
+tutorial - I honestly believe a designer who can code static site in HTML and CSS can turn
+it into a web app with ease.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/angular-plus-react-equals-speed-revisited/" data-id="cihtr6wd800vdl3urj12x1xf9" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/angular-plus-react-equals-speed-revisited/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/angularjs/">angularjs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/performance/">performance</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/reactjs/">reactjs</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../web-working-like-a-boss/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Web working like a boss
+        
+      </div>
+    </a>
+  
+  
+    <a href="../remove-boilerplate-from-promise-chains/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Remove boilerplate from promise chains</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/angular-plus-react-equals-speed-revisited/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

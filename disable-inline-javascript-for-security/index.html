@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Disable inline JavaScript for security | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="The source code for this blog post is in bahmutov/disable-inline-javascript-tutorial
+and the demo showing the insecure page that allows inline JavaScript tags is at
+insecure demo. If you want to see t">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Disable inline JavaScript for security">
+<meta property="og:url" content="http://glebbahmutov.com/blog/disable-inline-javascript-for-security/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="The source code for this blog post is in bahmutov/disable-inline-javascript-tutorial
+and the demo showing the insecure page that allows inline JavaScript tags is at
+insecure demo. If you want to see t">
+<meta property="og:image" content="http://glebbahmutov.com/disable-inline-javascript-tutorial/insecure-demo-result.png">
+<meta property="og:image" content="http://glebbahmutov.com/disable-inline-javascript-tutorial/inject-script-cnn.png">
+<meta property="og:image" content="http://glebbahmutov.com/disable-inline-javascript-tutorial/secure-page-does-not-script.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Disable inline JavaScript for security">
+<meta name="twitter:description" content="The source code for this blog post is in bahmutov/disable-inline-javascript-tutorial
+and the demo showing the insecure page that allows inline JavaScript tags is at
+insecure demo. If you want to see t">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-disable-inline-javascript-for-security" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-11-21T05:00:00.000Z" itemprop="datePublished">Nov 21 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Disable inline JavaScript for security
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Use JS to JS template engine in Express to ban all inlined JavaScript.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>The source code for this blog post is in <a href="https://github.com/bahmutov/disable-inline-javascript-tutorial" target="_blank" rel="external">bahmutov/disable-inline-javascript-tutorial</a>
+and the demo showing the insecure page that allows inline JavaScript tags is at
+<a href="http://glebbahmutov.com/disable-inline-javascript-tutorial/" target="_blank" rel="external">insecure demo</a>. If you want to see the secure page right now, take a look at
+<a href="http://glebbahmutov.com/disable-inline-javascript-tutorial/index-secure.html" target="_blank" rel="external">secure demo</a>.</p>
+<h2 id="the-security-risk">The security risk</h2><p>Inserting &quot;evil&quot; script tags into a page is a common attack. If you ever allow the user-produced
+content to be linked into the DOM (to control its appearance for example), then your
+website is vulnerable to this attack. If you allow the user to enter this text</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">this is a <span class="tag">&lt;<span class="title">strong</span>&gt;</span>tag<span class="tag">&lt;/<span class="title">strong</span>&gt;</span> and this is <span class="tag">&lt;<span class="title">em</span>&gt;</span>emphasized<span class="tag">&lt;/<span class="title">em</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>and then insert the text as HTML into your page, very little is stopping the user
+from entering &quot;bad&quot; text like this one that have a <code>&lt;script&gt;</code> tag inside</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">this is a <span class="tag">&lt;<span class="title">strong</span>&gt;</span>tag<span class="tag">&lt;/<span class="title">strong</span>&gt;</span> and my script.</span><br><span class="line">Run it from your page <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="actionscript">alert(<span class="string">&apos;You have been hacked&apos;</span>)</span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>There are a lot of ways the <code>&lt;script&gt;</code> tag can hide inside the HTML, escaping
+(pun intended) even the most sophisticated text sanitizers.</p>
+<p>You can see this in action by visiting the <a href="http://glebbahmutov.com/disable-inline-javascript-tutorial/" target="_blank" rel="external">demo page</a>.
+Clicking the green button inserts the &quot;good&quot; styled content.
+Clicking the red button on the other hand inserts the &quot;bad&quot; content that runs the JavaScript
+inside the inlined <code>&lt;script&gt;</code> tag, opening an alert box.</p>
+<p><img src="http://glebbahmutov.com/disable-inline-javascript-tutorial/insecure-demo-result.png" alt="insecure demo"></p>
+<p>The source in the script tag can now do anything it wants - like grab the sensitive data
+and send somewhere, or make API calls on the user&apos;s behalf.
+It is pretty severe compromise at this point.</p>
+<h2 id="stopping-inline-javascript-completely">Stopping inline JavaScript completely</h2><p>We can stop these attacks in their tracks by completely banning <em>all inline JavaScript</em> -
+any JavaScript code directly between the <code>&lt;script&gt; ... source ... &lt;/script&gt;</code> tags in the page.
+We can still use any JavaScript that is loaded via <code>&lt;script src=&quot;...&quot;&gt;&lt;/script&gt;</code>.
+The way to do this in the modern browsers is to set the &apos;Content-Security-Policy&apos; (CSP)
+property, either via <code>meta</code> attribute or headers. Read these two <a href="https://developer.mozilla.org/en-US/docs/Web/Security/CSP/Using_Content_Security_Policy" target="_blank" rel="external">1</a>, <a href="http://www.html5rocks.com/en/tutorials/security/content-security-policy/" target="_blank" rel="external">2</a>
+references to learn about CSP.
+See the notes at the end of this post regarding browser support
+(summary: the way I use it in this blog post is widely supported by the modern browsers).</p>
+<p>You can see a very strict and solid CSP header if you curl <code>https://github.com</code> website.</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">$ curl -I <span class="string">https:</span><span class="comment">//github.com</span></span><br><span class="line">HTTP/<span class="number">1.1</span> <span class="number">200</span> OK</span><br><span class="line"><span class="string">Server:</span> GitHub.com</span><br><span class="line"><span class="string">Date:</span> Sat, <span class="number">21</span> Nov <span class="number">2015</span> <span class="number">18</span>:<span class="number">40</span>:<span class="number">23</span> GMT</span><br><span class="line">Content-<span class="string">Type:</span> text/html; charset=utf-<span class="number">8</span></span><br><span class="line"><span class="string">Status:</span> <span class="number">200</span> OK</span><br><span class="line">Content-Security-<span class="string">Policy:</span></span><br><span class="line">  <span class="keyword">default</span>-src *;</span><br><span class="line">  script-src assets-cdn.github.com;</span><br><span class="line">  object-src assets-cdn.github.com;</span><br><span class="line">  style-src <span class="string">&apos;self&apos;</span> <span class="string">&apos;unsafe-inline&apos;</span> <span class="string">&apos;unsafe-eval&apos;</span> assets-cdn.github.com;</span><br><span class="line">  img-src <span class="string">&apos;self&apos;</span></span><br><span class="line"><span class="label">    data:</span> assets-cdn.github.com identicons.github.com www.google-analytics.com ...;</span><br><span class="line">  media-src <span class="string">&apos;none&apos;</span>;</span><br><span class="line">  frame-src <span class="string">&apos;self&apos;</span></span><br><span class="line">    render.githubusercontent.com gist.github.com www.youtube.com ...;</span><br><span class="line">  font-src assets-cdn.github.com;</span><br><span class="line">  connect-src <span class="string">&apos;self&apos;</span> live.github.com <span class="string">wss:</span><span class="comment">//live.github.com uploads.github.com ...;</span></span><br><span class="line">  base-uri <span class="string">&apos;self&apos;</span>;</span><br><span class="line">  form-action <span class="string">&apos;self&apos;</span> github.com gist.github.com</span><br></pre></td></tr></table></figure>
+<p>It is a beast, and I had split the relevant header across multiple lines to clarity. I also
+trimmed long lists of domains in some lines.</p>
+<p>The most important for our purpose is the limit the GitHub places on where the scripts
+can be sourced: only from <code>assets-cdn.github.com</code> domain. Thus the scripts that are
+inlined in the page itself are NOT going to run. Try it now</p>
+<ul>
+<li>Open the browser</li>
+<li>Browser to <code>https://github.com</code></li>
+<li>Open the Developer Tools console</li>
+<li>Paste the following code into the console to create a new inline script</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> el = <span class="built_in">document</span>.createElement(<span class="string">&apos;script&apos;</span>);</span><br><span class="line">el.innerText = <span class="string">&apos;alert(&quot;hi there&quot;);&apos;</span></span><br><span class="line"><span class="built_in">document</span>.body.appendChild(el); <span class="comment">// runs the code by default</span></span><br></pre></td></tr></table></figure>
+<p>You can find this code snippet in <a href="[https://github.com/bahmutov/code-snippets#security]">this collection</a>.</p>
+<p>When you paste the code snippet, it tries to run the code right away, but you get an
+error in the console</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Refused to <span class="operator"><span class="keyword">execute</span> inline script because it violates the <span class="keyword">following</span></span><br><span class="line"><span class="keyword">Content</span> <span class="keyword">Security</span> <span class="keyword">Policy</span> directive: <span class="string">&quot;script-src assets-cdn.github.com&quot;</span>.</span><br><span class="line">Either the <span class="string">&apos;unsafe-inline&apos;</span> keyword, a <span class="keyword">hash</span> (<span class="string">&apos;sha256-OsJIMy4ZGkXN5pDjr35TfT/PBETcXuD9koo2t1mYDSg=&apos;</span>),</span><br><span class="line"><span class="keyword">or</span> a nonce (<span class="string">&apos;nonce-...&apos;</span>) <span class="keyword">is</span> <span class="keyword">required</span> <span class="keyword">to</span> <span class="keyword">enable</span> inline execution.</span></span><br></pre></td></tr></table></figure>
+<p>Basically the script we tried to execute was stopped by the browser. The browser has checked
+and determined that the script did NOT</p>
+<ul>
+<li>come from the list of trusted sources <code>assets-cdn.github.com</code> (we executed it directly from <code>github.com</code>)</li>
+<li>the inline script execution flag <code>script-src unsafe-inline</code> is not present int the CSP header.</li>
+<li>the page also allows specific white-listed scripts via SHA list, but our script obviously is not
+on this list.</li>
+</ul>
+<p>Good.</p>
+<p>Now do the same on <code>cnn.com</code>, and it runs just fine.</p>
+<p><img src="http://glebbahmutov.com/disable-inline-javascript-tutorial/inject-script-cnn.png" alt="inject script on CNN.com"></p>
+<p>So if there is user supplied content (like visitor comments), and it is not validated very well,
+it could potentially be linked directly into the DOM, executing the user supplied source, as if
+was valid code written by the CNN page developers.</p>
+<h2 id="restricting-the-javascript-on-our-page">Restricting the JavaScript on our page</h2><p>For simplicity, we are going to set the security policy on our demo page
+using the <code>meta</code> attribute instead of the recommended way (response header &apos;Content-Security-Policy&apos;).
+This way we can still use the static web page without running a demo server.</p>
+<p>We can place the following into our page <code>head</code> element</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">meta</span> <span class="attribute">http-equiv</span>=<span class="value">&quot;Content-Security-Policy&quot;</span> <span class="attribute">content</span>=<span class="value">&quot;script-src https://code.jquery.com &apos;self&apos;;&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>We are allowing the JavaScript sources to be from the following two domains:</p>
+<ul>
+<li><code>https://code.jquery.com</code> - this is were our jQuery comes from in the script
+<code>&lt;script src=&quot;https://code.jquery.com/jquery-1.10.2.js&quot;&gt;&lt;/script&gt;</code></li>
+<li><code>self</code> - this are all the scripts linked as <em>external files</em> and hosted by the current domain,
+like the <code>&lt;script src=&quot;app.js&quot;&gt;&lt;/script&gt;</code></li>
+</ul>
+<p>When we try the same buttons, we can still get the styled HTML elements in the DOM
+(highlighted in red boxes).
+But the second button &quot;Link bad input to DOM&quot; fails to run the script (see the red arrow
+pointing at the error shown in the console)</p>
+<p><img src="http://glebbahmutov.com/disable-inline-javascript-tutorial/secure-page-does-not-script.png" alt="secured page"></p>
+<p>You can try the page yourself <a href="http://glebbahmutov.com/disable-inline-javascript-tutorial/index-secure.html" target="_blank" rel="external">here</a>.</p>
+<p>As a partial bonus, if you have a global error handler, like Sentry, Raygun, or your own, you
+can catch an error notification (but without any details, at least in Chrome 46) when a script
+tries to run but is prevented.</p>
+<p>We usually inject the dynamic values into our JavaScript directly as inlined script snippets,
+see how to solve this problem in my blog post <a href="../javascript-to-javascript-template-engine/">JavaScript to JavaScript template language</a>.</p>
+<h2 id="browser-support">Browser support</h2><p>There are two levels of &apos;Content-Security-Policy&apos; standards. Then one I have shown here, if used via
+a response header is widely supported. Most of the modern browsers (IE10+) support
+setting the list of allowed script sources <a href="http://caniuse.com/#feat=contentsecuritypolicy" target="_blank" rel="external">link</a>.
+There is a newer list of features (Content Security Policy Level 2) that allows white listing
+inlined source scripts by SHA, but it is only supported in a very <a href="http://caniuse.com/#feat=contentsecuritypolicy2" target="_blank" rel="external">few browsers</a>,
+so I recommend against it.</p>
+<h2 id="additional-resources">Additional resources</h2><ul>
+<li>Checkout this CSP header / string validator <a href="https://cspvalidator.org/" target="_blank" rel="external">cspvalidator.org/</a></li>
+<li>Web frameworks like AngularJS require configuration to work with CSP <a href="https://docs.angularjs.org/api/ng/directive/ngCsp" target="_blank" rel="external">ngCsp</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/disable-inline-javascript-for-security/" data-id="cihtr6w8w00p9l3uru8ydkk0m" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/disable-inline-javascript-for-security/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/">javascript</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/security/">security</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../javascript-to-javascript-template-engine/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          JavaScript to JavaScript template language
+        
+      </div>
+    </a>
+  
+  
+    <a href="../patching-global-Node-tools/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Patching global Node tools</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/disable-inline-javascript-for-security/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

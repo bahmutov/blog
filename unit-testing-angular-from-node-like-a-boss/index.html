@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Unit testing Angular from Node like a boss | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="I previously wrote how to quickly unit test an Angular application using ng-describe.
+While this library is useful (we use it every day at Kensho), we can do better. In this tutorial
+I will show how t">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unit testing Angular from Node like a boss">
+<meta property="og:url" content="http://glebbahmutov.com/blog/unit-testing-angular-from-node-like-a-boss/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="I previously wrote how to quickly unit test an Angular application using ng-describe.
+While this library is useful (we use it every day at Kensho), we can do better. In this tutorial
+I will show how t">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Unit testing Angular from Node like a boss">
+<meta name="twitter:description" content="I previously wrote how to quickly unit test an Angular application using ng-describe.
+While this library is useful (we use it every day at Kensho), we can do better. In this tutorial
+I will show how t">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-unit-testing-angular-from-node-like-a-boss" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-08-30T04:00:00.000Z" itemprop="datePublished">Aug 30 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Unit testing Angular from Node like a boss
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Building Angular application from CommonJS modules and powerful unit testing.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>I previously <a href="../1-2-3-tested/">wrote</a> how to quickly unit test an Angular application using <a href="https://github.com/kensho/ng-describe" target="_blank" rel="external">ng-describe</a>.
+While this library is useful (we use it every day at Kensho), we can do better. In this tutorial
+I will show how to:</p>
+<ul>
+<li>Use CommonJS modules in your application</li>
+<li>Run Angular unit tests under Node without any browsers</li>
+<li>Test private functions and Angular providers; something that is impossible to do using normal means.</li>
+</ul>
+<h2 id="the-code">The code</h2><p>The working code for this tutorial is inside <a href="https://github.com/bahmutov/test-ng-from-node-with-code-extraction-tutorial" target="_blank" rel="external">bahmutov/test-ng-from-node-with-code-extraction-tutorial</a>.
+You can clone the repo to local disk, install the dependencies, run the tiny Angular application
+and most importantly run the unit tests</p>
+<pre><code>git <span class="keyword">clone</span> <span class="title">git</span>@github.com:bahmutov/test-ng-from-<span class="keyword">node</span><span class="identifier"></span><span class="title">-with-code-extraction-tutorial</span>.git
+cd test-ng-from-<span class="keyword">node</span><span class="identifier"></span><span class="title">-with-code-extraction-tutorial</span>
+npm install
+open index.html
+npm test
+</code></pre><p>I tagged different points in the repository to allow you to see how the code developed and be able
+to play with it.</p>
+<h2 id="the-initial-application">The initial application</h2><p>Let us make a simple application that adds numbers. First, we need AngularJS library</p>
+<pre><code>npm <span class="operator"><span class="keyword">install</span> <span class="comment">--save angular</span></span>
+</code></pre><p>Second, we need a page</p>
+<pre><code><span class="keyword">touch</span> <span class="built_in">index</span>.html
+</code></pre><p>We can place all the code into the page for now</p>
+<figure class="highlight html"><figcaption><span>index.html</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="doctype">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">title</span>&gt;</span>Angular App<span class="tag">&lt;/<span class="title">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;node_modules/angular/angular.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="actionscript"></span><br><span class="line">  angular.module(<span class="string">&apos;Application&apos;</span>, [])</span><br><span class="line">    .controller(<span class="string">&apos;ApplicationController&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="params">($scope)</span> </span>{</span><br><span class="line">      $scope.add = <span class="function"><span class="keyword">function</span> <span class="params">(a, b)</span> </span>{</span><br><span class="line">        <span class="keyword">return</span> a + b;</span><br><span class="line">      };</span><br><span class="line">    });</span><br><span class="line">  </span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">body</span> <span class="attribute">ng-app</span>=<span class="value">&quot;Application&quot;</span> <span class="attribute">ng-controller</span>=<span class="value">&quot;ApplicationController&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">h2</span>&gt;</span>Angular App<span class="tag">&lt;/<span class="title">h2</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">p</span>&gt;</span>2 + 3 = {{ add(2, 3) }}<span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>If you open the <code>index.html</code> in the browser you will see the result</p>
+<pre><code>Angular App
+<span class="number">2</span> + <span class="number">3</span> = <span class="number">5</span>
+</code></pre><p>You can see this result for yourself under the tag <code>step-0</code>.</p>
+<p>The application is working, now let us refactor: the application JavaScript code should live separately
+from the page, etc.</p>
+<h2 id="separate-javascript-code">Separate JavaScript code</h2><p>Let us first move all JavaScript code into separate files in the <code>src</code> folder.</p>
+<pre><code><span class="tag">md</span> <span class="tag">src</span>
+<span class="tag">cd</span> <span class="tag">src</span>
+<span class="tag">touch</span> <span class="tag">calc</span><span class="class">.js</span> <span class="tag">application</span><span class="class">.js</span>
+</code></pre><p>We can place the addition code into the <code>calc.js</code>, using <code>value</code> provider for simplicity</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">angular.module(<span class="string">&apos;Calc&apos;</span>, [])</span><br><span class="line">  .value(<span class="string">&apos;add&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">  });</span><br></pre></td></tr></table></figure>
+<p>Our application will grab the <code>add</code> function from <code>Calc</code> module and will attach it to the scope
+so it could be used from the <code>index.html</code> template.</p>
+<figure class="highlight js"><figcaption><span>application.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">angular.module(<span class="string">&apos;Application&apos;</span>, [<span class="string">&apos;Calc&apos;</span>])</span><br><span class="line">  .controller(<span class="string">&apos;ApplicationController&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">$scope, add</span>) </span>{</span><br><span class="line">    $scope.add = add;</span><br><span class="line">  });</span><br></pre></td></tr></table></figure>
+<p>Finally, the page itself must include both <code>calc.js</code> and <code>application.js</code></p>
+<figure class="highlight html"><figcaption><span>index.html</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="doctype">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">title</span>&gt;</span>Angular App<span class="tag">&lt;/<span class="title">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;node_modules/angular/angular.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;src/calc.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;src/application.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">body</span> <span class="attribute">ng-app</span>=<span class="value">&quot;Application&quot;</span> <span class="attribute">ng-controller</span>=<span class="value">&quot;ApplicationController&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">h2</span>&gt;</span>Angular App<span class="tag">&lt;/<span class="title">h2</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">p</span>&gt;</span>2 + 3 = {{ add(2, 3) }}<span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>This code is at tag <code>step-1</code>.</p>
+<h2 id="start-unit-testing">Start unit testing</h2><p>Let us start unit testing code. We need the browser! And Karma! And configuration!
+But we want to unit test like a boss, which in my mind means being able to unit test <em>individual components quickly</em>.
+If we used CommonJS modules, we could do it very quickly</p>
+<pre><code>npm <span class="operator"><span class="keyword">install</span> <span class="comment">--save-dev mocha</span>
+cd src
+touch <span class="keyword">add</span>.js <span class="keyword">add</span>-spec.js</span>
+</code></pre><p>We could move function <code>add</code> to <code>add.js</code> and write BDD tests in <code>add-spec.js</code></p>
+<figure class="highlight js"><figcaption><span>add.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> a + b;</span><br><span class="line">}</span><br><span class="line"><span class="built_in">module</span>.exports = add;</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><figcaption><span>add-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">describe(<span class="string">&apos;add&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> add = <span class="built_in">require</span>(<span class="string">&apos;./add&apos;</span>);</span><br><span class="line">  it(<span class="string">&apos;adds numbers&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.assert(add(<span class="number">2</span>, <span class="number">3</span>) === <span class="number">5</span>);</span><br><span class="line">  });</span><br><span class="line">  it(<span class="string">&apos;concatenates strings&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.assert(add(<span class="string">&apos;foo&apos;</span>, <span class="string">&apos;bar&apos;</span>) === <span class="string">&apos;foobar&apos;</span>);</span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>If we have <a href="http://mochajs.org/" target="_blank" rel="external">mocha</a> installed globall (<code>npm install -g mocha</code>) we could run a single test suite
+using <code>mocha src/add-spec.js</code>, or we could run mocha via NPM package script</p>
+<figure class="highlight"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&quot;scripts&quot;: {</span><br><span class="line">  &quot;test&quot;: &quot;mocha src/*-spec.js&quot;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>We can easily run unit tests with matching string using <code>--grep</code> or <code>-g</code> for short option</p>
+<pre><code>mocha -g <span class="string">&quot;concatenates&quot;</span> src/add-spec<span class="class">.js</span>
+<span class="comment">// runs just a single unit test &apos;concatenates strings&apos;</span>
+</code></pre><p>Ok, we can now either run an individual spec file or all unit tests using <code>npm test</code> command.</p>
+<p>But we copied the <code>add</code> function from <code>calc.js</code> and pasted the code into <code>add.js</code>. Now we need to load
+the <code>add.js</code> and use it from our Angular code. Our unit test is using CommonJS <code>require</code>, but the angular
+code executes in the browser where the <code>require</code> is unavailable. We need to <em>build</em> the application code
+from CommonJS code. </p>
+<h2 id="building-application-code-with-webpack">Building application code with webpack</h2><p>To convert all code necessary from CommonJS and bundle it up to be run in the browser we are going to
+use <a href="http://webpack.github.io/" target="_blank" rel="external">webpack</a></p>
+<pre><code>npm install --<span class="built_in">save</span>-<span class="built_in">dev</span> webpack
+</code></pre><p>Add <code>build</code> command to the <code>package.json</code> scripts</p>
+<figure class="highlight"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&quot;scripts&quot;: {</span><br><span class="line">  &quot;build&quot;: &quot;webpack src/add.js src/calc.js src/application.js built.js&quot;,</span><br><span class="line">  &quot;test&quot;: &quot;mocha src/*-spec.js&quot;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>Modify <code>calc.js</code> to load the addition funciton exported from <code>add.js</code> file</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">angular.module(<span class="string">&apos;Calc&apos;</span>, [])</span><br><span class="line">  .value(<span class="string">&apos;add&apos;</span>, <span class="built_in">require</span>(<span class="string">&apos;./add&apos;</span>));</span><br></pre></td></tr></table></figure>
+<p>Run the build</p>
+<pre><code>npm <span class="command">run</span> build
+</code></pre><p>Which will produce a single file <code>built.js</code> which replaces the separate script tags in our <code>index.html</code></p>
+<figure class="highlight html"><figcaption><span>index.html</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="doctype">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">title</span>&gt;</span>Angular App<span class="tag">&lt;/<span class="title">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;node_modules/angular/angular.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;built.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">body</span> <span class="attribute">ng-app</span>=<span class="value">&quot;Application&quot;</span> <span class="attribute">ng-controller</span>=<span class="value">&quot;ApplicationController&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">h2</span>&gt;</span>Angular App<span class="tag">&lt;/<span class="title">h2</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">p</span>&gt;</span>2 + 3 = {{ add(2, 3) }}<span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>You can find this code at the tag <code>step-3</code></p>
+<h2 id="unit-testing-angular-code">Unit testing Angular code</h2><p>So far we could unit test pieces of code that do not touch Angular library. Now let us create a synthetic
+browser environment and load the Angular library directly from Node. I am using <a href="https://www.npmjs.com/package/benv" target="_blank" rel="external">benv</a> module
+for emulating window and document under Node.</p>
+<pre><code>npm install --<span class="keyword">save</span>-dev benv
+<span class="keyword">touch</span> src/calc-spec.js
+</code></pre><p>Let us place unit testing code into <code>src/calc-spec.js</code>. First, we will create the synthetic browser environment
+before each unit test. We will wipe it clean after each unit test</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> benv = <span class="built_in">require</span>(<span class="string">&apos;benv&apos;</span>);</span><br><span class="line">describe(<span class="string">&apos;calc module&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  beforeEach(<span class="function"><span class="keyword">function</span> <span class="title">setupEnvironment</span>(<span class="params">done</span>) </span>{</span><br><span class="line">    benv.setup(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      benv.expose({</span><br><span class="line">        angular: benv.require(<span class="string">&apos;../node_modules/angular/angular.js&apos;</span>, <span class="string">&apos;angular&apos;</span>)</span><br><span class="line">      });</span><br><span class="line">      done();</span><br><span class="line">    });</span><br><span class="line">  });</span><br><span class="line">  <span class="comment">// more stuff will go here</span></span><br><span class="line">  afterEach(<span class="function"><span class="keyword">function</span> <span class="title">destroySyntheticBrowser</span>(<span class="params"></span>) </span>{</span><br><span class="line">    benv.teardown(<span class="literal">true</span>);</span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>After we setup the synthetic browser environment, we need to load the angular module <code>Calc</code> from
+file <code>calc.js</code>. We need to make sure to load it from scratch to prevent caching artifacts.</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> benv = <span class="built_in">require</span>(<span class="string">&apos;benv&apos;</span>);</span><br><span class="line">describe(<span class="string">&apos;calc module&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="comment">// beforeEach setupEnvironment code</span></span><br><span class="line">  beforeEach(<span class="function"><span class="keyword">function</span> <span class="title">loadCalcModule</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="comment">// force to load the module from scratch</span></span><br><span class="line">    <span class="keyword">delete</span> <span class="built_in">require</span>.cache[<span class="built_in">require</span>.resolve(<span class="string">&apos;./calc&apos;</span>)];</span><br><span class="line">    <span class="built_in">require</span>(<span class="string">&apos;./calc&apos;</span>);</span><br><span class="line">  });</span><br><span class="line">  <span class="comment">// unit test goes here</span></span><br><span class="line">  <span class="comment">// afterEach destroySyntheticBrowser code</span></span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Now we are ready to unit test the <code>calc.js</code> - which has single module &apos;Calc&apos; that provides single
+value under name &apos;add&apos;</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">angular.module(<span class="string">&apos;Calc&apos;</span>, [])</span><br><span class="line">  .value(<span class="string">&apos;add&apos;</span>, <span class="built_in">require</span>(<span class="string">&apos;./add&apos;</span>));</span><br></pre></td></tr></table></figure>
+<p>We load <code>calc.js</code> directly from Node environment, thus the <code>require</code> call works right away, without
+any preprocessing. Here is the unit test we could use</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> benv = <span class="built_in">require</span>(<span class="string">&apos;benv&apos;</span>);</span><br><span class="line">describe(<span class="string">&apos;calc module&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="comment">// beforeEach setupEnvironment code</span></span><br><span class="line">  <span class="comment">// beforeEach loadCalcModule code</span></span><br><span class="line"></span><br><span class="line">  it(<span class="string">&apos;has &quot;add&quot; value that adds numbers&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> injector = angular.injector([<span class="string">&apos;Calc&apos;</span>]);</span><br><span class="line">    <span class="keyword">var</span> add = injector.get(<span class="string">&apos;add&apos;</span>);</span><br><span class="line">    <span class="built_in">console</span>.assert(add(<span class="number">2</span>, <span class="number">3</span>) === <span class="number">5</span>, <span class="string">&apos;added 2 + 3&apos;</span>);</span><br><span class="line">  });</span><br><span class="line"></span><br><span class="line">  <span class="comment">// afterEach destroySyntheticBrowser code</span></span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>We are grabbing the injector for module &apos;Calc&apos; (already created by the Angular system when loading
+file <code>calc.js</code>). Then we grab the addition function using name <code>add</code>. Then we verify that the
+addition function sums numbers correctly.</p>
+<p>We can verify this runs from the command line</p>
+<pre><code>$ npm test
+&gt; test-ng-from-<span class="keyword">node</span><span class="identifier"></span><span class="title">-with-code-extraction-tutorial</span>@<span class="number">1.0</span>.<span class="number">0</span> test /git/tutorial
+&gt; mocha src/*-<span class="operator">spec</span>.js
+  add
+    &#x2713; adds numbers
+    &#x2713; concatenates strings
+  calc module
+    &#x2713; has <span class="string">&quot;add&quot;</span> value that adds numbers
+  <span class="number">3</span> passing (<span class="number">102ms</span>)
+</code></pre><p>Nice!</p>
+<h2 id="test-what-you-cannot-touch">Test what you cannot touch</h2><p>We often have code in our files that is NOT exported, and thus can be tested only indirectly. 
+For a very artificial example, let us say that instead of using provider value, we provide
+an <code>add</code> service in our application.</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">angular.module(<span class="string">&apos;Calc&apos;</span>, [])</span><br><span class="line">  .service(<span class="string">&apos;add&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">addService</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">require</span>(<span class="string">&apos;./add&apos;</span>);</span><br><span class="line">  });</span><br></pre></td></tr></table></figure>
+<p>The unit tests still work the same since we use the dependency injection and we get the <code>add</code> function
+returned by <code>addService</code>. Imagine there is some additional function inside the file, but it is
+neither called nor exported.</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="string">&apos;hello&apos;</span>;</span><br><span class="line">}</span><br><span class="line">angular.module(<span class="string">&apos;Calc&apos;</span>, [])</span><br><span class="line">  .service(<span class="string">&apos;add&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">addService</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">require</span>(<span class="string">&apos;./add&apos;</span>);</span><br><span class="line">  });</span><br></pre></td></tr></table></figure>
+<p>How can we unit test the function <code>hello</code>? This is where the <em>code extraction</em> technique comes handy.
+Basically, we can use our own version of Node&apos;s require called <a href="https://github.com/bahmutov/really-need" target="_blank" rel="external">really-need</a> which allows
+preprocessing the loaded source code before compiling it. The project <a href="https://github.com/bahmutov/describe-it" target="_blank" rel="external">describe-it</a>
+for example loads a given module inside a <code>describe</code> block and <em>extracts</em> any function / variable
+so you can unit test it, even if it is not exported.</p>
+<pre><code><span class="built_in">npm</span> install --save-dev describe-<span class="literal">it</span>
+</code></pre><p>We get a function <code>describeIt</code> that creates its own set of tests, and can give you the desired
+function based on signature. It is additional code next to the existing unit tests</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> benv = <span class="built_in">require</span>(<span class="string">&apos;benv&apos;</span>);</span><br><span class="line">describe(<span class="string">&apos;calc module&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="comment">// beforeEach setupEnvironment code</span></span><br><span class="line">  <span class="comment">// beforeEach loadCalcModule code</span></span><br><span class="line">  <span class="comment">// it &apos;has &quot;add&quot; value that adds numbers&apos; test</span></span><br><span class="line">  <span class="keyword">var</span> describeIt = <span class="built_in">require</span>(<span class="string">&apos;describe-it&apos;</span>);</span><br><span class="line">  <span class="keyword">var</span> setupEachTime = <span class="literal">true</span>;</span><br><span class="line">  describeIt(__dirname + <span class="string">&apos;/calc.js&apos;</span>, <span class="string">&apos;hello()&apos;</span>, setupEachTime, <span class="function"><span class="keyword">function</span> (<span class="params">getHello</span>) </span>{</span><br><span class="line">    it(<span class="string">&apos;has private &quot;hello&quot;&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      <span class="keyword">var</span> hello = getHello();</span><br><span class="line">      <span class="built_in">console</span>.assert(hello() === <span class="string">&apos;hello&apos;</span>);</span><br><span class="line">    });</span><br><span class="line">  });</span><br><span class="line">  <span class="comment">// afterEach destroySyntheticBrowser code</span></span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>The line <code>describeIt(__dirname + &apos;/calc.js&apos;, &apos;hello()&apos;, true, function (getHello)</code> 
+loads the file <code>calc.js</code>, looks for function signature <code>hello()</code>, and then will
+return the found function reference whenever you call <code>getHello()</code>.</p>
+<p>Pretty cool, see the code at <code>step-5</code> tag.</p>
+<h2 id="test-the-provider-function">Test the provider function</h2><p>Let us imagine that the angular module <code>Calc</code> has the second function <code>sub</code> that is implemented
+using <code>add</code> like this</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">angular.module(<span class="string">&apos;Calc&apos;</span>, [])</span><br><span class="line">  .service(<span class="string">&apos;add&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">addService</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">require</span>(<span class="string">&apos;./add&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .service(<span class="string">&apos;sub&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">subService</span>(<span class="params">add</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">sub</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">      <span class="keyword">return</span> add(a, -b);</span><br><span class="line">    };</span><br><span class="line">  });</span><br></pre></td></tr></table></figure>
+<p>We can easily unit test the returned <code>sub</code> function, but can we unit test the function <code>subService</code> itself?
+Not through the dependency injection - it returns the <em>result</em> function <code>sub</code>. But we can grab the function 
+<code>subService</code> using the code extraction trick. For simplicity, move the function <code>subService(add)</code> to
+be function declaration</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">subService</span>(<span class="params">add</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">sub</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> add(a, -b);</span><br><span class="line">  };</span><br><span class="line">}</span><br><span class="line">angular.module(<span class="string">&apos;Calc&apos;</span>, [])</span><br><span class="line">  .service(<span class="string">&apos;add&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">addService</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">require</span>(<span class="string">&apos;./add&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .service(<span class="string">&apos;sub&apos;</span>, subService);</span><br></pre></td></tr></table></figure>
+<p>Then write unit test using <code>describeIt</code> that grabs the function with the <code>subService(add)</code> signature</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">describeIt(__dirname + <span class="string">&apos;/calc.js&apos;</span>, <span class="string">&apos;subService(add)&apos;</span>, setupEachTime, <span class="function"><span class="keyword">function</span> (<span class="params">getSubService</span>) </span>{</span><br><span class="line">  it(<span class="string">&apos;has function&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> fn = getSubService();</span><br><span class="line">    <span class="built_in">console</span>.assert(<span class="keyword">typeof</span> fn === <span class="string">&apos;function&apos;</span>);</span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>The unit test passes - we do grab the function reference. We can even execute the function to get the
+actual <code>sub</code> function, except it has a problem</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">describeIt(__dirname + <span class="string">&apos;/calc.js&apos;</span>, <span class="string">&apos;subService(add)&apos;</span>, setupEachTime, <span class="function"><span class="keyword">function</span> (<span class="params">getSubService</span>) </span>{</span><br><span class="line">  it(<span class="string">&apos;has function&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> fn = getSubService();</span><br><span class="line">    <span class="built_in">console</span>.assert(<span class="keyword">typeof</span> fn === <span class="string">&apos;function&apos;</span>);</span><br><span class="line">  });</span><br><span class="line">  it(<span class="string">&apos;returns sub&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> fn = getSubService();</span><br><span class="line">    <span class="keyword">var</span> sub = fn();</span><br><span class="line">    <span class="built_in">console</span>.assert(sub(<span class="number">2</span>, <span class="number">3</span>) === -<span class="number">1</span>);</span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<pre><code>calc module subService(<span class="built_in">add</span>) returns sub:
+    TypeError: undefined is <span class="operator">not</span> <span class="operator">a</span> <span class="function"><span class="keyword">function</span></span>
+</code></pre><p>The problem is that it tries to call <code>add</code> argument from <code>sub</code> - which we never provided!
+When the code run, the angular dependency injection finds <code>add</code> function and injects it into the returned
+function. When we just did it ourselves, we did not provide anything. Fortunately it is simple to do</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;returns sub&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> fn = getSubService();</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">testAdd</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">var</span> sub = fn(testAdd);</span><br><span class="line">  <span class="built_in">console</span>.assert(sub(<span class="number">2</span>, <span class="number">3</span>) === -<span class="number">1</span>);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Runs perfectly. We can even spy on <code>testAdd</code> to make sure it was called.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;calls the provided testAdd&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> fn = getSubService();</span><br><span class="line">  <span class="keyword">var</span> testAddCalled;</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">testAdd</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">    testAddCalled = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">var</span> sub = fn(testAdd);</span><br><span class="line">  <span class="built_in">console</span>.assert(sub(<span class="number">2</span>, <span class="number">3</span>) === -<span class="number">1</span>);</span><br><span class="line">  <span class="built_in">console</span>.assert(testAddCalled);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Great, find the code at tag <code>step-6</code>.</p>
+<h2 id="let-angular-dependency-injection-do-all-the-work">Let Angular Dependency Injection do all the work</h2><p>In the previous example, we had to create our own function <code>testAdd</code> to inject into the
+extracted function <code>subService(add)</code>. But there is already the function <code>add</code> provided by
+the module &quot;Calc&quot;. We can grab it via Angular&apos;s own dependency injection</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;works with Angular own injection&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> subService = getSubService();</span><br><span class="line">  <span class="keyword">var</span> injector = angular.injector([<span class="string">&apos;Calc&apos;</span>]);</span><br><span class="line">  <span class="keyword">var</span> sub = injector.invoke(subService);</span><br><span class="line">  <span class="built_in">console</span>.assert(sub(<span class="number">2</span>, <span class="number">3</span>) === -<span class="number">1</span>);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>When we use the <code>angular.injector([&apos;Calc&apos;]).invoke(subService)</code>, the dependency injection will
+use the argument names (extracted by inspecting the <code>subService.toString()</code> output) to find
+what to inject. We can even &quot;fool&quot; the dependency injection by listing <em>different</em> names to be injected.
+For example, let us provide &quot;hello&quot; service in the &quot;Calc&quot; module</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="string">&apos;hello&apos;</span>;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">subService</span>(<span class="params">add</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">sub</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> add(a, -b);</span><br><span class="line">  };</span><br><span class="line">}</span><br><span class="line">angular.module(<span class="string">&apos;Calc&apos;</span>, [])</span><br><span class="line">  .service(<span class="string">&apos;add&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">addService</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">require</span>(<span class="string">&apos;./add&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .value(<span class="string">&apos;hello&apos;</span>, hello)</span><br><span class="line">  .service(<span class="string">&apos;sub&apos;</span>, subService);</span><br></pre></td></tr></table></figure>
+<p>in our unit test, when extracting <code>subService</code> we can tell the dependency injection that
+the <code>subService</code> needs <em>hello</em> as the first argument (instead of &quot;add&quot;).</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;can inject different stuff&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> subService = getSubService();</span><br><span class="line">  <span class="keyword">var</span> injector = angular.injector([<span class="string">&apos;Calc&apos;</span>]);</span><br><span class="line">  subService.$inject = [<span class="string">&apos;hello&apos;</span>];</span><br><span class="line">  <span class="keyword">var</span> sub = injector.invoke(subService);</span><br><span class="line">  <span class="built_in">console</span>.assert(sub(<span class="number">2</span>, <span class="number">3</span>) === <span class="string">&apos;hello&apos;</span>);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>We grabbed the <code>subService</code> using code extraction. Before we let the dependency injection do its job
+we list the names to be injected manually. Instead of letting the DI inspect the function signature
+<code>subService(add)</code> and finding &quot;add&quot; argument name, we tell the DI that the function really needs to
+inject &quot;hello&quot; service. Thus the <code>sub(2, 3)</code> is really executing the code below</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">subService</span>(<span class="params">hello <span class="comment">/* injected instead of add */</span></span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">sub</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">        <span class="keyword">return</span> hello(a, b);</span><br><span class="line">    };</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>which always produces &quot;hello&quot;!</p>
+<p>You can see this code at <code>step-7</code> tag.</p>
+<h2 id="combined-custom-and-angular-dependency-injections">Combined custom and Angular dependency injections</h2><p>Can we combine the two types of injectors (our own and Angular) in the same code? Yes,
+using partial argument binding library like <a href="https://github.com/bahmutov/heroin#partial-dependency-injection" target="_blank" rel="external">heroin</a>. This little helper works by
+binding <em>only some arguments by name</em>. For example, if we have a function with 3 arguments</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// npm install --save-dev heroin</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">a, b, c</span>) </span>{ <span class="keyword">return</span> a + b + c; }</span><br><span class="line"><span class="keyword">var</span> heroin = <span class="built_in">require</span>(<span class="string">&apos;heroin&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> values = {</span><br><span class="line">  a: <span class="number">10</span>,</span><br><span class="line">  c: <span class="number">100</span></span><br><span class="line">};</span><br><span class="line"><span class="keyword">var</span> adder = heroin(add, values);</span><br><span class="line"><span class="comment">// adder = function(a = 10, b, c = 100) ...</span></span><br><span class="line">adder(<span class="number">4</span>); <span class="comment">// 4 goes to the only &quot;free&quot; argument &quot;b&quot;</span></span><br><span class="line"><span class="comment">// returns 114</span></span><br></pre></td></tr></table></figure>
+<p>Let us imagine that the &apos;Calc&apos; module provides a service to compute the sum asynchronously.</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">addAsyncService</span>(<span class="params">$q, add</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">addAsync</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> $q.when(add(a, b));</span><br><span class="line">  };</span><br><span class="line">}</span><br><span class="line">angular.module(<span class="string">&apos;Calc&apos;</span>, [<span class="string">&apos;ng&apos;</span>])</span><br><span class="line">  .service(<span class="string">&apos;add&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">addService</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">require</span>(<span class="string">&apos;./add&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .service(<span class="string">&apos;addAsync&apos;</span>, addAsyncService);</span><br></pre></td></tr></table></figure>
+<p>The function <code>addAsync</code> uses service <code>$q</code> from the standard module <code>ng</code> to return a promise.
+The promise will be resolved with the result of the <code>add</code> service (also injected from &apos;Calc&apos; module),
+and called synchronously. Ok, let us do the dependency injection in 2 steps, but first writing a new
+suite. We will extract the function <code>addAsyncService($q, add)</code> and will load the <code>heroin</code> function.</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">describeIt(__dirname + <span class="string">&apos;/calc.js&apos;</span>, <span class="string">&apos;addAsyncService($q, add)&apos;</span>, setupEachTime, <span class="function"><span class="keyword">function</span> (<span class="params">getFn</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> heroin = <span class="built_in">require</span>(<span class="string">&apos;heroin&apos;</span>);</span><br><span class="line">  it(<span class="string">&apos;can inject some of our mocks and let the angular inject the rest&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">done</span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> addAsyncService = getFn();</span><br><span class="line">    <span class="comment">// the rest of the unit test goes here</span></span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>To better test the asynchronous add, let us use our own little utility function that will
+verify the passed in argument and would return some unusual result. This way we will easily
+see if our mock <code>add</code> was called and not the real thing.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;can inject some of our mocks and let the angular inject the rest&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">done</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> addAsyncService = getFn();</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">mockAdd</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.assert(a === <span class="number">2</span> &amp;&amp; b === <span class="number">3</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">42</span>;</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">var</span> mockedAdd = heroin(addAsyncService, {</span><br><span class="line">    add: mockAdd</span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>We just created a new function <code>mockedAdd</code> from the function <code>addAsyncService</code>. 
+If we look at their effective signatures they are</p>
+<pre><code><span class="keyword">function</span> addAsyncService(<span class="variable">$q</span>, add)
+<span class="keyword">function</span> mockedAdd(<span class="variable">$q</span> /* add = mockAdd */)
+// mockedAdd will call addAsyncService
+</code></pre><p>What about the <code>$q</code> service? We could have injected our own promise-returning object with method 
+<code>$q.when</code>, but we could just let the Angular inject the true <code>$q</code>. We just need to tell it the 
+name of the remaining argument in <code>mockedAdd</code> - the <code>heroin</code> messes up the argument names, since
+it is a dynamic function that uses <code>arguments</code> object. The complete test is</p>
+<figure class="highlight js"><figcaption><span>calc-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;can inject some of our mocks and let the angular inject the rest&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">done</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> addAsyncService = getFn();</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">mockAdd</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.assert(a === <span class="number">2</span> &amp;&amp; b === <span class="number">3</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">42</span>;</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">var</span> mockedAdd = heroin(addAsyncService, {</span><br><span class="line">    add: mockAdd</span><br><span class="line">  });</span><br><span class="line">  mockedAdd.$inject = [<span class="string">&apos;$q&apos;</span>];</span><br><span class="line">  <span class="keyword">var</span> injector = angular.injector([<span class="string">&apos;Calc&apos;</span>]);</span><br><span class="line">  <span class="keyword">var</span> addAsync = injector.invoke(mockedAdd);</span><br><span class="line">  addAsync(<span class="number">2</span>, <span class="number">3</span>).then(<span class="function"><span class="keyword">function</span> (<span class="params">sum</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.assert(sum === <span class="number">42</span>);</span><br><span class="line">    done();</span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Crazy, but the two injectors work quite nicely together, and you can see it for yourself under tag <code>step-8</code>.</p>
+<h2 id="conclusions">Conclusions</h2><p>This tutorial showed how to write Angular application like a boss: instead of concatenating files, 
+obsessing over loading order, loading the entire application, the boss just <em>requires</em> stuff.
+Even better, using CommonJS modules makes unit testing from Node simpler. You want to run just a single
+spec? No problem, no editing <code>karma.conf.js</code> necessary. Just a single command needed:</p>
+<pre><code>mocha src/foo-<span class="operator">spec</span>.js
+</code></pre><p>What if your code is a collection of little functions, preferably pure, returning the result that
+only depends on the inputs? How can you test them, if they are just sitting there, 
+hidden from the outside world behind the <code>module.exports</code> interface? 
+Like a boss, you just grab them by name!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">describeIt(<span class="string">&apos;filename.js&apos;</span>, <span class="string">&apos;add(a, b)&apos;</span>, ...);</span><br></pre></td></tr></table></figure>
+<p>This <em>code extraction</em> feature does not require any source code modifications and works like magic
+using a source code preload hook inside the Node&apos;s require. No extra work on your part.</p>
+<p>Finally, instead of relying only on the Angular Dependency Injection, you can extract the entire
+provider code, substitute your own mocks or even use your own injector.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> subService = getSubService();</span><br><span class="line"><span class="keyword">var</span> injector = angular.injector([<span class="string">&apos;Calc&apos;</span>]);</span><br><span class="line"><span class="keyword">var</span> sub = injector.invoke(subService);</span><br><span class="line"><span class="built_in">console</span>.assert(sub(<span class="number">2</span>, <span class="number">3</span>) === -<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>You get the provider code much sooner, before the Angular dependency injection has a change 
+to limit what you can to the returned value. You are the boss; only the full service for you!</p>
+<p>As a very last observation, note that we <em>did not load or use angular-mocks</em> library in our unit tests.
+No dummy modules, weird delayed digest cycles or artifical back end responses. Pure production-grade
+Angular running in your unit tests, bridging the gap between your application and test code.</p>
+<h3 id="3rd-party-tools-in-this-tutorial">3rd party tools in this tutorial</h3><ul>
+<li><a href="http://mochajs.org/" target="_blank" rel="external">mocha</a> - excellent BDD unit testing framework that works great under Node.</li>
+<li><a href="https://www.npmjs.com/package/benv" target="_blank" rel="external">benv</a> - simulates browser and document environment which allows front end code to run under Node.</li>
+<li><a href="https://github.com/bahmutov/really-need" target="_blank" rel="external">really-need</a> - a replacement for Node&apos;s built-in <code>require</code> with some nice features.</li>
+<li><a href="https://github.com/bahmutov/describe-it" target="_blank" rel="external">describe-it</a> - code extraction tool for unit testing. Grabs private functions or variables,
+making them available for unit testing.</li>
+<li><a href="https://github.com/bahmutov/heroin#partial-dependency-injection" target="_blank" rel="external">heroin</a> - an addictive partial argument application by name.</li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/unit-testing-angular-from-node-like-a-boss/" data-id="cihtr6vrz003nl3urbxcdb35p" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/unit-testing-angular-from-node-like-a-boss/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/angularjs/">angularjs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/">testing</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/tutorial/">tutorial</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../bending-javascript-rules/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Bending JavaScript rules
+        
+      </div>
+    </a>
+  
+  
+    <a href="../imperative-to-compose-example/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Imperative to compose example</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/unit-testing-angular-from-node-like-a-boss/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

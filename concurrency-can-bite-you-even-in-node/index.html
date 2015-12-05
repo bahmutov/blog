@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Concurrency can bite you even in Node | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Last night I had a bug due to concurrency in Nodejs.
+Wait, what? Nodejs was supposed to be the single-threaded nirvana,
+where all the problems common to the multi-threaded apps were
+gone!
+No quite. Th">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Concurrency can bite you even in Node">
+<meta property="og:url" content="http://glebbahmutov.com/blog/concurrency-can-bite-you-even-in-node/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Last night I had a bug due to concurrency in Nodejs.
+Wait, what? Nodejs was supposed to be the single-threaded nirvana,
+where all the problems common to the multi-threaded apps were
+gone!
+No quite. Th">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Concurrency can bite you even in Node">
+<meta name="twitter:description" content="Last night I had a bug due to concurrency in Nodejs.
+Wait, what? Nodejs was supposed to be the single-threaded nirvana,
+where all the problems common to the multi-threaded apps were
+gone!
+No quite. Th">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-concurrency-can-bite-you-even-in-node" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2013-11-14T05:00:00.000Z" itemprop="datePublished">Nov 14 2013</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Concurrency can bite you even in Node
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Ordering of execution can be tricky in the JavaScript event loop.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Last night I had a bug due to concurrency in Nodejs.</p>
+<p>Wait, what? Nodejs was supposed to be the single-threaded nirvana,
+where all the problems common to the multi-threaded apps were
+gone!</p>
+<p>No quite. There is still a problem with shared data accessed
+by separate execution stacks. Let me explain with examples.</p>
+<p>Suppose we need to add 100 items to an array and then print the
+number of items in the array (should be 100) and then repeat.</p>
+<p><strong>First:</strong> the correct sync code that behaves as expected</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> n = <span class="number">100</span>;</span><br><span class="line"><span class="keyword">var</span> items;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">addItems</span>(<span class="params"></span>) </span>{</span><br><span class="line">    items = []; <span class="comment">// 1</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> k = <span class="number">0</span>; k &lt; n; k += <span class="number">1</span>) {</span><br><span class="line">        items.push(k);</span><br><span class="line">    }</span><br><span class="line">    <span class="keyword">return</span> items.length;</span><br><span class="line">}</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&apos;sync 1&apos;</span>, addItems()); <span class="comment">// 2</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&apos;sync 2&apos;</span>, addItems()); <span class="comment">// 3</span></span><br></pre></td></tr></table></figure>
+<pre><code><span class="comment">// prints</span>
+sync <span class="number">1</span> <span class="number">100</span>
+sync <span class="number">2</span> <span class="number">100</span>
+</code></pre><p>Call to <em>addItems // 2</em> clears the items array (<em>// 1</em>),
+then adds each item.
+Second call <em>addItems // 3</em> waits
+until the <em>addItems</em> finishes, then starts. <em>items</em> is initialized
+outside <em>addItem</em> but that poses no threat.
+Nodejs is good
+with module&apos;s default scope, so for all purposes the variable
+<em>items</em> is local.</p>
+<p><strong>Second:</strong> lets simulate event-driven processing by adding
+each item via scheduling code to run later. This is closer to
+<em>normal</em> asynchronous event processing common to an http
+server responding to requests for example.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> items;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">addItems</span>(<span class="params"></span>) </span>{</span><br><span class="line">    items = []; <span class="comment">// 1</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">j</span>) </span>{</span><br><span class="line">        items.push(j);</span><br><span class="line">        <span class="keyword">if</span> (j === n - <span class="number">1</span>) {</span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">&apos;async&apos;</span>, items.length); <span class="comment">// 2</span></span><br><span class="line">        }</span><br><span class="line">    }</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> k = <span class="number">0</span>; k &lt; n; k += <span class="number">1</span>) {</span><br><span class="line">        process.nextTick(add.bind(<span class="literal">null</span>, k)); <span class="comment">// 3</span></span><br><span class="line">    }</span><br><span class="line">}</span><br><span class="line">addItems(); <span class="comment">// 4</span></span><br><span class="line">addItems(); <span class="comment">// 5</span></span><br></pre></td></tr></table></figure>
+<pre><code><span class="comment">// prints</span>
+async <span class="number">100</span>
+async <span class="number">200</span>
+</code></pre><p>The output is unexpected, the second result is wrong! Did it not
+initialize the <em>items</em> array properly? Yes it did, but the
+execution order here is not what you would expect. Instead it goes
+something like this:</p>
+<ul>
+<li>variable <em>items</em> is created in the first line</li>
+<li>first call to <em>addItems // 4</em> executes</li>
+<li><em>items</em> is set to empty array in <em>// 1</em></li>
+<li><em>add(0)</em> code block is placed onto the event queue by <em>// 3</em></li>
+<li><em>add(1)</em> code block is placed onto the event queue by <em>// 3</em><ul>
+<li>same for <em>add(2), ..., add(99)</em></li>
+</ul>
+</li>
+<li>The for loop completes. The current stack continues to run!
+It exits <em>addItems</em> and get to next <em>addItems //5</em></li>
+<li><em>items</em> (still empty) is set to empty array again in <em>// 1</em></li>
+<li>Another 100 calls to <em>add</em> are placed on the event queue,
+making 200 code blocks there.</li>
+<li><em>addItems</em> returns and the main block exits</li>
+<li>first 100 <em>add</em> code blocks execute before printing
+first <em>items.length</em> in <em>// 2</em></li>
+<li>second 100 <em>add</em> code blocks execute</li>
+<li>unexpected 200 is printed in <em>// 2</em> because there was no <em>items</em>
+reset.</li>
+</ul>
+<p><strong>Fix:</strong> make <em>items</em> variable private to each execution:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">addItems</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> items = []; <span class="comment">// 1</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">j</span>) </span>{</span><br><span class="line">        items.push(j);</span><br><span class="line">        <span class="keyword">if</span> (j === n - <span class="number">1</span>) {</span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">&apos;async&apos;</span>, items.length); <span class="comment">// 2</span></span><br><span class="line">        }</span><br><span class="line">    }</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> k = <span class="number">0</span>; k &lt; n; k += <span class="number">1</span>) {</span><br><span class="line">        process.nextTick(add.bind(<span class="literal">null</span>, k)); <span class="comment">// 3</span></span><br><span class="line">    }</span><br><span class="line">}</span><br><span class="line">addItems(); <span class="comment">// 4</span></span><br><span class="line">addItems(); <span class="comment">// 5</span></span><br></pre></td></tr></table></figure>
+<pre><code>async <span class="number">100</span>
+async <span class="number">100</span>  <span class="comment">// excellent!</span>
+</code></pre><p>By making <em>items</em> in <em>// 1</em> private to <em>addItems</em> we create
+separate copy for each call of <em>addItems</em>. First 100 calls
+to <em>add</em> thus are bound to first copy, while the second 100
+are bound to the second copy.</p>
+<p><strong>Third:</strong> lets write async code using promises</p>
+<p>I use my favorite <a href="https://npmjs.org/package/q" target="_blank" rel="external">Q</a> library,
+but feel free to use any implementation.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> items;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">addItems</span>(<span class="params"></span>) </span>{</span><br><span class="line">    items = []; <span class="comment">// 1</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">j</span>) </span>{</span><br><span class="line">        items.push(j);</span><br><span class="line">        <span class="keyword">return</span> items.length; <span class="comment">// 2</span></span><br><span class="line">    }</span><br><span class="line">    <span class="keyword">var</span> chain = Q();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> k = <span class="number">0</span>; k &lt; n; k += <span class="number">1</span>) {</span><br><span class="line">        chain = chain.then(add.bind(<span class="literal">null</span>, k)); <span class="comment">// 3</span></span><br><span class="line">    }</span><br><span class="line">    <span class="keyword">return</span> chain;</span><br><span class="line">}</span><br><span class="line">addItems().then(<span class="built_in">console</span>.log); <span class="comment">// 4</span></span><br><span class="line">addItems().then(<span class="built_in">console</span>.log); <span class="comment">// 5</span></span><br></pre></td></tr></table></figure>
+<pre><code><span class="comment">// prints</span>
+<span class="number">199</span>
+<span class="number">200</span>
+</code></pre><p>Now this result is even weirder than <strong>async</strong> example!</p>
+<p>Here is what happens:</p>
+<blockquote>
+<p>The two promise chains take turns, each executing one link at
+a time and then scheduling next link onto the event queue.
+Classic concurrency, except each code block cannot be preempted
+in the middle by design.</p>
+</blockquote>
+<ul>
+<li>a chain of 100 promises is constructed by <em>addItems()</em> in <em>// 4</em><ul>
+<li>the first link is placed onto the event queue</li>
+<li>the last link will return the length of <em>items</em> array</li>
+</ul>
+</li>
+<li>a chain of 100 promises is constructed by <em>addItems()</em> in <em>// 5</em><ul>
+<li>the first link is placed onto the event queue</li>
+<li>the last link will return the length of <em>items</em> array</li>
+</ul>
+</li>
+<li>the chain does not start execution until the current
+execution stack exits</li>
+<li>first link of the first chain executes, then adds second link
+of the first chain to the even queue. Then it exits.</li>
+<li>first link of the second chain executes, adding its second
+link to the event queue.</li>
+<li>second link of the first chain executes, etc.</li>
+<li>last link (number 100) of the first chain executes. By this
+time 99 links of the second chain have finished, adding the
+extra 99 items to the array. Thus first <em>console.log</em> prints 199.</li>
+<li>last link of the second chain finishes, printing 200.</li>
+</ul>
+<p>The solution again is to move the <em>items</em> variable into the <em>addItems</em>
+function, making two separate copies for two promise chains.</p>
+<h2 id="conclusion">Conclusion</h2><p>Nodejs makes event-driven programming so easy, that sometimes
+it hides its turn by turn event queue nature. When starting with sync
+code, and then changing to async (using promises for example),
+it is easy to overlook the changed access order to shared data.</p>
+<p>My advice to avoid running into this problem is too keep data
+in as small of scope as possible, minimizing chances that
+separate interior code blocks having access are going to
+run out of expected order.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/concurrency-can-bite-you-even-in-node/" data-id="cihtr6waf00rel3urp54f517m" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/concurrency-can-bite-you-even-in-node/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/concurrency/">concurrency</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/promises/">promises</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../high-mpg-unit-tests/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          High MPG Unit Tests
+        
+      </div>
+    </a>
+  
+  
+    <a href="../large-projects-are-never-finished/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Large projects are never finished</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/concurrency-can-bite-you-even-in-node/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

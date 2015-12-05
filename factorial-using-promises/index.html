@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Factorial using promises | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Here is my typical multi-part interview question.
+Compute factorial of N using recursionAll I am looking for is simple code like this
+123456function factorial(n) {  if (n === 1) {    return 1;  }  ret">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Factorial using promises">
+<meta property="og:url" content="http://glebbahmutov.com/blog/factorial-using-promises/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Here is my typical multi-part interview question.
+Compute factorial of N using recursionAll I am looking for is simple code like this
+123456function factorial(n) {  if (n === 1) {    return 1;  }  ret">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Factorial using promises">
+<meta name="twitter:description" content="Here is my typical multi-part interview question.
+Compute factorial of N using recursionAll I am looking for is simple code like this
+123456function factorial(n) {  if (n === 1) {    return 1;  }  ret">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-factorial-using-promises" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-02-13T01:00:00.000Z" itemprop="datePublished">Feb 12 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Factorial using promises
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Iterative, recursive, promise-returning factorial interview question.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Here is my typical multi-part interview question.</p>
+<h2 id="compute-factorial-of-n-using-recursion">Compute factorial of N using recursion</h2><p>All I am looking for is simple code like this</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">factorial</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (n === <span class="number">1</span>) {</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> n * factorial(n - <span class="number">1</span>);</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<h2 id="can-you-verify-this-code-computes-the-correct-factorial">Can you verify this code computes the correct factorial?</h2><p>I am looking for something quick and dirty</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.assert(factorial(<span class="number">1</span>) === <span class="number">1</span>, <span class="string">&apos;1!&apos;</span>);</span><br><span class="line"><span class="built_in">console</span>.assert(factorial(<span class="number">2</span>) === <span class="number">2</span>, <span class="string">&apos;2!&apos;</span>);</span><br><span class="line"><span class="built_in">console</span>.assert(factorial(<span class="number">3</span>) === <span class="number">6</span>, <span class="string">&apos;3!&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>If a person writes actual QUnit / Mocha / anything unit tests that is a plus.</p>
+<h2 id="can-you-find-the-largest-n-the-system-can-compute-factorial-for">Can you find the largest N the system can compute factorial for?</h2><p>I am looking for the value of N where the max size of the stack is exhausted.
+The candidate should know that when using recursion the previous call remains on the stack,
+so computing factorial of 5 means there are five calls at once at some point</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">factorial(<span class="number">5</span>) {</span><br><span class="line">    <span class="keyword">return</span> <span class="number">5</span> * factorial(<span class="number">4</span>) {</span><br><span class="line">        <span class="keyword">return</span> <span class="number">4</span> * factorial (<span class="number">3</span>) {</span><br><span class="line">            <span class="keyword">return</span> <span class="number">3</span> * factorial (<span class="number">2</span>) {</span><br><span class="line">                <span class="keyword">return</span> <span class="number">2</span> * factorial (<span class="number">1</span>) {</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">                }</span><br><span class="line">            }</span><br><span class="line">        }</span><br><span class="line">    }</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>The candidate should try different values of N, probably starting with 1000, 10k, 100k, etc.
+On my machine, the stack is exhausted for n = 100k.</p>
+<h2 id="can-you-write-factorial-using-iteration">Can you write factorial using iteration?</h2><p>Change code to a loop, and I am looking for the candidate to reuse the unit tests from before.</p>
+<h2 id="can-you-write-asynchronous-version-of-factorial-function-using-promises">Can you write asynchronous version of factorial function using promises?</h2><p>I am looking for recursive (simpler) version of the code, something like this using Q library</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">factorial</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (n === <span class="number">1</span>) {</span><br><span class="line">    <span class="keyword">return</span> Q(<span class="number">1</span>);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> factorial(n - <span class="number">1</span>).then(<span class="function"><span class="keyword">function</span> (<span class="params">nMinus1Factorial</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> n * nMinus1Factorial;</span><br><span class="line">  });</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<h2 id="can-you-write-unit-tests-for-your-asynchronous-factorial">Can you write unit tests for your asynchronous factorial?</h2><p>I am looking for something like this, quick and dirty, but the candidate should know how
+to handle the error.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">factorial(<span class="number">5</span>).then(<span class="function"><span class="keyword">function</span> (<span class="params">result</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(result === <span class="number">120</span>);</span><br><span class="line">}).catch(<span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>{ </span><br><span class="line">    <span class="built_in">console</span>.error(<span class="string">&apos;invalid 5!&apos;</span>);</span><br><span class="line">});</span><br><span class="line"><span class="comment">// OR</span></span><br><span class="line">factorial(<span class="number">5</span>).then(<span class="function"><span class="keyword">function</span> (<span class="params">result</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(result === <span class="number">120</span>);</span><br><span class="line">}).done();</span><br></pre></td></tr></table></figure>
+<h2 id="can-you-test-multiple-numbers-for-example-1-2-3-at-once">Can you test multiple numbers, for example [1, 2, 3] at once?</h2><p>I am looking for the candidate to know how to execute multiple promises in parallel. Q, Bluebird and $q
+libraries have this feature</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Q.all([</span><br><span class="line">  factorial(<span class="number">1</span>),</span><br><span class="line">  factorial(<span class="number">2</span>),</span><br><span class="line">  factorial(<span class="number">3</span>)</span><br><span class="line">]).then(<span class="function"><span class="keyword">function</span> (<span class="params">results</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(results[<span class="number">0</span>] === <span class="number">1</span>, results);</span><br><span class="line">  <span class="built_in">console</span>.assert(results[<span class="number">1</span>] === <span class="number">2</span>, results);</span><br><span class="line">  <span class="built_in">console</span>.assert(results[<span class="number">2</span>] === <span class="number">6</span>, results);</span><br><span class="line">})</span><br><span class="line">.finally(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;all done&apos;</span>);</span><br><span class="line">})</span><br><span class="line">.done();</span><br></pre></td></tr></table></figure>
+<h2 id="does-the-recursive-async-version-crash-for-large-n">Does the recursive async version crash for large N?</h2><p>Yes, the candidate should just try running the same large N found earlier against the promise-returning factorial.</p>
+<h2 id="advanced-rewrite-async-factorial-to-avoid-stack-exhaustion">Advanced: rewrite async factorial to avoid stack exhaustion</h2><p>I am looking for understanding the different between
+creating a chain of promises and executing a function. A simple solution is to build the chain
+first without using recursion and then execute it.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">factorial</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> start = Q(n);</span><br><span class="line">  <span class="keyword">while</span> (n -= <span class="number">1</span>) {</span><br><span class="line">    start = start.then(<span class="function"><span class="keyword">function</span> (<span class="params">n, value</span>) </span>{</span><br><span class="line">      <span class="keyword">return</span> value * n;</span><br><span class="line">    }.bind(<span class="literal">null</span>, n));</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> start;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>Notice there is no call to <code>factorial</code> anywhere inside this code. The only detail is binding the value of <code>n</code>
+when creating the <code>then</code> callback function.</p>
+<p>This function can &quot;compute&quot; factorial for n = 100k. I am putting the word <em>compute</em> in quotes because the actual
+value quickly reaches <code>Infinity</code>.  But the stack is never exhausted!</p>
+<h2 id="advanced-write-async-factorial-using-native-es6-promises">Advanced: write async factorial using native ES6 promises</h2><p>Native promises are <a href="http://kangax.github.io/compat-table/es6/#generators" target="_blank" rel="external">already in V8</a>
+and the syntax is very simple. To avoid using Q when building promise chain one can write</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">valuePromise</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> (<span class="params">resolve</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> resolve(n);</span><br><span class="line">  });</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">factorial</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> start = valuePromise(n);</span><br><span class="line">  <span class="keyword">while</span> (n -= <span class="number">1</span>) {</span><br><span class="line">    start = start.then(<span class="function"><span class="keyword">function</span> (<span class="params">n, value</span>) </span>{</span><br><span class="line">      <span class="comment">// console.log(&apos;n&apos;, n, &apos;value&apos;, value)</span></span><br><span class="line">      <span class="keyword">return</span> value * n;</span><br><span class="line">    }.bind(<span class="literal">null</span>, n));</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> start;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<h2 id="advanced-write-tail-call-optimized-version-of-recursive-sync-function">Advanced: write tail call optimized version of recursive sync function</h2><p>If the candidate is familiar with the tail call optimization, he / she could write the ES6 version
+and show the <a href="http://6to5.org/docs/learn-es6/#tail-calls" target="_blank" rel="external">6to5</a> transpiler transforming recursive code to the imperative one.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">factorial</span>(<span class="params">n, acc = 1</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (n &lt;= <span class="number">1</span>) <span class="keyword">return</span> acc;</span><br><span class="line">  <span class="keyword">return</span> factorial(n - <span class="number">1</span>, acc * n);</span><br><span class="line">}</span><br><span class="line"><span class="built_in">console</span>.assert(factorial(<span class="number">1</span>) === <span class="number">1</span>, <span class="string">&apos;1!&apos;</span>);</span><br><span class="line"><span class="built_in">console</span>.assert(factorial(<span class="number">2</span>) === <span class="number">2</span>, <span class="string">&apos;2!&apos;</span>);</span><br><span class="line"><span class="built_in">console</span>.assert(factorial(<span class="number">3</span>) === <span class="number">6</span>, <span class="string">&apos;3!&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>Notice the accumulator parameter that replaced <code>n * factorial(n - 1)</code> expression. The recursive call
+is by itself at the <em>tail</em> of the function.</p>
+<h2 id="advanced-write-factorial-using-generators">Advanced: write factorial using generators</h2><p>Generators exit the function AND keep the internal state after each <code>yield</code>. Thus we can keep multiplying
+the number without growing the stack.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">Factorial</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> n = <span class="number">1</span>, total = <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">while</span> (<span class="literal">true</span>) {</span><br><span class="line">    total = total * n++;</span><br><span class="line">    <span class="keyword">yield</span> total;</span><br><span class="line">  };</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">factorial</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> f = Factorial(), k, nf;</span><br><span class="line">  <span class="keyword">for</span> (k = <span class="number">0</span>; k &lt; n; k += <span class="number">1</span>) {</span><br><span class="line">    nf = f.next().value;</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> nf;</span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<h2 id="how-to-prepare-for-these-interviews">How to prepare for these interviews?</h2><ul>
+<li>Read a few of my favorite <a href="../javascript-books/">JavaScript books</a>. </li>
+<li>Read my other blog posts.</li>
+<li>Follow me on twitter <a href="https://twitter.com/bahmutov" target="_blank" rel="external">@bahmutov</a></li>
+<li>Read about upcoming <a href="https://github.com/lukehoban/es6features" target="_blank" rel="external">ES6 features</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/factorial-using-promises/" data-id="cihtr6w8100nvl3urelxiuvuc" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/factorial-using-promises/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/es6/">es6</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/interview/">interview</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/promises/">promises</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../performance-of-v8-generators-vs-promises/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Performance of v8 generators vs promises
+        
+      </div>
+    </a>
+  
+  
+    <a href="../angularjs2-intro/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">AngularJS 2 intro</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/factorial-using-promises/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

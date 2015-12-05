@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Measuring semver adherence | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Semantic versioning replaces a single software version with a major.minor.patch triple.
+
+major is incremented when there are API breaking changes
+minor is incremented when a new feature is added witho">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Measuring semver adherence">
+<meta property="og:url" content="http://glebbahmutov.com/blog/measuring-semver-adherence/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Semantic versioning replaces a single software version with a major.minor.patch triple.
+
+major is incremented when there are API breaking changes
+minor is incremented when a new feature is added witho">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/next-update-table.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/next-update-pairs.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/check-types-semver-adherence.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Measuring semver adherence">
+<meta name="twitter:description" content="Semantic versioning replaces a single software version with a major.minor.patch triple.
+
+major is incremented when there are API breaking changes
+minor is incremented when a new feature is added witho">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-measuring-semver-adherence" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2014-11-23T01:00:00.000Z" itemprop="datePublished">Nov 22 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Measuring semver adherence
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Measuring how close a library follows semver semantics when publishing new releases.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="(http://semver.org/)">Semantic versioning</a> replaces a single software version with a <em>major.minor.patch</em> triple.</p>
+<ul>
+<li><strong>major</strong> is incremented when there are API breaking changes</li>
+<li><strong>minor</strong> is incremented when a new feature is added without breaking existing API users</li>
+<li><strong>patch</strong> is a bug fix</li>
+</ul>
+<p>If we think about a library&apos;s user, semver means</p>
+<ul>
+<li><strong>major</strong> - possible API break, we cannot upgrade without changing our code.</li>
+<li><strong>minor</strong> - there is new feature in the package, but my stuff should still work.</li>
+<li><strong>patch</strong> - there is a bug fix, the API stays the same, my code should work without changes.</li>
+</ul>
+<p>There is an excellent <a href="https://nodesource.com/blog/semver-a-primer" target="_blank" rel="external">introduction to semver</a> that you should read.</p>
+<p>This implicit contract is not enforceable - the library&apos;s author increments the numbers.
+Different developers approach the problem with different attitudes. For example, 
+<a href="http://underscorejs.org/" target="_blank" rel="external">underscore</a> 
+does NOT follow semantic versioning, while its fork <a href="https://lodash.com/" target="_blank" rel="external">lodash</a>
+does. There is a <a href="https://github.com/jashkenas/underscore/issues/1684" target="_blank" rel="external">long argument</a> 
+between the two developer camps. In essense, I agree that</p>
+<ul>
+<li>Following semver is a good thing.</li>
+<li>It shows long range planning and caring about your users.</li>
+</ul>
+<p>Unfortunately, <a href="http://npmbynumbers.bocoup.com/breakdown/versions" target="_blank" rel="external">great majority</a> of public modules on NPM registry either do not follow semver,
+or still have major version <code>0</code>, meaning API can be broken at any time.</p>
+<p>If I am looking for a 3rd party library on <a href="https://www.npmjs.org/" target="_blank" rel="external">NPM registry</a> and I see several choices,
+a library that follows semver is more appealing to me.</p>
+<h2 id="testing-each-version-before-updating">Testing each version before updating</h2><p>How can I tell if a library <em>really</em> follows semver and not just claims to do so?
+The only way I see is for every user of the library is to test if it works with different versions
+of the library in isolation. Run a project with version <code>x.y.z</code>, then install and run the project
+with <code>x.y.z+1</code>. If your project works without problems, then this particular patch increment
+follows semver principles. Perform the same over all patch and minor releases, and if nothing
+breaks - then library adheres to the semver closely.</p>
+<p>I have already released a tool to make testing a project against different versions of any dependency
+a snap - <a href="https://github.com/bahmutov/next-update" target="_blank" rel="external">next-update</a>. It works for NPM and bower modules
+by installing each available version of every dependency and running your project&apos;s unit tests.
+For example, if my project declared the following dependencies</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&quot;dependencies&quot;: {</span><br><span class="line">    &quot;lodash&quot;: &quot;~1.2.0&quot;,</span><br><span class="line">    &quot;async&quot;: &quot;~0.2.5&quot;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>and lodash and async release new versions, next-update can test each release to see if it breaks your unit tests</p>
+<pre><code>next updates:
+lodash
+    <span class="number">1.2</span><span class="number">.1</span> PASS
+async
+    <span class="number">0.2</span><span class="number">.6</span> PASS
+    <span class="number">0.2</span><span class="number">.7</span> PASS
+    <span class="number">0.2</span><span class="number">.8</span> PASS
+</code></pre><p>Finally, next-update tells you which dependencies can be installed safely</p>
+<pre><code>npm install --save lodash@<span class="number">2.1</span><span class="number">.0</span> async@<span class="number">0.2</span><span class="number">.8</span>
+</code></pre><h2 id="example">Example</h2><p>Let us write a simple program that uses first public release of lodash@0.1.0</p>
+<figure class="highlight js"><figcaption><span>index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> _ = <span class="built_in">require</span>(<span class="string">&apos;lodash&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> result = _.difference([<span class="string">&apos;foo&apos;</span>, <span class="string">&apos;bar&apos;</span>], [<span class="string">&apos;foo&apos;</span>]);</span><br><span class="line"><span class="comment">// [&apos;bar&apos;]</span></span><br><span class="line"><span class="built_in">console</span>.assert(_.isEqual(result, [<span class="string">&apos;bar&apos;</span>]));</span><br></pre></td></tr></table></figure>
+<p>Our test command will be <code>node index.js</code>. We can check every available version of lodash against this program</p>
+<pre><code>next-update --latest <span class="literal">false</span> <span class="comment">// check every version, not just latest</span>
+next updates:
+lodash <span class="number">0.2</span><span class="number">.0</span>, <span class="number">0.2</span><span class="number">.1</span>, ..., <span class="number">2.4</span><span class="number">.0</span>, <span class="number">2.4</span><span class="number">.1</span>
+Use the following command to install working versions
+npm install --save lodash@<span class="number">2.4</span><span class="number">.1</span>
+</code></pre><p>So both <code>_.difference</code> and <code>_.isEqual</code> work for this particular test case across all lodash versions.</p>
+<p>What if we write another small program using a feature available in lodash@0.1.0?</p>
+<figure class="highlight js"><figcaption><span>index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> _ = <span class="built_in">require</span>(<span class="string">&apos;lodash&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> result = _.intersect([<span class="string">&apos;foo&apos;</span>, <span class="string">&apos;bar&apos;</span>], [<span class="string">&apos;foo&apos;</span>]);</span><br><span class="line"><span class="comment">// [&apos;foo&apos;]</span></span><br><span class="line"><span class="built_in">console</span>.assert(_.isEqual(result, [<span class="string">&apos;foo&apos;</span>]));</span><br></pre></td></tr></table></figure>
+<p>We run the same <code>next-update</code> command but get a very different result</p>
+<pre><code>next-update --latest <span class="literal">false</span>
+testing lodash@<span class="number">0</span>.<span class="number">2</span>.<span class="number">0</span>
+lodash@<span class="number">0</span>.<span class="number">2</span>.<span class="number">0</span> works
+testing lodash@<span class="number">0</span>.<span class="number">2</span>.<span class="number">1</span>
+npm test returned <span class="number">1</span>
+test errors:
+/index.js:<span class="number">2</span>
+<span class="keyword">var</span> <span class="literal">result</span> = _.intersect([&apos;foo&apos;, &apos;bar&apos;], [&apos;foo&apos;]);
+<span class="type">TypeError</span>: <span class="type">Object</span> function lodash(value) {
+    // allow invoking `lodash` <span class="keyword">without</span> the `new` operator
+    <span class="keyword">return</span> new <span class="type">LoDash</span>(value);
+  } has no <span class="keyword">method</span> &apos;intersect&apos;
+</code></pre><p><a href="https://github.com/lodash/lodash/wiki/Changelog#v021" target="_blank" rel="external">lodash@0.2.1</a> removed <code>_.intersect</code> alias to
+<code>_.intersection</code> method, thus my second example can upgrade to lodash@0.2.0 but nothing after that.
+If we use the original method <code>_.intersection</code> then all versions of lodash work fine.</p>
+<p>This small example shows that even when the library&apos;s author tries to follow semver very closely,
+small mistakes can crop up (removing an existing public method in a patch release is an API-breaking change).</p>
+<h2 id="collecting-test-data-across-all-users">Collecting test data across all users</h2><p>While testing your project over and over against different dependencies, next-update sends anonymous statistics
+to my server application running on heroku. Only thedependency name, the <em>from</em> and <em>to</em> version 
+and the test result are sent.</p>
+<p>For example if your project already uses lodash@0.1.2 and next-update successfully tested lodash@1.2.1, 
+then it will send</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">    &quot;<span class="attribute">name</span>&quot;: <span class="value"><span class="string">&quot;lodash&quot;</span></span><br><span class="line">    <span class="string">&quot;from&quot;</span>: <span class="string">&quot;1.2.0&quot;</span></span>,</span><br><span class="line">    &quot;<span class="attribute">to</span>&quot;: <span class="value"><span class="string">&quot;1.2.1&quot;</span></span>,</span><br><span class="line">    &quot;<span class="attribute">status</span>&quot;: <span class="value"><span class="literal">true</span></span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<p>You project might use only a small set of features from lodash@1.2.0, but taken across multiple users, you can get
+a more complete data for lodash@1.2.0 vs lodash@1.2.1 (you can see this data at 
+<a href="http://next-update.herokuapp.com/" target="_blank" rel="external">http://next-update.herokuapp.com/</a>). 
+If all or almost all projects dependent on the lodash  successfully upgrade, then lodash follows semver at 1.2.1.
+Integrate this information across every minor and patch release and you can see how well it adheres to semver 
+in general.</p>
+<h2 id="computing-semver-adherence">Computing semver adherence</h2><p>If we take every update success status for a particular library together, we get an upper diagonal matrix,
+as shown below for <a href="https://github.com/philbooth/check-types.js" target="_blank" rel="external">check-types.js</a>.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/next-update-table.png" alt="next update table"></p>
+<p>Each table row reflects the same starting version. Every column shows success when upgrading from the starting
+version to this particular version. The bottom triangle of cells is empty, because we do not test
+downgrading libraries.</p>
+<p>Not every cell is filled, because no one has upgraded this particular combination of from / to versions.
+As more people use <code>next-update</code>, the table should fill up and show a more complete picture.</p>
+<p>What if we take only the upgrade statistics for each immediately successful pair of versions? 
+For example, if we consider only pairs <code>0.2.0</code> to <code>0.2.1</code>, <code>0.2.1</code> to <code>0.2.2</code>, <code>0.3.1</code> to <code>0.4.0</code>, etc? 
+The update success information about every pair of releases might not be available yet, 
+so let us only consider the pairs with existing information. We get the following numbers, highlighted in red</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/next-update-pairs.png" alt="next update pairs"></p>
+<p>In this case, let us look at the numbers plus the type of the change signalled by the semver triple</p>
+<pre><code>type      from     to      successful %
+patch     <span class="number">0.2</span><span class="number">.0</span>   <span class="number">0.2</span><span class="number">.1</span>        <span class="number">100</span>
+patch     <span class="number">0.4</span><span class="number">.0</span>   <span class="number">0.4</span><span class="number">.1</span>        <span class="number">100</span>
+patch     <span class="number">0.6</span><span class="number">.0</span>   <span class="number">0.6</span><span class="number">.1</span>        <span class="number">100</span> 
+patch     <span class="number">0.6</span><span class="number">.4</span>   <span class="number">0.6</span><span class="number">.5</span>        <span class="number">100</span>
+minor     <span class="number">0.6</span><span class="number">.5</span>   <span class="number">0.7</span><span class="number">.0</span>        <span class="number">100</span>
+major     <span class="number">0.8</span><span class="number">.1</span>   <span class="number">1.0</span><span class="number">.0</span>          <span class="number">0</span>
+minor     <span class="number">1.0</span><span class="number">.0</span>   <span class="number">1.1</span><span class="number">.0</span>        <span class="number">100</span>
+patch     <span class="number">1.1</span><span class="number">.0</span>   <span class="number">1.1</span><span class="number">.1</span>         <span class="number">94</span>
+minor     <span class="number">1.1</span><span class="number">.1</span>   <span class="number">1.2</span><span class="number">.0</span>        <span class="number">100</span>
+patch     <span class="number">1.2</span><span class="number">.0</span>   <span class="number">1.2</span><span class="number">.1</span>        <span class="number">100</span>
+minor     <span class="number">1.2</span><span class="number">.1</span>   <span class="number">1.3</span><span class="number">.0</span>        <span class="number">100</span>
+patch     <span class="number">1.3</span><span class="number">.0</span>   <span class="number">1.3</span><span class="number">.1</span>        <span class="number">100</span>
+patch     <span class="number">1.3</span><span class="number">.1</span>   <span class="number">1.3</span><span class="number">.2</span>        <span class="number">100</span>
+minor     <span class="number">1.3</span><span class="number">.2</span>   <span class="number">1.4</span><span class="number">.0</span>        <span class="number">100</span>
+</code></pre><p>check-types.js adheres to semver principles very closely. It never broke its users when upgrading its minor or
+patch numbers, aside from 6% during patch upgrade from <code>1.1.0</code> to <code>1.1.1</code>. All dependent projects were broken
+when the library released the new major version 1.0.0, but this is allowed by the semver principles.</p>
+<p>We can take average number of successful pair updates from the above table, but I think this unnecessarily penalizes
+projects that have not stabilized until later versions. 
+Instead I prefer to chart this information using <a href="http://www.highcharts.com/" target="_blank" rel="external">highcharts</a> to preserve the historical trend.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/check-types-semver-adherence.png" alt="check-types semver"></p>
+<p>This shows how small the quality dip was in <code>1.1.1</code> patch release.</p>
+<p>You can grab the original data for each library from next-update-stats API endpoint</p>
+<pre><code>http://next-<span class="operator"><span class="keyword">update</span>.herokuapp.com/<span class="keyword">package</span>/&lt;<span class="keyword">name</span>&gt;</span>
+</code></pre><h2 id="conclusion">Conclusion</h2><p>Following the semver principles makes upgrading a library predictable. This project uses anonymous
+upgrade stats to compute a full historical picture of a module, helping other developers decide if the
+library is reliable.</p>
+<h2 id="related">Related</h2><ul>
+<li><a href="../do-not-break-dependant-modules/">dont-break</a></li>
+</ul>
+<h2 id="update">Update</h2><p>A comment below brought to my attention the unfairness of punishing lodash for breaking its public API
+below <code>1.0.0</code> release. While I agree that this is one of the semantic version principles as listed
+at <a href="(http://semver.org/)">semver.org</a>, I strongly disagree with this principle in practice. A lot of very important tools
+in NPM ecosystem never reach &quot;stable&quot; <code>1.0.0</code> release. Think <a href="http://gruntjs.com/" target="_blank" rel="external">grunt</a> (the current stable release
+has version 0.4.5) or even Node itself (0.10.x). With this in mind, I think the boundary between
+the development period (&lt; 1.0.0) and stable support (&gt;= 1.0.0) is arbitrary. I would rather see
+every package start with version of API tagged <code>1.0.0</code> and reach <code>100.*.*</code>!</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/measuring-semver-adherence/" data-id="cihtr6w4400hsl3urtox6x5mc" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/measuring-semver-adherence/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/advice/">advice</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/modular-development/">modular development</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/">nodejs</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../my-story-presentations/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          My story presentations
+        
+      </div>
+    </a>
+  
+  
+    <a href="../immutable-javascript-example/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Immutable JavaScript example</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/measuring-semver-adherence/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Do not break dependant modules. | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="I strongly advocate splitting large applications into smaller modules.
+Each module can be understood, coded and tested thoroughly much easier if taken in isolation.
+Check dependencies (pull)Each modul">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Do not break dependant modules.">
+<meta property="og:url" content="http://glebbahmutov.com/blog/do-not-break-dependant-modules/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="I strongly advocate splitting large applications into smaller modules.
+Each module can be understood, coded and tested thoroughly much easier if taken in isolation.
+Check dependencies (pull)Each modul">
+<meta property="og:image" content="https://david-dm.org/gruntjs/grunt.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Do not break dependant modules.">
+<meta name="twitter:description" content="I strongly advocate splitting large applications into smaller modules.
+Each module can be understood, coded and tested thoroughly much easier if taken in isolation.
+Check dependencies (pull)Each modul">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-do-not-break-dependant-modules" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2014-11-01T04:00:00.000Z" itemprop="datePublished">Nov 1 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Do not break dependant modules.
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Check if your current module breaks other modules before publishing.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>I strongly advocate splitting large applications into smaller modules.
+Each module can be understood, coded and tested thoroughly much easier if taken in isolation.</p>
+<h2 id="check-dependencies-pull">Check dependencies (pull)</h2><p>Each module lists its dependencies using version numbers. I suggest using strict versions
+without any fuzzy ranges.</p>
+<pre><code><span class="string">&quot;dependencies&quot;</span>: {
+    <span class="string">&quot;foo&quot;</span>: <span class="string">&quot;0.2.1&quot;</span>, <span class="comment">// good</span>
+    <span class="string">&quot;bar&quot;</span>: <span class="string">&quot;0.*&quot;</span> <span class="comment">// bad</span>
+}
+</code></pre><p>You can use <a href="https://www.npmjs.org/doc/cli/npm-shrinkwrap.html" target="_blank" rel="external">npm shrinkwrap</a> 
+command to lock down used dependency versions, or 
+<a href="https://github.com/bahmutov/grunt-nice-package" target="_blank" rel="external">grunt-nice-package</a> to enforce strict version strings.</p>
+<p>When your module depends on a set of other modules, it will constantly fall behind.
+The dependencies will release new versions, but your module still depends on old versions. 
+You can add a dependency up to date badge from <a href="https://david-dm.org/" target="_blank" rel="external">David service</a> to remind yourself
+when your package falls behind minor or major releases.</p>
+<p>Grunt dependencies status <a href="https://david-dm.org/gruntjs/grunt" target="_blank" rel="external"><img src="https://david-dm.org/gruntjs/grunt.png" alt="grunt dependencies"> </a></p>
+<p>If you trust the published <a href="http://semver.org/" target="_blank" rel="external">semver</a> numbers, you should be able to use
+new minor and patch releases right away. Only major releases with API breaking changes are dangerous.
+Yet in practice, this is never 100% reliable. Some projects do not adhere to semantic versions, incrementing
+version numbers at will. Other projects do not test enough, breaking your features accidentally during 
+patch releases.</p>
+<p>I wrote <a href="https://github.com/bahmutov/next-update" target="_blank" rel="external">next-update</a> to make upgrading 3rd party
+dependencies an extremely simple operation. Instead of incrementing all versions manually and running
+tests to see if any upgrade breaks your project, just run <code>next-update</code> in your project&apos;s folder.
+Next-update installs each new release of 3rd party dependency separately, runs your unit tests then
+reports all successful and failed dependencies. </p>
+<pre><code><span class="comment">// in your project foo</span>
+$ next-update
+next updates:
+lodash
+    <span class="number">1.2</span><span class="number">.1</span> PASS
+async
+    <span class="number">0.2</span><span class="number">.7</span> PASS
+    <span class="number">0.2</span><span class="number">.8</span> PASS
+bar
+    <span class="number">1.0</span><span class="number">.1</span> FAIL
+install updates command: npm install --save lodash@<span class="number">1.2</span><span class="number">.1</span> async@<span class="number">0.2</span><span class="number">.8</span>
+</code></pre><p>You can now keep the successful updates and think how to upgrade the libraries that have breaking changes.</p>
+<h2 id="check-dependants-before-publish">Check dependants (before publish)</h2><p>Let us think about the reverse situation: there are projects that depend on your module.
+When working on new release, before you actually publish it, wouldn&apos;t it be nice if you could check
+if any dependants would not be able to upgrade right away? 
+There is an <a href="https://github.com/npm/npm/issues/6510" target="_blank" rel="external">open issue on NPM repo</a>
+about this feature. Most people think it should be a separate tool or service. I wrote CLI tool
+to do this: <a href="https://github.com/bahmutov/dont-break" target="_blank" rel="external">dont-break</a>. Here is how works using an example.</p>
+<p>Example: checking if new release of <a href="https://github.com/lodash/lodash" target="_blank" rel="external">lodash</a> 
+would break <a href="https://github.com/kensho/check-more-types" target="_blank" rel="external">check-more-types</a>.</p>
+<h3 id="step-1-try-current-latest-version-of-lodash">step 1 - try current latest version of lodash</h3><p>Clone lodash, change into its folder and create <code>.dont-break</code> file. Place published module&apos;s name
+to be checked</p>
+<pre><code>// file .dont-<span class="built_in">break</span>
+check-<span class="built_in">more</span>-types
+</code></pre><p>You can put multiple project names into the file, each project name at separate line.</p>
+<h3 id="step-2-confirm-the-current-version-still-work">step 2 - confirm the current version still work</h3><p>The current published version of check-more-types depends on lodash@2.4.1
+First let us confirm that the current source we are working with (@3.0.0-pre) still works</p>
+<pre><code>~<span class="regexp">/git/lodash</span> on master
+<span class="variable">$ </span>dont-<span class="keyword">break</span>
+dependents [ <span class="string">&apos;check-more-types&apos;</span> ]
+testing check-more-types
+  installing check-more-types
+installed into /tmp/lodash<span class="variable">@3</span>.<span class="number">0.0</span>-pre-against-check-more-types
+installing dev dependencies /tmp/lodash<span class="variable">@3</span>.<span class="number">0.0</span>-pre-against-check-more-types/<span class="class"><span class="keyword">lib</span>/<span class="title">node_modules</span>/<span class="title">check</span>-<span class="title">more</span>-<span class="title">types</span></span>
+  <span class="constant">NPM</span> install in current folder
+restoring current directory /<span class="constant">Users</span>/gleb/git/lodash
+  npm test
+tests work in /tmp/lodash<span class="variable">@3</span>.<span class="number">0.0</span>-pre-against-check-more-types/<span class="class"><span class="keyword">lib</span>/<span class="title">node_modules</span>/<span class="title">check</span>-<span class="title">more</span>-<span class="title">types</span></span>
+copied /<span class="constant">Users</span>/gleb/git/lodash/* to /tmp/lodash<span class="variable">@3</span>.<span class="number">0.0</span>-pre-against-check-more-types/<span class="class"><span class="keyword">lib</span>/<span class="title">node_modules</span>/<span class="title">check</span>-<span class="title">more</span>-<span class="title">types</span>/<span class="title">node_modules</span>/<span class="title">lodash</span></span>
+  npm test
+tests work in /tmp/lodash<span class="variable">@3</span>.<span class="number">0.0</span>-pre-against-check-more-types/<span class="class"><span class="keyword">lib</span>/<span class="title">node_modules</span>/<span class="title">check</span>-<span class="title">more</span>-<span class="title">types</span></span>
+all dependents tested
+<span class="constant">PASS</span>: <span class="constant">Current</span> version does not <span class="keyword">break</span> dependents
+</code></pre><h3 id="step-3-break-a-function-in-lodash">step 3 - break a function in lodash</h3><p>lodash is only used in check-more-types to run 1 test. 
+The test uses just a single feature: partial right application</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./test/load-under-node-test.js:<span class="number">12</span>:<span class="keyword">var</span> _ = <span class="built_in">require</span>(<span class="string">&apos;lodash&apos;</span>);</span><br><span class="line">./test/load-under-node-test.js:<span class="number">13</span>:<span class="keyword">var</span> hasFoo = _.partialRight(moreCheck.has, <span class="string">&apos;foo&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>let us break <code>_.partialRight</code> by changing slice to start with third argument.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// dist/lodash.compat.js word diff</span></span><br><span class="line"><span class="comment">// replaced slice(arguments, 1) with slice(arguments, 2)</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">partialRight</span>(<span class="params">func</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> args = slice(<span class="built_in">arguments</span>, [-<span class="number">1</span>),-]{+<span class="number">2</span>),+}</span><br><span class="line">      holders = replaceHolders(args, partialRight.placeholder);</span><br><span class="line">  <span class="keyword">return</span> basePartial(func, PARTIAL_RIGHT_FLAG, args, holders);</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>Run dont-break again</p>
+<pre><code>~<span class="regexp">/git/lodash</span> on master*
+<span class="variable">$ </span>dont-<span class="keyword">break</span>
+dependents [ <span class="string">&apos;check-more-types&apos;</span> ]
+testing check-more-types
+...
+npm test returned <span class="number">1</span>
+test <span class="symbol">errors:</span>
+<span class="constant">AssertionError</span>: <span class="literal">false</span> == <span class="literal">true</span>
+    at <span class="constant">Console</span>.assert (console.<span class="symbol">js:</span><span class="number">102</span>:<span class="number">23</span>)
+...
+tests did not work in /tmp/lodash<span class="variable">@3</span>.<span class="number">0.0</span>-pre-against-check-more-types/<span class="class"><span class="keyword">lib</span>/<span class="title">node_modules</span>/<span class="title">check</span>-<span class="title">more</span>-<span class="title">types</span></span>
+code <span class="number">1</span>
+<span class="constant">FAIL</span>: <span class="constant">Current</span> version <span class="keyword">break</span> dependents
+</code></pre><p>Even if lodash&apos;s own unit test passed, we now detect that we would break a dependant.</p>
+<h2 id="conclusions">Conclusions</h2><p>Your module is part of the NodeJs / NPM environment. It probably depends on modules written by other developers,
+people you most likely have never met. Your work will also be reused by other people. Errors caused by
+upgrading 3rd party libraries are usually hard to debug and solve, because they require working across 
+very high boundaries. If we all play nice
+and plan what we release into the wild at each iteration, applications will break less often, and everyone benefits.</p>
+<p>Related posts</p>
+<ul>
+<li><a href="../really-painless-modular-development/">Painless modular development (really)</a></li>
+<li><a href="../modular-development-using-nodejs/">Modular development using Nodejs</a></li>
+</ul>
+<h2 id="update-1">Update 1</h2><p>I added methods to fetch top N most downloaded or starred dependent modules for your module.
+Thus you do not have to manually pick which modules to test, instead you can support most popular dependants.</p>
+<pre><code>dont-<span class="keyword">break</span> --top-downloads <span class="number">10</span>
+<span class="comment">// finds 10 most downloaded modules that depend on your module</span>
+<span class="comment">// saves the list to .dont-break file</span>
+<span class="comment">// tests found names</span>
+</code></pre><p>The found list of names overwrites <code>.dont-break</code> file to avoid delay next time.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/do-not-break-dependant-modules/" data-id="cihtr6w8t00p2l3ur3fhqtpk0" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/do-not-break-dependant-modules/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/advice/">advice</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/">javascript</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/modular-development/">modular development</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../local-angular-scopes/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Local Angular scopes
+        
+      </div>
+    </a>
+  
+  
+    <a href="../run-angular-digest-cycle-in-web-worker/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Run Angular digest cycle in web worker</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/do-not-break-dependant-modules/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

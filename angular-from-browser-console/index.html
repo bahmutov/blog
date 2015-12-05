@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Angular from browser console | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="If there is an AngularJs app running in the page, it is often hard to
+debug or see the current model (stored in the $scope variables).
+There are browser extensions ng-inspector
+and Batarang,
+but what">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Angular from browser console">
+<meta property="og:url" content="http://glebbahmutov.com/blog/angular-from-browser-console/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="If there is an AngularJs app running in the page, it is often hard to
+debug or see the current model (stored in the $scope variables).
+There are browser extensions ng-inspector
+and Batarang,
+but what">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-change-scope.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-change-scope-apply.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/select-element.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Angular from browser console">
+<meta name="twitter:description" content="If there is an AngularJs app running in the page, it is often hard to
+debug or see the current model (stored in the $scope variables).
+There are browser extensions ng-inspector
+and Batarang,
+but what">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-angular-from-browser-console" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2014-05-25T04:00:00.000Z" itemprop="datePublished">May 25 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Angular from browser console
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Access angular model and update DOM from the browser console.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>If there is an AngularJs app running in the page, it is often hard to
+debug or see the current model (stored in the <code>$scope</code> variables).
+There are browser extensions <a href="http://ng-inspector.org/" target="_blank" rel="external">ng-inspector</a>
+and <a href="https://github.com/angular/angularjs-batarang" target="_blank" rel="external">Batarang</a>,
+but what if you just want to see values, maybe change something
+quickly? Here is how to do this from the browser&apos;s JavaScript console.</p>
+<p>I made the <a href="http://jsbin.com/filin/1/edit?html,console,output" target="_blank" rel="external">following example</a>
+that you can try this on. You can enter the commands in the middle
+column (that acts like browser console). We have the following HTML and JavaScript
+on the page</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="doctype">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;https://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.min.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">&quot;utf-8&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">title</span>&gt;</span>Manual angular update<span class="tag">&lt;/<span class="title">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="actionscript"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">MyApp</span><span class="params">($scope)</span> </span>{</span><br><span class="line">      $scope.name = <span class="string">&apos;Joe&apos;</span>;</span><br><span class="line">    }</span><br><span class="line">  </span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">body</span> <span class="attribute">ng-app</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">&quot;app&quot;</span> <span class="attribute">ng-controller</span>=<span class="value">&quot;MyApp&quot;</span>&gt;</span></span><br><span class="line">    My name is {{ name }}</span><br><span class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>We have variable <code>name</code> attached to the scope in the div <code>app</code>. Let us change the variable
+to something else, like <em>Mary</em> and see the change on the page.</p>
+<h2 id="grab-the-element-and-scope">Grab the element and scope</h2><p>We first start by getting the reference to the <code>scope</code>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> el = <span class="built_in">document</span>.getElementById(<span class="string">&apos;app&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> ngEl = angular.element(el);</span><br><span class="line"><span class="keyword">var</span> scope = ngEl.scope();</span><br><span class="line">scope.name <span class="comment">// &apos;Joe&apos;</span></span><br></pre></td></tr></table></figure>
+<p>If we include full jQuery library before including angular, we can get the wrapped element
+in a single request <code>var ngEl = angular.element(&apos;#app&apos;);</code></p>
+<p>Even without full jQuery library, inside Chrome DevTools we can select an element using <code>$(&lt;selector&gt;)</code> syntax.
+For example to grab the isolate scope from a directive &apos;MyWidget&apos; that creates <code>&lt;my-widget&gt;</code> node</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">angular.element($(<span class="string">&apos;my-widget&apos;</span>)).isolateScope();</span><br></pre></td></tr></table></figure>
+<h2 id="change-the-model-dom">Change the model / DOM</h2><p>Let us change the <em>name</em> to a new value</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scope.name = <span class="string">&apos;Mary&apos;</span>;</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-change-scope.png" alt="Changed variable in scope"></p>
+<p>Notice, that the page has not changed yet. We have only changed the model.
+The Angular engine has no idea that it needs to update any HTML nodes bound to the model.
+To update them, we can execute <code>$apply</code> function that acts on a scope</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scope.$apply();</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/angular-change-scope-apply.png" alt="Applied changes"></p>
+<p>If our update is simple (as above), we can directly change the model and call <em>apply</em> function</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scope.$apply(<span class="string">&apos;name = &quot;Mary&quot;;&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>We can also call any functions attached to the scope using the expression</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// app code</span></span><br><span class="line">$scope.formName = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{ ... }</span><br><span class="line"><span class="comment">// console</span></span><br><span class="line">scope.$apply(<span class="string">&apos;formName();&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>We can also do many steps if we pass a function to the <code>$apply</code> function, which will be
+executed in the scope&apos;s context BUT we need to inject the scope we want to use.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">scope.$apply(<span class="function"><span class="keyword">function</span> (<span class="params">$scope</span>) </span>{</span><br><span class="line">  $scope.name = <span class="string">&apos;Alex&apos;</span>;</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<h2 id="inner-elements">Inner elements</h2><p>You do not even need to know the exact id of the element to get the outer scope.
+For example if we have an HTML element inside the element with angular controller, we can
+still get the correct scope</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">&quot;app&quot;</span> <span class="attribute">ng-controller</span>=<span class="value">&quot;MyApp&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">&quot;inner&quot;</span>&gt;</span></span><br><span class="line">    My name is {{ name }}</span><br><span class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>From the console use id <em>inner</em></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> el = <span class="built_in">document</span>.getElementById(<span class="string">&apos;inner&apos;</span>); <span class="comment">// inner is inside app</span></span><br><span class="line"><span class="keyword">var</span> ngEl = angular.element(el);</span><br><span class="line"><span class="keyword">var</span> scope = ngEl.scope();</span><br><span class="line">scope.name <span class="comment">// &apos;Joe&apos; correct scope</span></span><br></pre></td></tr></table></figure>
+<h2 id="broadcast-an-event">Broadcast an event</h2><p>If you want to send an event to all listening scopes, you can quickly do this using <code>$rootScope</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// somewhere in the application</span></span><br><span class="line">$scope.$on(<span class="string">&apos;draw-chart&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">event, arg1, arg2</span>) </span>{ ... });</span><br><span class="line"><span class="comment">// from the browser console</span></span><br><span class="line">angular.element(<span class="built_in">document</span>)</span><br><span class="line">    .injector()</span><br><span class="line">    .get(<span class="string">&apos;$rootScope&apos;</span>)</span><br><span class="line">    .$broadcast(<span class="string">&apos;draw-chart&apos;</span>, <span class="string">&apos;foo&apos;</span>, <span class="string">&apos;bar&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>If the angular application wraps <code>body</code> element instead of the document, you can still use it easily</p>
+<pre><code>&lt;<span class="tag">body</span> ng-app=<span class="string">&quot;...&quot;</span>&gt;
+angular.<span class="function"><span class="title">element</span><span class="params">(document.body)</span></span>
+    ...
+</code></pre><h2 id="get-the-root-application-node">Get the root application node</h2><p>If you do not know the node where the application has been boostrapped, you can find the element after
+bootstrapping using the attribute selector</p>
+<pre><code><span class="tag">var</span> app = angular.<span class="function"><span class="title">element</span><span class="params">(document.querySelector(<span class="string">&apos;[ng-app]&apos;</span>)</span></span>)
+</code></pre><h2 id="chrome-devtools-shortcut">Chrome DevTools shortcut</h2><p>Sometimes getting the exact element selector is difficult. Instead you can use the following method</p>
+<ul>
+<li>Open the Chrome DevTools elements panel</li>
+<li>Select the looking glass tool</li>
+<li>Pick the element on the page</li>
+</ul>
+<p>The selected element will be highlighted in the DOM</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/select-element.png" alt="selected element"></p>
+<p>The Chrome DevTools has the shortcut <code>$0</code> to refer the currently selected element. You can use this 
+shortcut to quickly get the Angular scope.</p>
+<figure class="highlight js"><figcaption><span>grab scope of the currently selected element</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">angular.element($<span class="number">0</span>).scope();</span><br></pre></td></tr></table></figure>
+<p>Quick, isn&apos;t it?</p>
+<h2 id="inject-a-service">Inject a service</h2><p>You can get to any service / constant / etc. from the console using an injector instance.
+Just grab the root element and ask for its injector instance.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> el = <span class="built_in">document</span>.getElementById(<span class="string">&apos;app&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> ngEl = angular.element(el);</span><br><span class="line"><span class="keyword">var</span> di = ngEl.injector();</span><br><span class="line">di.has(<span class="string">&apos;$rootScope&apos;</span>);</span><br><span class="line"><span class="comment">// true</span></span><br><span class="line"><span class="keyword">var</span> $q = di.get(<span class="string">&apos;$q&apos;</span>);</span><br><span class="line">$q.when(<span class="string">&apos;hi&apos;</span>)</span><br><span class="line">  .then(<span class="built_in">console</span>.log.bind(<span class="built_in">console</span>));</span><br><span class="line"><span class="comment">// prints &quot;hi&quot;</span></span><br></pre></td></tr></table></figure>
+<h2 id="inject-something">Inject something</h2><p>Usually the <code>document.body</code> has angular application around it, so if you need to grab something </p>
+<pre><code>angular.element(document.body).injector().<span class="keyword">get</span>(&apos;<span class="keyword">some</span> <span class="property">name</span>&apos;);
+</code></pre><h2 id="cause-an-exception">Cause an exception</h2><p>Sometimes I want to test if the <a href="">application&apos;s exception handler</a> really catches errors.
+To cause the exception <em>inside the app</em> we can execute this in the browser console</p>
+<pre><code>angular.<span class="literal">element</span>(document.body).injector().get(<span class="string">&apos;$rootScope&apos;</span>).<span class="variable">$apply</span>(
+  <span class="keyword">function</span> bad() { <span class="string">&apos;use strict&apos;</span>; bad = <span class="string">&apos;bad&apos;</span>; }
+);
+</code></pre><p>The <code>&apos;use strict&apos;</code> is necessary to make sure <code>bad</code> variable is a true error, and does not create
+new property on the <code>window</code> object.</p>
+<h2 id="stop-inside-a-called-function">Stop inside a called function</h2><p>Imagine we have a button with a click handler <code>&lt;button ng-click=&quot;doSomething()&quot;&gt;Do it&lt;/button&gt;</code>. We
+do not know where the function <code>doSomething</code> is defined, but we can still easily pause the
+execution inside of it.</p>
+<p>Select the button in the &quot;Elements&quot; tab. This makes the button element available under <code>$0</code> variable.
+Tell the Chrome browser to stop once the function <code>doSomething</code> starts</p>
+<pre><code><span class="function"><span class="title">debug</span><span class="params">(angular.element($<span class="number">0</span>)</span></span>.<span class="function"><span class="title">scope</span><span class="params">()</span></span>.doSomething)
+</code></pre><p>That&apos;s it. If you want to prevent the stopping (remove the breakpoint), use <code>undebug</code> function.</p>
+<pre><code><span class="function"><span class="title">undebug</span><span class="params">(angular.element($<span class="number">0</span>)</span></span>.<span class="function"><span class="title">scope</span><span class="params">()</span></span>.doSomething)
+</code></pre><p>Pretty cool.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/angular-from-browser-console/" data-id="cihtr6wdm00vsl3ur6yw1574o" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/angular-from-browser-console/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/angularjs/">angularjs</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../jade-templates-for-angular-directives/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Jade templates for Angular directives
+        
+      </div>
+    </a>
+  
+  
+    <a href="../inject-valid-constants-into-angular/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Inject valid constants into Angular</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/angular-from-browser-console/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

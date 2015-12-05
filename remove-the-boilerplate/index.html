@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Remove the boilerplate | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="&amp;lt;!-- toc --&amp;gt;
+
+Intro
+Example: forming full path to a file
+
+
+Functional approach to the boilerplate removal
+Partial application
+Selective application
+Selective application by name
+Selective application">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Remove the boilerplate">
+<meta property="og:url" content="http://glebbahmutov.com/blog/remove-the-boilerplate/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="&amp;lt;!-- toc --&amp;gt;
+
+Intro
+Example: forming full path to a file
+
+
+Functional approach to the boilerplate removal
+Partial application
+Selective application
+Selective application by name
+Selective application">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Remove the boilerplate">
+<meta name="twitter:description" content="&amp;lt;!-- toc --&amp;gt;
+
+Intro
+Example: forming full path to a file
+
+
+Functional approach to the boilerplate removal
+Partial application
+Selective application
+Selective application by name
+Selective application">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-remove-the-boilerplate" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-10-03T04:00:00.000Z" itemprop="datePublished">Oct 3 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Remove the boilerplate
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Remove unnecessary code while preserving the same code semantics.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- toc -->
+<ul>
+<li><a href="#intro">Intro</a><ul>
+<li><a href="#example-forming-full-path-to-a-file">Example: forming full path to a file</a></li>
+</ul>
+</li>
+<li><a href="#functional-approach-to-the-boilerplate-removal">Functional approach to the boilerplate removal</a><ul>
+<li><a href="#partial-application">Partial application</a><ul>
+<li><a href="#selective-application">Selective application</a></li>
+<li><a href="#selective-application-by-name">Selective application by name</a></li>
+<li><a href="#selective-application-by-property-name">Selective application by property name</a></li>
+</ul>
+</li>
+<li><a href="#point-free-programming">Point-free programming</a></li>
+<li><a href="#working-with-arrays">Working with arrays</a></li>
+<li><a href="#functional-libraries-and-currying">Functional libraries and currying</a></li>
+<li><a href="#composition">Composition</a></li>
+<li><a href="#simplifying-logical-operations">Simplifying logical operations</a></li>
+</ul>
+</li>
+<li><a href="#removing-boilerplate-in-asynchronous-code">Removing boilerplate in asynchronous code</a></li>
+<li><a href="#boilerplate-in-the-unit-tests">Boilerplate in the unit tests</a><ul>
+<li><a href="#use-a-better-framework">Use a better framework</a></li>
+<li><a href="#write-a-wrapper-that-removes-the-boilerplate">Write a wrapper that removes the boilerplate</a></li>
+<li><a href="#remove-boilerplate-from-assertions">Remove boilerplate from assertions</a></li>
+<li><a href="#lazy-assertions">lazy assertions</a></li>
+<li><a href="#source-code-rewriting">source code rewriting</a></li>
+</ul>
+</li>
+<li><a href="#boilerplate-and-es6">Boilerplate and ES6</a><ul>
+<li><a href="#computed-property-names">Computed property names</a></li>
+<li><a href="#parameter-context-matching">Parameter context matching</a></li>
+<li><a href="#arrow-functions">Arrow functions</a></li>
+</ul>
+</li>
+<li><a href="#additional-tools">Additional tools</a></li>
+<li><a href="#conclusions">Conclusions</a></li>
+</ul>
+<!-- tocstop -->
+<p>You can find the slides to go with this blog post <a href="https://slides.com/bahmutov/remove-the-boilerplate" target="_blank" rel="external">here</a></p>
+<h1 id="intro">Intro</h1><p>We write too much code. Each day we pump hundreds if not thousands of new lines,
+trying to add new features, fix bugs or improve test coverage. This is not just simple
+code duplication - this is a code that takes more characters than necessary to
+achieve its goals.</p>
+<p>Each new variable, function and branch can interact with any other entity, all the way up
+the lexical scope chain until the <code>global</code> object. In the following code, there are
+only a few separate variables: <code>a</code>, <code>b</code>, <code>add</code> and an anomyous functional expression.</p>
+<pre><code><span class="keyword">var</span> <span class="keyword">add</span> = <span class="function"><span class="keyword">function</span> <span class="params">(a, b)</span> <span class="comment">{
+    return a + b;
+}</span>;</span>
+</code></pre><p>The four entities can interact with the other three, leading to 4x3 possible connections.
+As the number of tokens in the program grows to N, there are N x (N-1) interactions, which makes it O(n^2)
+in possible complexity. Every potential interaction makes the code more brittle, harder to understand,
+test and write. The complexity hides defects, logical contradictions, and ultimately errors.
+We can say that</p>
+<pre><code><span class="label">Errors</span> = more <span class="preprocessor">code</span>^<span class="number">2</span>
+</code></pre><p>or in its more famous notation <code>e = mc^2</code></p>
+<p>Let me show how to remove a lot of boilerplate code from your programs, while preserving or even
+clarifying its meaning. We are going to use a couple of approaches to remove the boilerplate code:
+partial application of arguments (built into the JavaScript language), functional programming,
+the intelligent order of arguments in the API functions, promises.
+Our ultimate goal is to remove code, while making the its meaning clear and unambiguous.</p>
+<h2 id="example-forming-full-path-to-a-file">Example: forming full path to a file</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// verbose approach</span></span><br><span class="line"><span class="keyword">var</span> path = <span class="built_in">require</span>(<span class="string">&apos;path&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> first = path.join(__dirname, <span class="string">&apos;../foo&apos;</span>);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">var</span> second = path.join(__dirname, <span class="string">&apos;../bar&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>Every time we need a full file path relative to the current directory, we can potentially trip over
+3 items: <code>path</code> variable, <code>join</code> method, <code>__dirname</code> argument. We can remove the first item easily
+because method <code>path.join</code> does not use <code>this</code> anywhere.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// removed object variable</span></span><br><span class="line"><span class="keyword">var</span> join = <span class="built_in">require</span>(<span class="string">&apos;path&apos;</span>).join;</span><br><span class="line"><span class="keyword">var</span> first = join(__dirname, <span class="string">&apos;../foo&apos;</span>);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">var</span> second = join(__dirname, <span class="string">&apos;../bar&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>This is better, but we still need to remember to pass the argument <code>__dirname</code>. We now can use the fact
+that <code>Function.prototype.bind</code> can do the <a href="../binding-vs-partial-application/">context binding and partial application</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// clean code</span></span><br><span class="line"><span class="keyword">var</span> relativePath = <span class="built_in">require</span>(<span class="string">&apos;path&apos;</span>).join.bind(<span class="literal">null</span>, __dirname);</span><br><span class="line"><span class="keyword">var</span> first = relativePath(<span class="string">&apos;../foo&apos;</span>);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">var</span> second = relativePath(<span class="string">&apos;../bar&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>The code clearly expresses what we are trying to compute for each filename. We removed
+or at least localized references to the <code>path.join</code> method, and only used the <code>__dirname</code> variable once.</p>
+<h1 id="functional-approach-to-the-boilerplate-removal">Functional approach to the boilerplate removal</h1><h2 id="partial-application">Partial application</h2><p>The above example used <em>partial application</em> - creating a new function from an existing one by binding
+some of the arguments to the values we already know.</p>
+<pre><code><span class="comment">// function join(a, b)</span>
+<span class="keyword">var</span> relativePath = path.<span class="keyword">join</span>.bind(<span class="keyword">null</span>, __dirname);
+<span class="comment">// relativePath(a=__dirname, b)</span>
+</code></pre><p>We can provide the first value to the <code>path.join</code> method, and then call it again, providing the other
+parts of the path. The new function <code>relativePath</code> will wait to be called again, and then combines
+the arguments before calling the <code>path.join</code>. This is different from the <em>default</em> argument value - we bind
+the value at runtime, not when writing the function</p>
+<pre><code><span class="comment">// bind at runtime</span>
+<span class="keyword">var</span> relativePath = path.join.bind(<span class="literal">null</span>, __dirname);
+<span class="comment">// not the same as</span>
+<span class="comment">// default value at write time</span>
+<span class="function"><span class="keyword">function</span> <span class="title">join</span><span class="params">(a: __dirname, b)</span></span>;
+</code></pre><p>The default left to right partial application works great if the function&apos;s signature was designed
+with this use case in mind. In general I try to <a href="../user-friendly-api/">follow this advice</a> when designing an API</p>
+<pre><code>Place <span class="function_start"><span class="keyword">on</span></span> <span class="keyword">the</span> left arguments <span class="keyword">that</span> are likely <span class="keyword">to</span> be known <span class="keyword">first</span>
+</code></pre><p>For example, updating user profile information method might need both the user id and new information</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">updateUserInfo</span>(<span class="params">userId, newInfo</span>);</span><br><span class="line">// <span class="title">vs</span></span><br><span class="line"><span class="title">function</span> <span class="title">updateUserInfo</span>(<span class="params">newInfo, userId</span>);</span></span><br></pre></td></tr></table></figure>
+<p>It is likely that we know the user id when the user successfully logs in. Then we can make a new method
+for updating the user method using the standard <code>.bind</code> method</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// user-service.js</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">updateUserInfo</span>(<span class="params">userId, newInfo</span>) </span>{ ... }</span><br><span class="line"><span class="comment">// user-controller.js</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">onLogin</span>(<span class="params">id</span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> updateUser = updateUserInfo.bind(<span class="literal">null</span>, id);</span><br><span class="line">    $(<span class="string">&apos;form&apos;</span>).on(<span class="string">&apos;submit&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">onSubmitted</span>(<span class="params">form</span>) </span>{</span><br><span class="line">        updateUser(form);</span><br><span class="line">    });</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<h3 id="selective-application">Selective application</h3><p>If we know the value of an argument that is on the <em>right</em> position, we can still do
+partial application, but we must use a helper library (please don&apos;t right <code>partialRight</code> yourself,
+there are already lots of libraries for this). For example, Lodash has
+<a href="https://lodash.com/docs#partialRight" target="_blank" rel="external">_.partialRight</a> function</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[<span class="string">&apos;1&apos;</span>, <span class="string">&apos;2&apos;</span>, <span class="string">&apos;3&apos;</span>].map(<span class="built_in">parseInt</span>); <span class="comment">// [1, NaN, NaN]</span></span><br><span class="line"><span class="comment">// function parseInt(x, radix) &lt;-- radix should have value 10</span></span><br><span class="line"><span class="comment">// but Array.map sends (value, index, array)</span></span><br><span class="line">[<span class="string">&apos;1&apos;</span>, <span class="string">&apos;2&apos;</span>, <span class="string">&apos;3&apos;</span>].map(<span class="function"><span class="keyword">function</span> (<span class="params">x</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">parseInt</span>(x, <span class="number">10</span>);</span><br><span class="line">});</span><br><span class="line">[<span class="string">&apos;1&apos;</span>, <span class="string">&apos;2&apos;</span>, <span class="string">&apos;3&apos;</span>].map(_.partialRight(<span class="built_in">parseInt</span>, <span class="number">10</span>)); <span class="comment">// [1, 2, 3]</span></span><br><span class="line"><span class="comment">// radix is bound, index and array arguments are ignored</span></span><br></pre></td></tr></table></figure>
+<p>What if we want to bind arguments by position? Lodash can leave empty places now</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="string">&apos;1&apos;</span>, <span class="string">&apos;2&apos;</span>, <span class="string">&apos;3&apos;</span>].map(_.partial(<span class="built_in">parseInt</span>, _, <span class="number">10</span>)); <span class="comment">// [1, 2, 3]</span></span><br></pre></td></tr></table></figure>
+<p>Even less boilerplate if you use <a href="https://github.com/bahmutov/spots" target="_blank" rel="external">spots</a> which does both
+argument binding with placeholders and context bind</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> S = <span class="built_in">require</span>(<span class="string">&apos;spots&apos;</span>);</span><br><span class="line">[<span class="string">&apos;1&apos;</span>, <span class="string">&apos;2&apos;</span>, <span class="string">&apos;3&apos;</span>].map(S(<span class="built_in">parseInt</span>, S, <span class="number">10</span>)); <span class="comment">// [1, 2, 3]</span></span><br></pre></td></tr></table></figure>
+<p>Authenticating users in Express routes example:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// same callbacks to check if the user is logged in and authorized</span></span><br><span class="line">app.get(<span class="string">&apos;/repos&apos;</span>, passport.isAuthenticated, passport.isAuthorized, ctrl.getRepos);</span><br><span class="line">app.get(<span class="string">&apos;/repos/:user/:name&apos;</span>, passport.isAuthenticated, passport.isAuthorized, ctrl.getRepo);</span><br><span class="line">app.get(<span class="string">&apos;/repos/view/:user/:name&apos;</span>, passport.isAuthenticated, passport.isAuthorized, ctrl.viewFile);</span><br><span class="line"><span class="comment">// prefill 2 middle arguments using spots</span></span><br><span class="line"><span class="keyword">var</span> S = <span class="built_in">require</span>(<span class="string">&apos;spots&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> authGet = S(app.get, S, passport.isAuthenticated, passport.isAuthorized).bind(app);</span><br><span class="line">authGet(<span class="string">&apos;/repos&apos;</span>, ctrl.getRepos);</span><br><span class="line">authGet(<span class="string">&apos;/repos/:user/:name&apos;</span>, ctrl.getRepo);</span><br><span class="line">authGet(<span class="string">&apos;/repos/view/:user/:name&apos;</span>, ctrl.viewFile);</span><br></pre></td></tr></table></figure>
+<h3 id="selective-application-by-name">Selective application by name</h3><p>Sometimes we wish to bind values by <em>argument</em> name, and not by its position, similarly to the
+AngularJS dependency injection mechanism. We can easily do this using <a href="https://github.com/bahmutov/heroin" target="_blank" rel="external">heroin</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// divide by 10</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">divide</span>(<span class="params">a, b</span>) </span>{ <span class="keyword">return</span> a / b; }</span><br><span class="line"><span class="keyword">var</span> selective = <span class="built_in">require</span>(<span class="string">&apos;heroin&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> by10 = selective(divide, { b: <span class="number">10</span> });</span><br><span class="line"><span class="built_in">console</span>.log(by10(<span class="number">10</span>)); <span class="comment">// 1 (a = 10, b = 10)</span></span><br><span class="line"><span class="built_in">console</span>.log(by10(<span class="number">2</span>)); <span class="comment">// 0.2 (a = 2, b = 10)</span></span><br></pre></td></tr></table></figure>
+<h3 id="selective-application-by-property-name">Selective application by property name</h3><p>As the number of arguments grows, it becomes quite difficult to manage them. Any function with more than
+2 arguments I switch to using an options object. We can partially apply properties in the options object
+too using <a href="https://github.com/bahmutov/obind" target="_blank" rel="external">obind</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obind = <span class="built_in">require</span>(<span class="string">&apos;obind&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params">options</span>) </span>{ ... }</span><br><span class="line"><span class="keyword">var</span> withBar = obind(foo, { bar: <span class="string">&apos;bar&apos;</span> });</span><br><span class="line">withBar({ baz: <span class="string">&apos;baz&apos;</span> });</span><br><span class="line"><span class="comment">/*</span><br><span class="line">equivalent to</span><br><span class="line">foo({</span><br><span class="line">    bar: &apos;bar&apos;,</span><br><span class="line">    baz: &apos;baz&apos;</span><br><span class="line">})</span><br><span class="line">*/</span></span><br></pre></td></tr></table></figure>
+<h2 id="point-free-programming">Point-free programming</h2><p>Let us go back to updating the user information example</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// user-service.js</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">updateUserInfo</span>(<span class="params">userId, newInfo</span>) </span>{ ... }</span><br><span class="line"><span class="comment">// user-controller.js</span></span><br><span class="line"><span class="keyword">var</span> updateUser;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">onLogin</span>(<span class="params">id</span>) </span>{</span><br><span class="line">    updateUser = updateUserInfo.bind(<span class="literal">null</span>, id);</span><br><span class="line">    $(<span class="string">&apos;form&apos;</span>).on(<span class="string">&apos;submit&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">onSubmitted</span>(<span class="params">form</span>) </span>{</span><br><span class="line">        updateUser(form);</span><br><span class="line">    });</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>Notice that function <code>onSubmitted</code> takes a single argument and simply calls <code>updateUser</code>
+function with the same argument. We don&apos;t need a separate <code>onSubmitted</code>!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">&apos;form&apos;</span>).on(<span class="string">&apos;submit&apos;</span>, updateUser);</span><br></pre></td></tr></table></figure>
+<p>By adapting the <code>updateUserInfo</code> function and using it as a callback, we have achieved a
+<em>point-free</em> programming style - avoiding using unnecessary arguments and variables.The
+values are simply passed from one function to another, but hidden from our program&apos;s eyes.</p>
+<p>You can read more about the point-free programming in JavaScript
+<a href="../point-free-programming-is-not-pointless/">here</a>. The main difficulty is usually
+matching and adapting the signatures of functions that have to work together. Read
+[Adapted point-free callbacks][../adapted-point-free-callbacks/] for more examples.</p>
+<p>For example, the above example most likely has a <em>first</em> argument that makes our point-free
+programming hard to achieve</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// user-service.js</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">updateUserInfo</span>(<span class="params">userId, newInfo</span>) </span>{ ... }</span><br><span class="line"><span class="comment">// user-controller.js</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">onLogin</span>(<span class="params">id</span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> updateUser = updateUserInfo.bind(<span class="literal">null</span>, id);</span><br><span class="line">    $(<span class="string">&apos;form&apos;</span>).on(<span class="string">&apos;submit&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">onSubmitted</span>(<span class="params">event, form</span>) </span>{</span><br><span class="line">        updateUser(form);</span><br><span class="line">    });</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>Luckily, just like we can bind known values, we can ignore some arguments at known positions
+using <a href="https://github.com/bahmutov/ignore-argument" target="_blank" rel="external">ignore-argument</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// user-service.js</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">updateUserInfo</span>(<span class="params">userId, newInfo</span>) </span>{ ... }</span><br><span class="line"><span class="comment">// user-controller.js</span></span><br><span class="line"><span class="keyword">var</span> ignoreArgument = <span class="built_in">require</span>(<span class="string">&apos;ignore-argument&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">onLogin</span>(<span class="params">id</span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> updateUser = updateUserInfo.bind(<span class="literal">null</span>, id);</span><br><span class="line">    $(<span class="string">&apos;form&apos;</span>).on(<span class="string">&apos;submit&apos;</span>, ignoreArgument(updateUser, <span class="literal">true</span>));</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p><code>ignoreArgument</code> returns a new function that will call your function but will ignore some of the
+outer arguments</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">&apos;form&apos;</span>).on(<span class="string">&apos;submit&apos;</span>, ignoreArgument(updateUser, <span class="literal">true</span>));</span><br><span class="line"><span class="comment">// same as</span></span><br><span class="line">$(<span class="string">&apos;form&apos;</span>).on(<span class="string">&apos;submit&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">outer</span>(<span class="params">ignored, a</span>) </span>{</span><br><span class="line">    updateUser(a);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Another example: configuring and returning a service object to make requests to specific API
+end points.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initDataService</span>(<span class="params">urls</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> {</span><br><span class="line">    legacy: <span class="function"><span class="keyword">function</span> (<span class="params">data</span>) </span>{</span><br><span class="line">      <span class="keyword">return</span> $http.get(urls.legacyUrl, data);</span><br><span class="line">    },</span><br><span class="line">    current: <span class="function"><span class="keyword">function</span> (<span class="params">data</span>) </span>{</span><br><span class="line">      <span class="keyword">return</span> $http.get(urls.currentUrl, data);</span><br><span class="line">    }</span><br><span class="line">  };</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>can be expressed much shorter</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initDataService</span>(<span class="params">urls</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> {</span><br><span class="line">    legacy: $http.get.bind($http, urls.legacyUrl),</span><br><span class="line">    current: $http.get.bind($http, urls.currentUrl)</span><br><span class="line">  };</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<h2 id="working-with-arrays">Working with arrays</h2><p>Imagine we deal with a collection of numbers and need to multiply and print them.
+We could just write a loop</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>];</span><br><span class="line"><span class="keyword">var</span> constant = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> k = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">for</span>(k = <span class="number">0</span>; k &lt; numbers.length; k += <span class="number">1</span>) {</span><br><span class="line">  <span class="built_in">console</span>.log(numbers[k] * constant);</span><br><span class="line">}</span><br><span class="line"><span class="comment">// 6 2 14</span></span><br></pre></td></tr></table></figure>
+<p>A lot of boilerplate in keeping an index variable, just to iterate over an array. We can use
+EcmaScript5 array methods</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">mul</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> a * b;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">print</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(n);</span><br><span class="line">}</span><br><span class="line">numbers.map(<span class="function"><span class="keyword">function</span> (<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> mul(n, constant);</span><br><span class="line">}).forEach(print);</span><br><span class="line"><span class="comment">// 6 2 14</span></span><br></pre></td></tr></table></figure>
+<p>We just wrote a lot more boilerplate, right? Yes, but we can also reuse all these short simple and easy
+to test functions. We can also change the order of arguments when calling <code>mul</code> and apply partial application
+to derive point-free style.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">mul</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> a * b;</span><br><span class="line">}</span><br><span class="line">numbers</span><br><span class="line">  .map(mul.bind(<span class="literal">null</span>, constant))</span><br><span class="line">  .forEach(<span class="built_in">console</span>.log.bind(<span class="built_in">console</span>));</span><br><span class="line"><span class="comment">// 6 2 14</span></span><br></pre></td></tr></table></figure>
+<p>I sometimes prefer to stress the code readability and natural expression of intent</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">mul</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> a * b;</span><br><span class="line">}</span><br><span class="line"><span class="keyword">var</span> byK = mul.bind(<span class="literal">null</span>, constant);</span><br><span class="line"><span class="keyword">var</span> print = <span class="built_in">console</span>.log.bind(<span class="built_in">console</span>);</span><br><span class="line">numbers</span><br><span class="line">  .map(byK)</span><br><span class="line">  .forEach(print);</span><br><span class="line"><span class="comment">// multiply each number by constant</span></span><br><span class="line"><span class="comment">// and print the result</span></span><br><span class="line"><span class="comment">// 6 2 14</span></span><br></pre></td></tr></table></figure>
+<h2 id="functional-libraries-and-currying">Functional libraries and currying</h2><p><code>Array.prototype.map</code> and <code>Array.prototype.forEach</code> are nice, but before ES5 people have been writing
+<code>map</code> and other operations as functions combined into libraries (like Underscore and Lodash). These libraries
+have hundreds of operations on lists, replacing lots of custom code.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>];</span><br><span class="line"><span class="keyword">var</span> constant = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> _ = <span class="built_in">require</span>(<span class="string">&apos;lodash&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">mul</span>(<span class="params">a, b</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> a * b;</span><br><span class="line">}</span><br><span class="line"><span class="keyword">var</span> byK = _.partial(mul, constant);</span><br><span class="line"><span class="keyword">var</span> print = _.bind(<span class="built_in">console</span>.log, <span class="built_in">console</span>);</span><br><span class="line">_.forEach(_.map(numbers, byK), print);</span><br><span class="line"><span class="comment">// 6 2 14</span></span><br></pre></td></tr></table></figure>
+<p>We are using Lodash <a href="https://lodash.com/docs#partial" target="_blank" rel="external">partial</a> method instead of built-in
+<code>bind</code> to save a few characters and make the meaning clearer. If we often have to apply partial
+application to our functions, we might make them <em>curried</em> - have the partial application from left
+to right built right in.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>];</span><br><span class="line"><span class="keyword">var</span> constant = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> _ = <span class="built_in">require</span>(<span class="string">&apos;lodash&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> mul = _.curry(<span class="function"><span class="keyword">function</span> (<span class="params">a, b</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> a * b;</span><br><span class="line">});</span><br><span class="line"><span class="keyword">var</span> byK = mul(constant);</span><br><span class="line"><span class="keyword">var</span> print = _.bind(<span class="built_in">console</span>.log, <span class="built_in">console</span>);</span><br><span class="line">_.forEach(_.map(numbers, byK), print);</span><br></pre></td></tr></table></figure>
+<p>Let us look at another fragment: the <code>_.map</code> function. It has a signature that is very similar to
+the native <code>Array.prototype.map</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">cb</span>(<span class="params">item, index, array</span>) </span>{ ... }</span><br><span class="line"><span class="comment">// ES5 method</span></span><br><span class="line"><span class="built_in">Array</span>.prototype.map(cb);</span><br><span class="line"><span class="comment">// Lodash method</span></span><br><span class="line">_.map(array, cb);</span><br></pre></td></tr></table></figure>
+<p>The <code>array</code> variable is at the first position, and the callback is at the second position.
+While this is very close to the native function, in practice this breaks the principle that
+allows us to quickly remove the boilerplate code by applying the partial application from
+the left. To remind us:</p>
+<pre><code>Place <span class="function_start"><span class="keyword">on</span></span> <span class="keyword">the</span> left arguments <span class="keyword">that</span> are likely <span class="keyword">to</span> be known <span class="keyword">first</span>
+</code></pre><p>The array of items is probably generated dynamically and is only known at runtime.
+The callback function on the other hand is often known statically! If we want to be able
+to quickly bind arguments in the <code>map</code>, we should have the <em>callback function</em> placed first,
+and the array argument second. This is exactly what the functional library
+<a href="http://ramdajs.com/docs/" target="_blank" rel="external">Ramda</a> takes as its main principle. Together with every function
+it exports being <em>curried</em> by default, it makes an excellent tool to remove boilerplate code.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>];</span><br><span class="line"><span class="keyword">var</span> constant = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> print = R.bind(<span class="built_in">console</span>.log, <span class="built_in">console</span>);</span><br><span class="line">R.forEach(print, R.map(R.multiply(constant), numbers));</span><br></pre></td></tr></table></figure>
+<p>We used the built-in curried <code>R.multiply</code> function to create new function inline.
+We also have every array iteration function accept callback at the first position, thus
+we can even make steps more explicit</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>];</span><br><span class="line"><span class="keyword">var</span> constant = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> print = R.bind(<span class="built_in">console</span>.log, <span class="built_in">console</span>);</span><br><span class="line"><span class="keyword">var</span> multiplyAll = R.map(R.multiply(constant));</span><br><span class="line"><span class="keyword">var</span> printAll = R.forEach(print);</span><br><span class="line">printAll(multiplyAll(numbers));</span><br></pre></td></tr></table></figure>
+<h2 id="composition">Composition</h2><p>The last line in the Ramda example shows something interesting. We have achieved a series of functions that
+execute each other with the dynamic data only appearing once at the very end. When functions call each other
+and pass the result back to the outer function, it is a functional composition operation. We can create
+a single function that performs the same computation and call it with the data.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>];</span><br><span class="line"><span class="keyword">var</span> constant = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> print = R.bind(<span class="built_in">console</span>.log, <span class="built_in">console</span>);</span><br><span class="line"><span class="keyword">var</span> multiplyAll = R.map(R.multiply(constant));</span><br><span class="line"><span class="keyword">var</span> printAll = R.forEach(print);</span><br><span class="line"><span class="keyword">var</span> computation = R.compose(printAll, multiplyAll);</span><br><span class="line">computation(numbers);</span><br></pre></td></tr></table></figure>
+<p>I prefer to work with the reverse of the composition, in order to make the code read as natural as possible</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>];</span><br><span class="line"><span class="keyword">var</span> constant = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> print = R.bind(<span class="built_in">console</span>.log, <span class="built_in">console</span>);</span><br><span class="line"><span class="keyword">var</span> multiplyAll = R.map(R.multiply(constant));</span><br><span class="line"><span class="keyword">var</span> printAll = R.forEach(print);</span><br><span class="line"><span class="comment">// multiple all numbers, then print them</span></span><br><span class="line"><span class="keyword">var</span> computation = R.pipe(multiplyAll, printAll);</span><br><span class="line">computation(numbers);</span><br></pre></td></tr></table></figure>
+<p>I prefer creating small utility functions by currying inline right inside the pipeline, even it is clear
+what they do. This is how much of my code looks today.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>];</span><br><span class="line"><span class="keyword">var</span> constant = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> mulPrint = R.pipe(</span><br><span class="line">  R.map(R.multiply(constant)),</span><br><span class="line">  R.forEach(R.bind(<span class="built_in">console</span>.log, <span class="built_in">console</span>))</span><br><span class="line">);</span><br><span class="line">mulPrint(numbers);</span><br></pre></td></tr></table></figure>
+<p>A nice utility if I want to debug the intermediate steps in the pipeline is
+<a href="http://ramdajs.com/docs/#tap" target="_blank" rel="external">R.tap</a>. The callback function will be passed the value, and the
+same value will be passed unchanged down the pipeline.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>];</span><br><span class="line"><span class="keyword">var</span> constant = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">debugLog</span>(<span class="params"></span>) </span>{ ... }</span><br><span class="line"><span class="keyword">var</span> mulPrint = R.pipe(</span><br><span class="line">  R.map(R.multiply(constant)),</span><br><span class="line">  R.tap(debugLog),</span><br><span class="line">  R.forEach(R.bind(<span class="built_in">console</span>.log, <span class="built_in">console</span>))</span><br><span class="line">);</span><br><span class="line">mulPrint(numbers);</span><br></pre></td></tr></table></figure>
+<p>You can see another example of the regular code transformed to a pipeline in
+<a href="../imperative-to-compose-example/">Imperative to compose example</a>, and see why
+<a href="../lodash-to-ramda-example/">Ramda wins in my eyes</a> compared to Lodash.</p>
+<h2 id="simplifying-logical-operations">Simplifying logical operations</h2><p>Ramda also has a set of logical operations that can be used to remove a lot of <code>if - else</code>
+branches. For example, we might need complicated precondition to continue inside a function</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">1</span>, <span class="number">5</span>, -<span class="number">3</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="literal">null</span>, <span class="number">0</span>, <span class="number">7</span>];</span><br><span class="line"><span class="comment">// select odd positive numbers</span></span><br><span class="line"><span class="keyword">var</span> selected = numbers.filter(<span class="function"><span class="keyword">function</span> (<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> (n &gt; <span class="number">0</span>) &amp;&amp; (n % <span class="number">2</span>);</span><br><span class="line">});</span><br><span class="line"><span class="built_in">console</span>.log(selected); <span class="comment">// [1, 5, 7]</span></span><br></pre></td></tr></table></figure>
+<p>Each condition should be a small reusable function</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">1</span>, <span class="number">5</span>, -<span class="number">3</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="literal">null</span>, <span class="number">0</span>, <span class="number">7</span>];</span><br><span class="line"><span class="comment">// select odd positive numbers</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isPositive</span>(<span class="params">x</span>) </span>{ <span class="keyword">return</span> x &gt; <span class="number">0</span>; }</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isOdd</span>(<span class="params">x</span>) </span>{ <span class="keyword">return</span> x % <span class="number">2</span>; }</span><br><span class="line"><span class="keyword">var</span> selected = numbers.filter(<span class="function"><span class="keyword">function</span> (<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> isPositive(n) &amp;&amp; isOdd(n);</span><br><span class="line">});</span><br><span class="line"><span class="built_in">console</span>.log(selected); <span class="comment">// [1, 5, 7]</span></span><br></pre></td></tr></table></figure>
+<p>We can combine <code>AND</code> predicates using Ramda&apos;s <a href="http://ramdajs.com/docs/#allPass" target="_blank" rel="external">allPass</a> function</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">1</span>, <span class="number">5</span>, -<span class="number">3</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="literal">null</span>, <span class="number">0</span>, <span class="number">7</span>];</span><br><span class="line"><span class="comment">// select odd positive numbers</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isPositive</span>(<span class="params">x</span>) </span>{ <span class="keyword">return</span> x &gt; <span class="number">0</span>; }</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isOdd</span>(<span class="params">x</span>) </span>{ <span class="keyword">return</span> x % <span class="number">2</span>; }</span><br><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> isOddAndPositive = R.allPass([isOdd, isPositive]);</span><br><span class="line"><span class="keyword">var</span> selected = numbers.filter(isOddAndPositive);</span><br><span class="line"><span class="built_in">console</span>.log(selected); <span class="comment">// [1, 5, 7]</span></span><br></pre></td></tr></table></figure>
+<p>Finally, we can make a reusable function to select positive odd numbers</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">1</span>, <span class="number">5</span>, -<span class="number">3</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="literal">null</span>, <span class="number">0</span>, <span class="number">7</span>];</span><br><span class="line"><span class="comment">// select odd positive numbers</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isPositive</span>(<span class="params">x</span>) </span>{ <span class="keyword">return</span> x &gt; <span class="number">0</span>; }</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isOdd</span>(<span class="params">x</span>) </span>{ <span class="keyword">return</span> x % <span class="number">2</span>; }</span><br><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> selectOddPositive = R.filter(R.allPass([ isOdd, isPositive ]));</span><br><span class="line"><span class="built_in">console</span>.log(selectOddPositive(numbers)); <span class="comment">// [1, 5, 7]</span></span><br></pre></td></tr></table></figure>
+<p>The final code is very short, testable and hard to misunderstand. Similarly, one can
+<a href="../refactoring-or/">refactor OR</a> conditions, or even <code>if-else</code> blocks using
+the <a href="http://ramdajs.com/docs/#ifElse" target="_blank" rel="external">ifElse</a> function.</p>
+<h1 id="removing-boilerplate-in-asynchronous-code">Removing boilerplate in asynchronous code</h1><p>NodeJs asynchronous operation convention is to pass a callback function, leading to verbose,
+error-prone code. For example writing a simple function to print all the JavaScript files
+in the current folder requires a lot of boilerplate code (even when using a helper module
+to fetch the files list)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> glob = <span class="built_in">require</span>(<span class="string">&apos;glob&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getJavaScriptFiles</span>(<span class="params">cb</span>) </span>{</span><br><span class="line">  glob(<span class="string">&apos;*.js&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err, files</span>) </span>{</span><br><span class="line">    <span class="keyword">if</span> (err) {</span><br><span class="line">      <span class="keyword">return</span> cb(err);</span><br><span class="line">    }</span><br><span class="line">    cb(<span class="literal">null</span>, files);</span><br><span class="line">  });</span><br><span class="line">}</span><br><span class="line">getJavaScriptFiles(<span class="function"><span class="keyword">function</span> (<span class="params">err, files</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (err) {</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">console</span>.error(err);</span><br><span class="line">  }</span><br><span class="line">  <span class="built_in">console</span>.log(files);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Each step needs to check if the previous one returned an error, not forget to return, etc.
+We can do better by using promises, and especially multiple useful methods present in the major
+libraries, like <a href="https://github.com/kriskowal/q/wiki/API-Reference" target="_blank" rel="external">Q</a> and
+<a href="https://github.com/petkaantonov/bluebird/blob/master/API.md" target="_blank" rel="external">Bluebird</a>. For example
+we can convert a node callback to a promise returning method quickly.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> getJavaScriptFiles = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>)</span><br><span class="line">  .denodeify(<span class="built_in">require</span>(<span class="string">&apos;glob&apos;</span>))</span><br><span class="line">  .bind(<span class="literal">null</span>, <span class="string">&apos;*.js&apos;</span>);</span><br><span class="line">getJavaScriptFiles()</span><br><span class="line">    .then(<span class="built_in">console</span>.log, <span class="built_in">console</span>.error)</span><br><span class="line">    .done();</span><br></pre></td></tr></table></figure>
+<p>Pretty cool, and by using <code>.done()</code> to finish the chain of promises we are making
+sure that any error thrown from any internal function is not <a href="../why-promises-need-to-be-done/">quietly swallowed</a>.</p>
+<p>A lot of code that uses promises still suffers from boilerplate. Let us take this example.
+Two asynchronous functions, then print the result and verify it.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">asyncF</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> defer = Q.defer();</span><br><span class="line">  process.nextTick(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    defer.resolve(<span class="string">&apos;f&apos;</span>);</span><br><span class="line">  });</span><br><span class="line">  <span class="keyword">return</span> defer.promise;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">asyncAddOo</span>(<span class="params">value</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> defer = Q.defer();</span><br><span class="line">  process.nextTick(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    defer.resolve(value + <span class="string">&apos;oo&apos;</span>);</span><br><span class="line">  });</span><br><span class="line">  <span class="keyword">return</span> defer.promise;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">print</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;value =&apos;</span>, x);</span><br><span class="line">  <span class="keyword">return</span> x;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">verify</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(x === <span class="string">&apos;foo&apos;</span>);</span><br><span class="line">}</span><br><span class="line">asyncF()</span><br><span class="line">  .then(asyncAddOo)</span><br><span class="line">  .then(print)</span><br><span class="line">  .then(verify)</span><br><span class="line">  .done();</span><br></pre></td></tr></table></figure>
+<p>First, let us start the promise chain from a value without the boilerplate code</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">asyncAddOo</span>(<span class="params">value</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> defer = Q.defer();</span><br><span class="line">  process.nextTick(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    defer.resolve(value + <span class="string">&apos;oo&apos;</span>);</span><br><span class="line">  });</span><br><span class="line">  <span class="keyword">return</span> defer.promise;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">print</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;value =&apos;</span>, x);</span><br><span class="line">  <span class="keyword">return</span> x;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">verify</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(x === <span class="string">&apos;foo&apos;</span>);</span><br><span class="line">}</span><br><span class="line">Q(<span class="string">&apos;f&apos;</span>)</span><br><span class="line">  .then(asyncAddOo)</span><br><span class="line">  .then(print)</span><br><span class="line">  .then(verify)</span><br><span class="line">  .done();</span><br></pre></td></tr></table></figure>
+<p>Second, any function that is NOT the first call,
+will be part of the promise by default and does not need to make a new promise itself.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">addOo</span>(<span class="params">value</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> value + <span class="string">&apos;oo&apos;</span>;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">print</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;value =&apos;</span>, x);</span><br><span class="line">  <span class="keyword">return</span> x;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">verify</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(x === <span class="string">&apos;foo&apos;</span>);</span><br><span class="line">}</span><br><span class="line">Q(<span class="string">&apos;f&apos;</span>)</span><br><span class="line">  .then(addOo)</span><br><span class="line">  .then(print)</span><br><span class="line">  .then(verify)</span><br><span class="line">  .done();</span><br></pre></td></tr></table></figure>
+<p>or even</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">print</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;value =&apos;</span>, x);</span><br><span class="line">  <span class="keyword">return</span> x;</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">verify</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(x === <span class="string">&apos;foo&apos;</span>);</span><br><span class="line">}</span><br><span class="line">Q(<span class="string">&apos;f&apos;</span>)</span><br><span class="line">  .then(R.add(R.__, <span class="string">&apos;oo&apos;</span>)) <span class="comment">// leave the first argument free</span></span><br><span class="line">  .then(print)</span><br><span class="line">  .then(verify)</span><br><span class="line">  .done();</span><br></pre></td></tr></table></figure>
+<p>Third, let us remove the <code>return</code> statement from the <code>print</code> function, using <code>R.tap</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">print</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;value =&apos;</span>, x);</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">verify</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(x === <span class="string">&apos;foo&apos;</span>);</span><br><span class="line">}</span><br><span class="line">Q(<span class="string">&apos;f&apos;</span>)</span><br><span class="line">  .then(R.add(R.__, <span class="string">&apos;oo&apos;</span>))</span><br><span class="line">  .then(R.tap(print))</span><br><span class="line">  .then(verify)</span><br><span class="line">  .done();</span><br></pre></td></tr></table></figure>
+<p>Third, Ramda works great with promise chains, just like it works great with ordinary functions.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">print</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;value =&apos;</span>, x);</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">verify</span>(<span class="params">x</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(x === <span class="string">&apos;foo&apos;</span>);</span><br><span class="line">}</span><br><span class="line"><span class="keyword">var</span> printThenVerify = R.pipeP(</span><br><span class="line">  R.add(R.__, <span class="string">&apos;oo&apos;</span>),</span><br><span class="line">  R.tap(print),</span><br><span class="line">  verify</span><br><span class="line">);</span><br><span class="line">Q(<span class="string">&apos;f&apos;</span>)</span><br><span class="line">  .then(printThenVerify);</span><br></pre></td></tr></table></figure>
+<p>The clarity of asynchronous pipelines becomes very obvious in any real-world application.
+For the most power, check <a href="https://github.com/petkaantonov/bluebird/blob/master/API.md#mapfunction-mapper--object-options---promise" target="_blank" rel="external">Bluebird .map</a> function that allows to process a list of
+promises with a given concurrency limit</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fs.readdirAsync(<span class="string">&apos;.&apos;</span>)</span><br><span class="line">    .map(processFile, { concurrency: <span class="number">3</span> })</span><br><span class="line">    .then(fileResults);</span><br></pre></td></tr></table></figure>
+<p>Imagine how much boilerplate this single method removes!</p>
+<h1 id="boilerplate-in-the-unit-tests">Boilerplate in the unit tests</h1><h2 id="use-a-better-framework">Use a better framework</h2><p>If you use Jasmine or QUnit, consider using Mocha unit testing framework.
+I <a href="../picking-javascript-testing-framework/">prefer</a> Mocha because it understands the async promise-returning
+code natively. Just return a promise from a unit test to let the framework know what to do.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">QUnit.test(<span class="string">&apos;a test&apos;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">assert</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> done = assert.async();</span><br><span class="line">  asyncOperation(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="comment">// assert something</span></span><br><span class="line">    done();</span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Compare this to Mocha - just return the promise</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;works&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> asyncOperation()</span><br><span class="line">    .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      <span class="comment">// assert something</span></span><br><span class="line">    });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<h2 id="write-a-wrapper-that-removes-the-boilerplate">Write a wrapper that removes the boilerplate</h2><p>You can also write your own API- or library-specific wrappers for removing unit test boilerplate.
+For example, we wrote <a href="https://github.com/kensho/ng-describe" target="_blank" rel="external">ng-describe</a> that removes a LOT of boilerplate code
+from AngularJS unit tests</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// typical AngularJS unit test</span></span><br><span class="line">describe(<span class="string">&apos;typical test&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> $rootScope, foo;</span><br><span class="line">    beforeEach(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">        angular.mock.module(<span class="string">&apos;A&apos;</span>);</span><br><span class="line">        <span class="comment">// other modules</span></span><br><span class="line">    });</span><br><span class="line">    beforeEach(inject(<span class="function"><span class="keyword">function</span> (<span class="params">_$rootScope_, _foo_</span>) </span>{</span><br><span class="line">        $rootScope = _$rootScope_;</span><br><span class="line">        foo = _foo_;</span><br><span class="line">    }));</span><br><span class="line">    it(<span class="string">&apos;finally a test&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">        $rootScope.$apply(); <span class="comment">// for example</span></span><br><span class="line">        expect(foo).toEqual(<span class="string">&apos;bar&apos;</span>);</span><br><span class="line">    });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>The same unit test using <code>ng-describe</code> cuts out all verbose repetitive parts</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ngDescribe({</span><br><span class="line">    modules: <span class="string">&apos;A&apos;</span>,</span><br><span class="line">    inject: [<span class="string">&apos;$rootScope&apos;</span>, <span class="string">&apos;foo&apos;</span>],</span><br><span class="line">    tests: <span class="function"><span class="keyword">function</span> (<span class="params">deps</span>) </span>{</span><br><span class="line">        it(<span class="string">&apos;finally a test&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">            deps.$rootScope.$apply();</span><br><span class="line">            expect(deps.foo).toEqual(<span class="string">&apos;bar&apos;</span>);</span><br><span class="line">        });</span><br><span class="line">    });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Do not think that just because a popular library has a tool (like AngularJs that has
+<a href="https://docs.angularjs.org/api/ngMock" target="_blank" rel="external">angular-mocks</a> for testing),
+that this tool is the ultimate perfection. You might be able to write a tool that perfectly
+solves your particular use case.</p>
+<h2 id="remove-boilerplate-from-assertions">Remove boilerplate from assertions</h2><p>The assertions inside unit tests can have a lot of boilerplate if you try to make sure that a failed
+assertion provides plenty of context to allow quick debugging. For example, just using a predicate
+generates an empty exception message.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;does something&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  ...</span><br><span class="line">  expect(foo).toEqual(<span class="string">&apos;bar&apos;</span>);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<pre><code><span class="keyword">test</span> <span class="string">&quot;does something&quot;</span> failed
+<span class="keyword">Error</span>:
+</code></pre><p>At most we get the source line from the stack. What is the assertion that failed? What was the value of <code>foo</code>
+that we were comparing to the string <code>bar</code>? We usually write this manually.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;does something&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  ...</span><br><span class="line">  expect(foo).toEqual(<span class="string">&apos;bar&apos;</span>, <span class="string">&apos;expected foo to equal &quot;bar&quot;&apos;</span>);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<pre><code>test <span class="string">&quot;does something&quot;</span> failed
+Error: expected foo <span class="keyword">to</span> <span class="keyword">equal</span> <span class="string">&quot;bar&quot;</span>
+</code></pre><p>We still don&apos;t know the value of <code>foo</code>, so let us add it to the message. Most assertion libraries only
+allow a single message argument after the predicate, thus we are forced to concatenate.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;does something&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  ...</span><br><span class="line">  expect(foo).toEqual(<span class="string">&apos;bar&apos;</span>,</span><br><span class="line">    <span class="string">&apos;expected foo &apos;</span> + foo + <span class="string">&apos; to equal &quot;bar&quot;&apos;</span>);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<pre><code>test <span class="string">&quot;does something&quot;</span> failed
+Error: expected foo something <span class="keyword">to</span> <span class="keyword">equal</span> <span class="string">&quot;bar&quot;</span>
+</code></pre><p>Because <code>foo</code> could be a complex object, we need to stringify it better to avoid <code>[object Object]</code> text</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&apos;does something&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  ...</span><br><span class="line">  expect(foo).toEqual(<span class="string">&apos;bar&apos;</span>,</span><br><span class="line">    <span class="string">&apos;expected foo &apos;</span> + <span class="built_in">JSON</span>.stringify(foo) + <span class="string">&apos; to equal &quot;bar&quot;&apos;</span>);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>This code is slow, verbose, and forces us to repeat the assertion <code>expect(foo).toEqual(bar)</code> inside
+the error message. We solved this problem in two parts:</p>
+<h2 id="lazy-assertions">lazy assertions</h2><p>First, we wrote an assertion library that allows unlimited number of arguments after the predicate.
+The arguments are intelligently stringified if the predicate is false, thus avoiding the performance
+penalty, yet providing a lot of context.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// require(&apos;lazy-ass&apos;);</span></span><br><span class="line">it(<span class="string">&apos;does something&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  la(foo === <span class="string">&apos;bar&apos;</span>, <span class="string">&apos;expected foo&apos;</span>, foo, <span class="string">&apos;to equal &quot;bar&quot;&apos;</span>);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>See the library at <a href="https://github.com/bahmutov/lazy-ass" target="_blank" rel="external">lazy-ass</a></p>
+<h2 id="source-code-rewriting">source code rewriting</h2><p>Second, in our unit tests we rewrite the source code on the fly to generate the assertion message.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> helpfulDescribe = <span class="built_in">require</span>(<span class="string">&apos;lazy-ass-helpful&apos;</span>);</span><br><span class="line">helpfulDescribe(<span class="function"><span class="keyword">function</span> <span class="title">tests</span>(<span class="params"></span>) </span>{</span><br><span class="line">  it(<span class="string">&apos;does something&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    la(foo === <span class="string">&apos;bar&apos;</span>);</span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>When the code runs, the <code>helpfulDescribe</code> re-evaluates the callback <code>tests</code> after rewriting
+its source. It inserts the predicate expression as string and the values of all variables into the
+assertion. The above example thus becomes at runtime</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> helpfulDescribe = <span class="built_in">require</span>(<span class="string">&apos;lazy-ass-helpful&apos;</span>);</span><br><span class="line">helpfulDescribe(<span class="function"><span class="keyword">function</span> <span class="title">tests</span>(<span class="params"></span>) </span>{</span><br><span class="line">  it(<span class="string">&apos;does something&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    la(foo === <span class="string">&apos;bar&apos;</span>, <span class="string">&apos;condition [foo === &quot;bar&quot;], foo is&apos;</span>, foo);</span><br><span class="line">  });</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Every assertion is expanded to provide values of variables automatically.
+Check out more examples in <a href="https://github.com/bahmutov/lazy-ass-helpful" target="_blank" rel="external">lazy-ass-helpful</a></p>
+<h1 id="boilerplate-and-es6">Boilerplate and ES6</h1><p>ES6 (or EcmaScript2015) adds a lot of syntactic suger. Some of it is useless in my opinion, like
+<code>class</code> keyword. The most interesting in my opinion are the new concepts from ES6
+that remove the boilerplate.
+For example, the <a href="http://es6-features.org/#RestParameter" target="_blank" rel="external">rest parameter</a> can remove a lot of boilerplate
+when getting the list of arguments as an array.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">f</span>(<span class="params">x, y</span>) </span>{</span><br><span class="line">  <span class="comment">// need all arguments after &quot;y&quot;</span></span><br><span class="line">  <span class="keyword">var</span> a = <span class="built_in">Array</span>.prototype.slice.call(<span class="built_in">arguments</span>, <span class="number">2</span>);</span><br><span class="line">  ...</span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<p>Using <a href="https://lodash.com/docs#toArray" target="_blank" rel="external">lodash toArray</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">f</span>(<span class="params">x, y</span>) </span>{</span><br><span class="line">  <span class="comment">// need all arguments after &quot;y&quot;</span></span><br><span class="line">  <span class="keyword">var</span> a = _.toArray(<span class="built_in">arguments</span>).slice(<span class="number">2</span>);</span><br><span class="line">  ...</span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<p>Using ES6 rest parameter</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">f</span>(<span class="params">x, y, ...a</span>) </span>{</span><br><span class="line">  <span class="comment">// a is an array of arguments after &quot;y&quot;</span></span><br><span class="line">  ...</span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<p>Similarly, ES6 allows to <a href="http://es6-features.org/#DefaultParameterValues" target="_blank" rel="external">specify default values</a>
+for arguments on the right</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">f</span> (<span class="params">x, y, z</span>) </span>{</span><br><span class="line">    <span class="keyword">if</span> (y === <span class="literal">undefined</span>)</span><br><span class="line">        y = <span class="number">7</span>;</span><br><span class="line">    <span class="keyword">if</span> (z === <span class="literal">undefined</span>)</span><br><span class="line">        z = <span class="number">42</span>;</span><br><span class="line">    <span class="keyword">return</span> x + y + z;</span><br><span class="line">};</span><br><span class="line"><span class="comment">// es6</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">f</span> (<span class="params">x, y = 7, z = 42</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> x + y + z</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<h2 id="computed-property-names">Computed property names</h2><p>In ES5 we had to add properties that were computed as separate steps</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> foo = <span class="string">&apos;...&apos;</span>;</span><br><span class="line"><span class="keyword">var</span> o = {};</span><br><span class="line">o[foo] = <span class="number">42</span>;</span><br></pre></td></tr></table></figure>
+<p>In ES6 we can just list them when creating the object</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> foo = <span class="string">&apos;...&apos;</span>;</span><br><span class="line"><span class="keyword">var</span> o = {</span><br><span class="line">  [foo]: <span class="number">42</span></span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>The property name <code>foo</code> will be computed.</p>
+<h2 id="parameter-context-matching">Parameter context matching</h2><p>When passing options object, the new parameter matching might be useful.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// in both cases add({ a: 10, b: 20 })</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">options</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> options.a + options.b;</span><br><span class="line">}</span><br><span class="line"><span class="comment">// vs ES6</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">{a, b}</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> a + b;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<h2 id="arrow-functions">Arrow functions</h2><p>Shorthand for small anonymous functions: preserves <code>this</code>, returns the last value automatically.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">numbers.map(<span class="function"><span class="keyword">function</span> (<span class="params">v</span>) </span>{ <span class="keyword">return</span> v + <span class="number">1</span>; });</span><br><span class="line"><span class="comment">// es6</span></span><br><span class="line">numbers.map(v =&gt; v + <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>I am not sure this is a great feature. The functions are anonymous, making debugging more difficult.
+I also prefer using utility functions that are tested as part of the library. For example</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> R = <span class="built_in">require</span>(<span class="string">&apos;ramda&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> add1 = R.add(<span class="number">1</span>);</span><br><span class="line">numbers.map(add1);</span><br><span class="line"><span class="comment">// rather than</span></span><br><span class="line">numbers.map(v =&gt; v + <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>Small arrow functions can be useful, but at the cost of readability and testability in my personal opinion.
+Ramda allows simpler (in my opinion) point-free code.</p>
+<h1 id="additional-tools">Additional tools</h1><ul>
+<li><a href="https://github.com/bahmutov/changed-complexity" target="_blank" rel="external">changed-complexity</a> reports the difference in complexity
+in the changed file before a commit. At least answers the questions: how many lines of code I have added or removed?</li>
+<li><a href="https://www.npmjs.com/package/jscpd" target="_blank" rel="external">jscpd</a> detects the copied code fragments in your repo.</li>
+</ul>
+<h1 id="conclusions">Conclusions</h1><p>We can remove a lot of custom code using the following principles</p>
+<ul>
+<li>writing small testable functions with a single clear goal</li>
+<li>designing the signatures to allow quick and natural partial application or currying</li>
+<li>combining small functions into pipelines using standard composition</li>
+<li>using promises and helper methods from promise libraries to handle asynchronous code</li>
+<li>designing helper methods for unit testing our code</li>
+<li>using the new ES6 constructs</li>
+</ul>
+<p>I hope that you take my advice to heart and start removing more code every day. To help, I tagged more of
+my blog posts that deal with the boilerplate code, see the list at
+<a href="http://glebbahmutov.com/blog/tags/boilerplate/" target="_blank" rel="external">glebbahmutov.com/blog/tags/boilerplate/</a>.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/remove-the-boilerplate/" data-id="cihtr6vy800bhl3ur32fde3h6" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/remove-the-boilerplate/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/advice/">advice</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/boilerplate/">boilerplate</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/">javascript</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../async-angular-filter/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Async Angular filter
+        
+      </div>
+    </a>
+  
+  
+    <a href="../di-vs-io-monad-example/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Dependency injection vs IO Monad example</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/remove-the-boilerplate/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

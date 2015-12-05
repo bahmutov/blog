@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Immutable JavaScript example | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="I prefer using Array.prototype.map over Array.prototype.forEach because .map semantically 
+signals to everyone that it constructs a new array, while .forEach might modify the existing one. 
+In order t">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Immutable JavaScript example">
+<meta property="og:url" content="http://glebbahmutov.com/blog/immutable-javascript-example/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="I prefer using Array.prototype.map over Array.prototype.forEach because .map semantically 
+signals to everyone that it constructs a new array, while .forEach might modify the existing one. 
+In order t">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Immutable JavaScript example">
+<meta name="twitter:description" content="I prefer using Array.prototype.map over Array.prototype.forEach because .map semantically 
+signals to everyone that it constructs a new array, while .forEach might modify the existing one. 
+In order t">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-immutable-javascript-example" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2014-11-22T05:00:00.000Z" itemprop="datePublished">Nov 22 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Immutable JavaScript example
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Implementing Todo list with Undo using immutable data structure.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>I prefer using <code>Array.prototype.map</code> over <code>Array.prototype.forEach</code> because <code>.map</code> semantically 
+signals to everyone that it constructs a new array, while <code>.forEach</code> might modify the existing one. 
+In order to actually prevent modifying the array in <code>.map</code>, one needs to use an immutable
+array, see <a href="../avoid-side-effects-with-immutable-data-structures/">Avoiding Side Effects</a> blog post. In this blog post I will
+show another benefit of using an immutable list in my JavaScript programs - easy implementation
+of Undo command.</p>
+<p>This is an exploration in progress of immutable data in JavaScript. 
+I am not sure that this example clearly shows the advantages of immutability. Consider this a
+practice exercise. I implement a Todo list using the traditional object oriented encapsulation
+and the same features using an immutable data structure. I also answered a few questions at the end of this
+blog post; these questions poped up as I was working with immutable objects.</p>
+<h2 id="todo-list-using-oo">Todo list using OO</h2><p>I will start with implementing a simple Todo list using a regular array. Each item has a label and
+<code>done</code> property.</p>
+<h3 id="using-individual-todo-items">Using individual todo items</h3><p>My initial implementation allows to directly modify the state of a todo item in the collection</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Todos</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> _todos = [];</span><br><span class="line">  <span class="keyword">var</span> todosModule = {</span><br><span class="line">    add: <span class="function"><span class="keyword">function</span> (<span class="params">label</span>) </span>{</span><br><span class="line">      <span class="keyword">var</span> newTodo = {</span><br><span class="line">        label: label,</span><br><span class="line">        done: <span class="literal">false</span></span><br><span class="line">      };</span><br><span class="line">      _todos.push(newTodo);</span><br><span class="line">      <span class="keyword">return</span> newTodo;</span><br><span class="line">    },</span><br><span class="line">    toString: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      <span class="keyword">return</span> _todos.map(<span class="function"><span class="keyword">function</span> (<span class="params">todo</span>) </span>{</span><br><span class="line">        <span class="keyword">return</span> todo.label + <span class="string">&apos; &apos;</span> + (todo.done ? <span class="string">&apos;done&apos;</span> : <span class="string">&apos;&apos;</span>);</span><br><span class="line">      }).join(<span class="string">&apos;\n&apos;</span>);</span><br><span class="line">    }</span><br><span class="line">  };</span><br><span class="line">  <span class="keyword">return</span> todosModule;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>The above code makes marking an individual item as done very convenient</p>
+<pre><code><span class="comment">// typical use</span>
+<span class="keyword">var</span> todos = Todos();
+<span class="keyword">var</span> doFoo = todos.add(<span class="string">&apos;foo&apos;</span>);
+<span class="keyword">var</span> doBar = todos.add(<span class="string">&apos;bar&apos;</span>);
+<span class="built_in">console</span>.log(todos.toString());
+<span class="comment">// foo</span>
+<span class="comment">// bar</span>
+doFoo.done = <span class="literal">true</span>;
+<span class="built_in">console</span>.log(todos.toString());
+<span class="comment">// foo done</span>
+<span class="comment">// bar</span>
+doBar.done = <span class="literal">true</span>;
+<span class="built_in">console</span>.log(todos.toString());
+<span class="comment">// foo done</span>
+<span class="comment">// bar done</span>
+</code></pre><p>Unfortunately I do not see how to implement <code>todos.undo()</code> if the list has no idea what has happened.
+I will need to move <code>done</code> into the <code>todos</code> object</p>
+<h3 id="using-todos-api-to-mark-item-done">Using Todos API to mark item done</h3><pre><code><span class="function"><span class="keyword">function</span> <span class="title">Todos</span><span class="params">()</span> </span>{
+  <span class="keyword">var</span> _todos = [];
+  <span class="keyword">var</span> todosModule = {
+    add: <span class="function"><span class="keyword">function</span> <span class="params">(label)</span> </span>{
+      _todos.push({
+        label: label,
+        done: <span class="literal">false</span>
+      });
+      <span class="keyword">return</span> todosModule;
+    },
+    done: <span class="function"><span class="keyword">function</span> <span class="params">(index)</span> </span>{
+      _todos[index].done = <span class="literal">true</span>;
+      <span class="keyword">return</span> todosModule;
+    },
+    toString: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      <span class="keyword">return</span> _todos.map(<span class="function"><span class="keyword">function</span> <span class="params">(todo)</span> </span>{
+        <span class="keyword">return</span> todo.label + <span class="string">&apos; &apos;</span> + (todo.done ? <span class="string">&apos;done&apos;</span> : <span class="string">&apos;&apos;</span>);
+      }).join(<span class="string">&apos;\n&apos;</span>);
+    }
+  };
+  <span class="keyword">return</span> todosModule;
+}
+</code></pre><p>The <code>Todos</code> object only has 3 methods <code>add</code>, <code>done</code> and <code>toString</code>. One can easily add tasks,
+print them, and mark an individual task as done.</p>
+<pre><code>var todos = Todos();
+todos
+  .<span class="built_in">add</span>(<span class="string">&apos;foo&apos;</span>)
+  .<span class="built_in">add</span>(<span class="string">&apos;bar&apos;</span>);
+console.<span class="built_in">log</span>(todos.toString());
+<span class="comment">// foo</span>
+<span class="comment">// bar</span>
+todos.done(<span class="number">0</span>);
+console.<span class="built_in">log</span>(todos.toString());
+<span class="comment">// foo done</span>
+<span class="comment">// bar</span>
+todos.done(<span class="number">1</span>);
+console.<span class="built_in">log</span>(todos.toString());
+<span class="comment">// foo done</span>
+<span class="comment">// bar done</span>
+</code></pre><p>There is only a single reference <code>todos</code> always pointing at the same object. When we call <code>todos.add</code> we modify
+the only instance. This makes implementing <code>undo</code> simple.</p>
+<h2 id="cleardone">clearDone</h2><p>If we mark items done, let us clear the list of done items too.</p>
+<pre><code>clearDone: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{
+  _todos = _todos.filter(<span class="function"><span class="keyword">function</span> (<span class="params">todo</span>) </span>{
+    <span class="keyword">return</span> !todo.done;
+  });
+  <span class="keyword">return</span> todosModule;
+}
+<span class="comment">// use clearDone</span>
+<span class="keyword">var</span> todos = Todos();
+todos.add(<span class="string">&apos;foo&apos;</span>).add(<span class="string">&apos;bar&apos;</span>);
+todos.done(<span class="number">0</span>);
+<span class="built_in">console</span>.log(todos.toString());
+<span class="comment">// foo done</span>
+<span class="comment">// bar</span>
+todos.clearDone();
+<span class="built_in">console</span>.log(todos.toString());
+<span class="comment">// bar</span>
+</code></pre><h2 id="undo-cleardone-command">Undo clearDone command</h2><p>We will keep track of <code>done</code> calls using list of commands. Each command is an object that can reverse a
+previous <code>todos</code> list modification. An example of a command with undo:</p>
+<pre><code><span class="keyword">var</span> sum = <span class="number">0</span>;
+<span class="function"><span class="keyword">function</span> <span class="title">add</span><span class="params">(a)</span> </span>{
+    sum += a;
+    <span class="keyword">return</span> {
+        undo: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+            sum -= a;
+        }
+    };
+}
+<span class="keyword">var</span> undoAdd10 = add(<span class="number">10</span>); <span class="comment">// sum = 10</span>
+<span class="keyword">var</span> undoAdd20 = add(<span class="number">20</span>); <span class="comment">// sum = 30</span>
+undoAdd20.undo(); <span class="comment">// sum = 10</span>
+undoAdd10.undo(); <span class="comment">// sum = 0</span>
+</code></pre><p>We should respect the action order, thus we will use a stack to keep list of commands to undo
+them in reverse order.</p>
+<pre><code><span class="function"><span class="keyword">function</span> <span class="title">Todos</span><span class="params">()</span> </span>{
+  <span class="keyword">var</span> _todos = [];
+  <span class="keyword">var</span> _commands = [];
+  <span class="keyword">var</span> todosModule = {
+    add: <span class="function"><span class="keyword">function</span> <span class="params">(label)</span> </span>{
+      _todos.push({
+        label: label,
+        done: <span class="literal">false</span>
+      });
+      <span class="keyword">return</span> todosModule;
+    },
+    done: <span class="function"><span class="keyword">function</span> <span class="params">(index)</span> </span>{
+      _todos[index].done = <span class="literal">true</span>;
+      <span class="keyword">return</span> todosModule;
+    },
+    toString: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      <span class="keyword">return</span> _todos.map(<span class="function"><span class="keyword">function</span> <span class="params">(todo)</span> </span>{
+        <span class="keyword">return</span> todo.label + <span class="string">&apos; &apos;</span> + (todo.done ? <span class="string">&apos;done&apos;</span> : <span class="string">&apos;&apos;</span>);
+      }).join(<span class="string">&apos;\n&apos;</span>);
+    },
+    clearDone: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      _commands.push({
+        <span class="comment">// save entire list using undo function closure</span>
+        undo: <span class="function"><span class="keyword">function</span> <span class="params">(prevTodos)</span> </span>{
+          _todos = prevTodos;
+        }.bind(<span class="literal">null</span>, _todos)
+      });
+      _todos = _todos.filter(<span class="function"><span class="keyword">function</span> <span class="params">(todo)</span> </span>{
+        <span class="keyword">return</span> !todo.done;
+      });
+      <span class="keyword">return</span> todosModule;
+    },
+    undo: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      <span class="keyword">if</span> (_commands.length) {
+        _commands.pop().undo();
+      }
+    }
+  };
+  <span class="keyword">return</span> todosModule;
+}
+</code></pre><p>we can set <code>done</code>, clear done tasks, then undo the clear operation</p>
+<pre><code><span class="keyword">var</span> todos = Todos();
+todos.<span class="keyword">add</span>(<span class="string">&apos;foo&apos;</span>).<span class="keyword">add</span>(<span class="string">&apos;bar&apos;</span>);
+todos.done(<span class="number">0</span>);
+<span class="comment">// foo done</span>
+<span class="comment">// bar</span>
+todos.clearDone();
+<span class="comment">// bar</span>
+todos.undo();
+<span class="comment">// foo done</span>
+<span class="comment">// bar</span>
+</code></pre><p>Notice the added complexity that now is inside the Todos object. Because the undo commands need full access
+to the list, the undo functionality is added inside the <code>Todos</code> closure.</p>
+<h2 id="undo-any-action">Undo any action</h2><p>Our undo <code>clearDone</code> feature just restores the previous list. Why don&apos;t we reuse it for other actions?
+Let us factor it out into <code>checkpoint</code> function</p>
+<pre><code><span class="function"><span class="keyword">function</span> <span class="title">Todos</span><span class="params">()</span> </span>{
+  <span class="keyword">var</span> _todos = [];
+  <span class="keyword">var</span> _commands = [];
+  <span class="function"><span class="keyword">function</span> <span class="title">checkPoint</span><span class="params">()</span> </span>{
+    _commands.push({
+      undo: <span class="function"><span class="keyword">function</span> <span class="params">(prevTodos)</span> </span>{
+        _todos = prevTodos;
+      }.bind(<span class="literal">null</span>, _todos)
+    });
+  }
+  <span class="keyword">var</span> todosModule = {
+    clearDone: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      checkPoint();
+      _todos = _todos.filter(<span class="function"><span class="keyword">function</span> <span class="params">(todo)</span> </span>{
+        <span class="keyword">return</span> !todo.done;
+      });
+      <span class="keyword">return</span> todosModule;
+    }
+    <span class="comment">// the rest is the same</span>
+  }
+}
+</code></pre><p>Now we can just call <code>checkPoint</code> before any action, and we get the undo feature.</p>
+<pre><code><span class="keyword">var</span> todosModule = {
+  add: <span class="function"><span class="keyword">function</span> <span class="params">(label)</span> </span>{
+    checkPoint();
+    _todos.push({
+      label: label,
+      done: <span class="literal">false</span>
+    });
+    <span class="keyword">return</span> todosModule;
+  },
+  done: <span class="function"><span class="keyword">function</span> <span class="params">(index)</span> </span>{
+    checkPoint();
+    _todos[index].done = <span class="literal">true</span>;
+    <span class="keyword">return</span> todosModule;
+  },
+  clearDone: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+    checkPoint();
+    _todos = _todos.filter(<span class="function"><span class="keyword">function</span> <span class="params">(todo)</span> </span>{
+      <span class="keyword">return</span> !todo.done;
+    });
+    <span class="keyword">return</span> todosModule;
+  },
+  toString: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+    <span class="keyword">return</span> _todos.map(<span class="function"><span class="keyword">function</span> <span class="params">(todo)</span> </span>{
+      <span class="keyword">return</span> todo.label + <span class="string">&apos; &apos;</span> + (todo.done ? <span class="string">&apos;done&apos;</span> : <span class="string">&apos;&apos;</span>);
+    }).join(<span class="string">&apos;\n&apos;</span>);
+  },
+  undo: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+    <span class="keyword">if</span> (_commands.length) {
+      _commands.pop().undo();
+    }
+  }
+};
+</code></pre><h2 id="wait-something-is-wrong">Wait, something is wrong!</h2><p>We are not correctly restoring the todo list after marking an item done</p>
+<pre><code>var todos = Todos();
+todos.<span class="built_in">add</span>(<span class="string">&apos;foo&apos;</span>).<span class="built_in">add</span>(<span class="string">&apos;bar&apos;</span>);
+todos.done(<span class="number">0</span>);
+console.<span class="built_in">log</span>(todos.toString());
+<span class="comment">// foo done</span>
+<span class="comment">// bar</span>
+console.<span class="built_in">log</span>(<span class="string">&apos;undo done()&apos;</span>);
+todos.undo();
+console.<span class="built_in">log</span>(todos.toString());
+<span class="comment">// foo done</span>
+<span class="comment">// bar done</span>
+</code></pre><p>Notice that the item <code>foo</code> still remains <code>done</code>! This is because we are making a copy of the
+reference to the list, not a deep copy of the todos.</p>
+<h2 id="deep-clone-_todos">Deep clone _todos</h2><p>A good approach to simplify the saving and restoring of todos list is to
+deep clone the list.</p>
+<pre><code><span class="function"><span class="keyword">function</span> <span class="title">checkPoint</span>(<span class="params"></span>) </span>{
+  <span class="keyword">var</span> _ = <span class="built_in">require</span>(<span class="string">&apos;lodash&apos;</span>);
+  _commands.push({
+    undo: <span class="function"><span class="keyword">function</span> (<span class="params">prevTodos</span>) </span>{
+      _todos = prevTodos;
+    }.bind(<span class="literal">null</span>, _.cloneDeep(_todos))
+  });
+}
+</code></pre><p>Now any operation can be undone, not matter how it is implemented</p>
+<pre><code>var todos = Todos();
+todos.<span class="built_in">add</span>(<span class="string">&apos;foo&apos;</span>).<span class="built_in">add</span>(<span class="string">&apos;bar&apos;</span>);
+todos.done(<span class="number">0</span>);
+console.<span class="built_in">log</span>(todos.toString());
+<span class="comment">// foo done</span>
+<span class="comment">// bar</span>
+console.<span class="built_in">log</span>(<span class="string">&apos;undo done()&apos;</span>);
+todos.undo();
+console.<span class="built_in">log</span>(todos.toString());
+<span class="comment">// foo</span>
+<span class="comment">// bar</span>
+</code></pre><p>I call this approach <em>semi-immutable</em>. We are making a copy of the internal data structure, with this extra complexity
+inside the Todos instance.</p>
+<h2 id="multiple-references-and-equality">Multiple references and equality</h2><p>If we reference the todos list in several places, can we check if it has been modified? For example,
+we could maintain the reference to the list in our MVC model object, and pass reference to the view object.</p>
+<pre><code><span class="comment">// model</span>
+<span class="variable"><span class="keyword">var</span> todos</span> = Todos();
+view.render(todos);
+<span class="comment">// view renders todos, allows user to mark items done</span>
+<span class="comment">// should we save todos to the server?</span>
+</code></pre><p>To see if we need to save todos to the server, we could add new feature to the Todos object. Every
+method that modifies the internal state could mark the object <code>dirty</code>.</p>
+<pre><code><span class="function"><span class="keyword">function</span> <span class="title">Todos</span><span class="params">()</span> </span>{
+  <span class="keyword">var</span> _todos = [];
+  <span class="keyword">var</span> _commands = [];
+  <span class="keyword">var</span> _dirty;
+  <span class="keyword">var</span> todosModule = {
+    add: <span class="function"><span class="keyword">function</span> <span class="params">(label)</span> </span>{
+      checkPoint();
+      _dirty = <span class="literal">true</span>;
+      <span class="comment">// ...</span>
+    },
+    done: <span class="function"><span class="keyword">function</span> <span class="params">(index)</span> </span>{
+      checkPoint();
+      _dirty = <span class="literal">true</span>;
+      <span class="comment">// ...</span>
+    },
+    clearDone: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      checkPoint();
+      _dirty = <span class="literal">true</span>;
+      ...
+    }
+    undo: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      <span class="keyword">if</span> (_commands.length) {
+        _commands.pop().undo();
+        _dirty = <span class="literal">true</span>;
+      }
+    },
+    isDirty: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      <span class="keyword">return</span> _dirty;
+    }
+  };
+</code></pre><p>Notice the added complexity: our list of todo items now has two additional features mixed in: undo commands 
+and dirty state bit.</p>
+<p>The dirty bit is also inefficient.</p>
+<pre><code>var todos = Todos():
+<span class="built_in">save</span>(todos);
+todos.<span class="built_in">add</span>(<span class="string">&apos;bar&apos;</span>);
+todos.undo();
+<span class="keyword">if</span> (todos.isDirty()) {
+    <span class="built_in">save</span>(todos);
+}
+</code></pre><p>The second save is unnecessary, since we reverted the state back to the way it was during the first one.
+Instead of the dirty bit, we could actually compare item <em>contents</em> for equality. For this we need to break privacy
+and return <code>_todos</code> so that it is possible to compare two lists using deep equality comparison 
+<a href="https://lodash.com/docs#isEqual" target="_blank" rel="external">lodash.isEqual</a>.</p>
+<pre><code><span class="function"><span class="keyword">function</span> <span class="title">Todos</span><span class="params">()</span> </span>{
+  <span class="keyword">var</span> _todos = [];
+  <span class="keyword">var</span> _commands = [];
+  <span class="comment">// no dirty bit</span>
+  <span class="keyword">var</span> todosModule = {
+    items: <span class="function"><span class="keyword">function</span><span class="params">()</span>
+    <span class="title">isEqual</span><span class="type">: function</span> <span class="params">(t)</span> </span>{
+        <span class="keyword">var</span> _ = require(<span class="string">&apos;lodash&apos;</span>);
+        <span class="keyword">return</span> _.isEqual(t.items(), _todos);
+    }
+  }
+}
+</code></pre><p>We are both breaking the privacy and use expensive method just to confirm that nothing has changed since
+last time we used the object.</p>
+<h2 id="immutable-todo-list-implementation">Immutable todo list implementation</h2><p>The main principle behind the immutable data is that every time something changes we construct a new
+object. Instead of plain array, I will use a wrapper from <a href="https://www.npmjs.org/package/seamless-immutable" target="_blank" rel="external">seamless-immutable</a>.</p>
+<pre><code><span class="keyword">var</span> Immutable = <span class="built_in">require</span>(<span class="string">&apos;seamless-immutable&apos;</span>);
+<span class="function"><span class="keyword">function</span> <span class="title">Todos</span>(<span class="params">todos</span>) </span>{
+  todos = todos || Immutable([]);
+  <span class="keyword">var</span> todosModule = {
+    add: <span class="function"><span class="keyword">function</span> (<span class="params">label</span>) </span>{
+      <span class="keyword">var</span> newTodo = {
+        label: label,
+        done: <span class="literal">false</span>
+      };
+      <span class="keyword">var</span> added = todos.concat(newTodo);
+      <span class="comment">// return new object</span>
+      <span class="keyword">return</span> Todos(added);
+    },
+    done: <span class="function"><span class="keyword">function</span> (<span class="params">index</span>) </span>{
+      <span class="keyword">var</span> changed = todos.map(<span class="function"><span class="keyword">function</span> (<span class="params">todo, k</span>) </span>{
+        <span class="keyword">return</span> k === index ? {
+          label: todo.label,
+          done: <span class="literal">true</span>
+        } : todo;
+      });
+      <span class="comment">// return new object</span>
+      <span class="keyword">return</span> Todos(changed);
+    },
+    toString: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{
+      <span class="keyword">return</span> todos.map(<span class="function"><span class="keyword">function</span> (<span class="params">todo, k</span>) </span>{
+        <span class="keyword">return</span> k + <span class="string">&apos;: &apos;</span> + todo.label + <span class="string">&apos; &apos;</span> + (todo.done ? <span class="string">&apos;done&apos;</span> : <span class="string">&apos;&apos;</span>);
+      }).join(<span class="string">&apos;\n&apos;</span>);
+    }
+  };
+  <span class="keyword">return</span> todosModule;
+}
+</code></pre><p>Notice how adding new todo item method changed:</p>
+<pre><code><span class="comment">// mutable</span>
+<span class="function"><span class="keyword">function</span> <span class="title">Todos</span><span class="params">()</span> </span>{
+  <span class="keyword">var</span> _todos = [];
+  <span class="keyword">var</span> todosModule = {
+    add: <span class="function"><span class="keyword">function</span> <span class="params">(label)</span> </span>{
+      _todos.push({
+        label: label,
+        done: <span class="literal">false</span>
+      });
+      <span class="keyword">return</span> todosModule;
+    }
+  };
+  <span class="keyword">return</span> todosModule;
+}
+<span class="comment">// immutable</span>
+<span class="function"><span class="keyword">function</span> <span class="title">Todos</span><span class="params">(todos)</span> </span>{
+  todos = todos || Immutable([]);
+  <span class="keyword">var</span> todosModule = {
+    add: <span class="function"><span class="keyword">function</span> <span class="params">(label)</span> </span>{
+      <span class="keyword">var</span> newTodo = {
+        label: label,
+        done: <span class="literal">false</span>
+      };
+      <span class="keyword">var</span> added = todos.concat(newTodo);
+      <span class="keyword">return</span> Todos(added);
+    }
+  };
+  <span class="keyword">return</span> todosModule;
+}
+</code></pre><p>We construct new <code>added</code> list by concatenating the existing immutable list with new item,
+and then call <code>Todos(added)</code> to return completely new object. Each time we call a method on
+the Todos object, we get back a reference to different object.</p>
+<pre><code><span class="keyword">var</span> todos = Todos();
+<span class="keyword">var</span> addedFoo = todos.<span class="keyword">add</span>(<span class="string">&apos;foo&apos;</span>);
+<span class="keyword">var</span> addedBar = addedFoo.<span class="keyword">add</span>(<span class="string">&apos;bar&apos;</span>);
+todos === addedFoo; <span class="comment">// false</span>
+todos === addedBar; <span class="comment">// false</span>
+addedFoo === addedBar; <span class="comment">// false</span>
+</code></pre><p>We need to be careful when using the object because we want to print the object after
+all modifications</p>
+<pre><code><span class="keyword">var</span> todos = Todos();
+<span class="keyword">var</span> addedFoo = todos.add(<span class="string">&apos;foo&apos;</span>);
+<span class="keyword">var</span> addedBar = addedFoo.add(<span class="string">&apos;bar&apos;</span>);
+<span class="built_in">console</span>.log(todos.toString()); <span class="comment">// prints nothing - todos is empty</span>
+<span class="built_in">console</span>.log(addedBar.toString());
+<span class="comment">// 0: foo done</span>
+<span class="comment">// 1: bar</span>
+</code></pre><p>Another observation: when setting <code>done</code> property on an object we are constructing
+new object, thus preventing any modifications through any other possible reference.</p>
+<h2 id="undo-command-around-immutable-object">Undo command around immutable object</h2><p>Because each operation on Todos returns new object, we could easily implement the
+Undo feature using an external proxy object.</p>
+<pre><code><span class="function"><span class="keyword">function</span> <span class="title">TodosWithUndo</span><span class="params">()</span> </span>{
+  <span class="keyword">var</span> states = [Todos()];
+  <span class="keyword">var</span> t = {
+    add: <span class="function"><span class="keyword">function</span> <span class="params">(label)</span> </span>{
+      states.push(states[states.length - <span class="number">1</span>].add(label));
+      <span class="keyword">return</span> t;
+    },
+    done: <span class="function"><span class="keyword">function</span> <span class="params">(index)</span> </span>{
+      states.push(states[states.length - <span class="number">1</span>].done(index));
+      <span class="keyword">return</span> t;
+    },
+    undo: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      <span class="keyword">if</span> (states.length &gt; <span class="number">1</span>) {
+        states.pop();
+      }
+      <span class="keyword">return</span> t;
+    },
+    toString: <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>{
+      <span class="keyword">return</span> states[states.length - <span class="number">1</span>].toString();
+    }
+  };
+  <span class="keyword">return</span> t;
+}
+</code></pre><p>The TodosWithUndo saves the reference to the current immutable </p>
+<p>Use:</p>
+<pre><code>var ts = TodosWithUndo();
+<span class="comment">// ts is mutable</span>
+ts.<span class="built_in">add</span>(<span class="string">&apos;foo&apos;</span>).<span class="built_in">add</span>(<span class="string">&apos;bar&apos;</span>);
+console.<span class="built_in">log</span>(<span class="string">&apos;after done first&apos;</span>);
+ts.done(<span class="number">0</span>);
+<span class="comment">// prints</span>
+<span class="comment">// 0: foo done</span>
+<span class="comment">// 1: bar</span>
+console.<span class="built_in">log</span>(ts.toString());
+ts.undo();
+console.<span class="built_in">log</span>(ts.toString());
+<span class="comment">// prints</span>
+<span class="comment">// 0: foo</span>
+<span class="comment">// 1: bar</span>
+</code></pre><p>In this implementation, we are <em>sure</em> that every operation creates a <em>new</em> Todo instance, 
+completely separate from the previous one. Nothing in the application logic can modify
+the list of instances we keep inside TodosWithUndo - not even a stray reference returned to the
+outside can modify it! The reasoning about program&apos;s state and data flow becomes very simple.</p>
+<h2 id="additional-questions">Additional questions</h2><blockquote>
+<p>Does an object added to the immutable list become immutable?</p>
+</blockquote>
+<p>You can still modify the object via its original reference, but the object inside an immutable collection is
+a separate copy</p>
+<pre><code><span class="pi">&apos;use strict&apos;</span>;
+<span class="keyword">var</span> obj = {
+  foo: <span class="string">&apos;foo&apos;</span>,
+  bar: <span class="string">&apos;bar&apos;</span>
+};
+<span class="keyword">var</span> Immutable = <span class="built_in">require</span>(<span class="string">&apos;seamless-immutable&apos;</span>);
+<span class="keyword">var</span> list = Immutable([]).concat(obj);
+<span class="built_in">console</span>.log(list);
+<span class="comment">// [ { foo: &apos;foo&apos;, bar: &apos;bar&apos; } ]</span>
+obj.foo = <span class="string">&apos;not foo&apos;</span>;
+<span class="built_in">console</span>.log(list);
+<span class="comment">// [ { foo: &apos;foo&apos;, bar: &apos;bar&apos; } ]</span>
+<span class="built_in">console</span>.log(<span class="string">&apos;object itself&apos;</span>, obj);
+<span class="comment">// object itself { foo: &apos;not foo&apos;, bar: &apos;bar&apos; }</span>
+</code></pre><blockquote>
+<p>Is this a deep copy of an object?</p>
+</blockquote>
+<p>Yes, the object is deep cloned when added to the immutable collection</p>
+<pre><code><span class="pi">&apos;use strict&apos;</span>;
+<span class="keyword">var</span> obj = {
+  foo: <span class="string">&apos;foo&apos;</span>,
+  bar: {
+    baz: <span class="string">&apos;baz&apos;</span>
+  }
+};
+<span class="keyword">var</span> Immutable = <span class="built_in">require</span>(<span class="string">&apos;seamless-immutable&apos;</span>);
+<span class="keyword">var</span> list = Immutable([]).concat(obj);
+<span class="built_in">console</span>.log(list);
+<span class="comment">// [ { foo: &apos;foo&apos;, bar: { baz: &apos;baz&apos; } } ]</span>
+obj.bar.baz = <span class="string">&apos;not baz&apos;</span>;
+<span class="built_in">console</span>.log(list);
+<span class="comment">// [ { foo: &apos;foo&apos;, bar: { baz: &apos;baz&apos; } } ]</span>
+<span class="built_in">console</span>.log(<span class="string">&apos;object itself&apos;</span>, obj);
+<span class="comment">// object itself object itself { foo: &apos;foo&apos;, bar: { baz: &apos;not baz&apos; } }</span>
+</code></pre><blockquote>
+<p>Can immutable data structures be used with 3rd party functional libraries, like <a href="https://lodash.com/docs" target="_blank" rel="external">lodash</a>?</p>
+</blockquote>
+<p>Almost. Lodash can take immutable data structures as inputs for methods that do not modify the input
+data structure: map, filter, etc. The returned object is NOT an immutable</p>
+<pre><code><span class="keyword">var</span> _ = <span class="keyword">require</span>(<span class="string">&apos;lodash&apos;</span>);
+<span class="keyword">var</span> <span class="keyword">list</span> = Immutable([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
+<span class="function"><span class="keyword">function</span> <span class="title">double</span><span class="params">(x)</span> </span>{ <span class="keyword">return</span> x * <span class="number">2</span>; }
+<span class="keyword">var</span> doubled = <span class="keyword">list</span>.map(<span class="keyword">double</span>);
+console.log(doubled);
+<span class="comment">// [2, 4, 6]</span>
+<span class="comment">// doubled[1] = 10; // exception because doubled is Immutable</span>
+<span class="keyword">var</span> _doubled = _.map(<span class="keyword">list</span>, <span class="keyword">double</span>);
+console.log(_doubled);
+<span class="comment">// [2, 4, 6]</span>
+_doubled[<span class="number">1</span>] = <span class="number">10</span>; <span class="comment">// works because _doubled is a regular Array</span>
+</code></pre><p>A work around is to wrap the returned value in Immutable again</p>
+<pre><code>var _doubled = Immutable(_.<span class="built_in">map</span>(<span class="built_in">list</span>, <span class="keyword">double</span>));
+<span class="comment">// _doubled is Immutable</span>
+</code></pre><p>A convenient library to work with Immutable is <a href="http://ramda.github.io/ramdocs/docs/" target="_blank" rel="external">Ramda</a>. Just pipe the result through Immutable
+function call</p>
+<pre><code><span class="built_in">var</span> R = <span class="keyword">require</span>(<span class="string">&apos;ramda&apos;</span>);
+<span class="built_in">var</span> _doubled = R<span class="built_in">.</span>pipe(R<span class="built_in">.</span><span class="built_in">map</span>(double), Immutable)(<span class="built_in">list</span>);
+console<span class="built_in">.</span><span class="keyword">log</span>(_doubled);
+<span class="comment">// [2, 4, 6]</span>
+<span class="comment">// _doubled is immutable too</span>
+</code></pre><blockquote>
+<p>Are there good libraries for working with immutable data and have large API?</p>
+</blockquote>
+<p>I used <a href="https://www.npmjs.org/package/seamless-immutable" target="_blank" rel="external">seamless-immutable</a> in the above example. It is very simple to use: just
+wrap an existing object or array to start. Other libraries have richer APIs. Take a look at <a href="http://swannodette.github.io/mori/" target="_blank" rel="external">mori</a>
+and <a href="http://facebook.github.io/immutable-js/" target="_blank" rel="external">Immutable</a>.</p>
+<blockquote>
+<p>Isn&apos;t deep copy on each operation a slow and memory hungry process?</p>
+</blockquote>
+<p>Yes, if we naively deep cloned everything. Luckily, people have programed the persistent data structures
+to store diffs efficiently. See <a href="https://www.youtube.com/watch?v=mS264h8KGwk" target="_blank" rel="external">this video</a> by David Nolen <a href="https://twitter.com/swannodette" target="_blank" rel="external">@swannodette</a> 
+that explains <a href="http://swannodette.github.io/mori/" target="_blank" rel="external">mori</a> implementation performance shortcuts.</p>
+<h2 id="conclusions">Conclusions</h2><p>Keeping some data immutable (Todos) helped clarify the data flow in this case. At the same time, other pieces
+can still mutate the state (TodosWithUndo). This way I could dip my toes into the immutable programming paradigm,
+without rewriting my entire application.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/immutable-javascript-example/" data-id="cihtr6w6300kul3uruusnawu6" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/immutable-javascript-example/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/immutable/">immutable</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/">javascript</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../measuring-semver-adherence/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Measuring semver adherence
+        
+      </div>
+    </a>
+  
+  
+    <a href="../point-free-programming-is-not-pointless/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Point-free programming is not pointless.</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/immutable-javascript-example/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

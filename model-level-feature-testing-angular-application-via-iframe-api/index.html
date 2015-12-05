@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Testing AngularJS application at the model level using iframe API | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Demo, 
+source,
+iframe-api.
+Testing is hard. Unit testing is easier that feature testing. Feature testing is hard because
+it drives the application through the DOM elements. The DOM elements change oft">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Testing AngularJS application at the model level using iframe API">
+<meta property="og:url" content="http://glebbahmutov.com/blog/model-level-feature-testing-angular-application-via-iframe-api/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Demo, 
+source,
+iframe-api.
+Testing is hard. Unit testing is easier that feature testing. Feature testing is hard because
+it drives the application through the DOM elements. The DOM elements change oft">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/todomvc-angularjs-iframe-test/master/todomvc-iframe.gif">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Testing AngularJS application at the model level using iframe API">
+<meta name="twitter:description" content="Demo, 
+source,
+iframe-api.
+Testing is hard. Unit testing is easier that feature testing. Feature testing is hard because
+it drives the application through the DOM elements. The DOM elements change oft">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-model-level-feature-testing-angular-application-via-iframe-api" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-02-04T05:00:00.000Z" itemprop="datePublished">Feb 4 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Testing AngularJS application at the model level using iframe API
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Simple end to end testing via iframe API.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://glebbahmutov.com/todomvc-angularjs-iframe-test/" target="_blank" rel="external">Demo</a>, 
+<a href="https://github.com/bahmutov/todomvc-angularjs-iframe-test" target="_blank" rel="external">source</a>,
+<a href="https://github.com/bahmutov/iframe-api" target="_blank" rel="external">iframe-api</a>.</p>
+<p>Testing is hard. Unit testing is easier that feature testing. Feature testing is hard because
+it drives the application through the DOM elements. The DOM elements change often due to style
+updates, and they are usually changed by people more proficient in CSS and visual design than
+JavaScript programming. </p>
+<p>Take a look at the TodoMVC angularjs example <a href="https://github.com/tastejs/todomvc/tree/master/examples/angularjs" target="_blank" rel="external">tastejs/todomvc</a>. The test
+folder contains many controller unit tests, while there is a single directive unit test (focus directive).
+There are no end to end feature tests.</p>
+<p>We write end to end feature tests using <a href="http://casperjs.org/" target="_blank" rel="external">CasperJS</a>. Other people might prefer <a href="http://angular.github.io/protractor/#/" target="_blank" rel="external">Protractor</a>,
+but the principle is the same: the entire application is loaded in a browser and then driven via DOM elements
+and events. In our case CasperJS is headless browser, thus we do not even see the website during testing,
+making it harder to diagnose problems.</p>
+<p>I am rethinking this approach to the application design and testing. The new way relies on being able to drive
+the application at the <em>model</em> level, and communicate with the website using <em>iframe api</em>. Then we can run
+the end to end test sequences, observe the results and decouple feature tests from particular UI implementation.</p>
+<p>I cloned the AngularJS TodoMVC application example and placed it in <a href="https://github.com/bahmutov/todomvc-angularjs-iframe-test" target="_blank" rel="external">this repo</a>. The next
+sections described what changes I have made to this example. You can see the finished example 
+<a href="http://glebbahmutov.com/todomvc-angularjs-iframe-test/" target="_blank" rel="external">here</a>. Click &quot;Test all todos&quot; button and watch 
+the new todo items appear one by one.</p>
+<h2 id="decouple-model-from-the-ui">Decouple model from the UI</h2><p>First change we have to do to our application is to decouple the model from the DOM. In a typical angularjs example,
+such as TodoMVC example, the controller keeps both the data (list of todo items), shows its
+representation on the page via data binding, AND handles user events, such as clicking on the button to
+add a new todo. Look at the way it is implemented in <a href="https://github.com/tastejs/todomvc/blob/master/examples/angularjs/js/controllers/todoCtrl.js" target="_blank" rel="external">TodoMVC/todoCtrl.js</a>:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> todos = $scope.todos = store.todos;</span><br><span class="line">$scope.newTodo = <span class="string">&apos;&apos;</span>;</span><br><span class="line">$scope.addTodo = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> newTodo = {</span><br><span class="line">        title: $scope.newTodo.trim(),</span><br><span class="line">        completed: <span class="literal">false</span></span><br><span class="line">    };</span><br><span class="line">    <span class="keyword">if</span> (!newTodo.title) {</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    }</span><br><span class="line">    $scope.saving = <span class="literal">true</span>;</span><br><span class="line">    store.insert(newTodo)</span><br><span class="line">        .then(<span class="function"><span class="keyword">function</span> <span class="title">success</span>(<span class="params"></span>) </span>{</span><br><span class="line">            $scope.newTodo = <span class="string">&apos;&apos;</span>;</span><br><span class="line">        })</span><br><span class="line">        .finally(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">            $scope.saving = <span class="literal">false</span>;</span><br><span class="line">        });</span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<p>The <code>$scope.addTodo</code> is executed whenever the user clicks on a button in the HTML template</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">id</span>=<span class="value">&quot;todo-form&quot;</span> <span class="attribute">ng-submit</span>=<span class="value">&quot;addTodo()&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">&quot;new-todo&quot;</span> <span class="attribute">placeholder</span>=<span class="value">&quot;What needs to be done?&quot;</span> </span><br><span class="line">           <span class="attribute">ng-model</span>=<span class="value">&quot;newTodo&quot;</span> <span class="attribute">ng-disabled</span>=<span class="value">&quot;saving&quot;</span> <span class="attribute">autofocus</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>Notice how <em>adding a new todo</em> depends on having the property <code>$scope.newTodo</code>. Anyone who
+wants to test adding a new todo feature has to look through the code to see that <code>newTodo</code> has to be set
+before calling <code>addTodo</code> - classic object-oriented complexity.</p>
+<p>Let us separate the model (<code>$scope.todos</code>), from the widget for entering a new todo UI information (<code>$scope.newTodo</code>, 
+the <code>ng-click</code> handler, the code for checking if <code>$scope.newTodo</code> is empty). I really likes Todd Moto&apos;s approach
+described in <a href="http://toddmotto.com/rethinking-angular-js-controllers/" target="_blank" rel="external">Rethinking AngularJS Controllers</a> that shows this approach.</p>
+<p>First, we create a separate method on the controller which is responsible for handling the click.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">id</span>=<span class="value">&quot;todo-form&quot;</span> <span class="attribute">ng-submit</span>=<span class="value">&quot;addTodoClicked()&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">&quot;new-todo&quot;</span> <span class="attribute">placeholder</span>=<span class="value">&quot;What needs to be done?&quot;</span> </span><br><span class="line">           <span class="attribute">ng-model</span>=<span class="value">&quot;newTodo&quot;</span> <span class="attribute">ng-disabled</span>=<span class="value">&quot;saving&quot;</span> <span class="attribute">autofocus</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>Second, we separate the input value checking (user interface) from adding the todo (model) 
+and resetting the input field (user interface again).</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// handle UI logic</span></span><br><span class="line">$scope.addTodoClicked = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> title = $scope.newTodo.trim();</span><br><span class="line">    <span class="keyword">if</span> (!title) {</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    }</span><br><span class="line">    $scope.addTodo(title)</span><br><span class="line">        .then(<span class="function"><span class="keyword">function</span> <span class="title">success</span>(<span class="params"></span>) </span>{</span><br><span class="line">            $scope.newTodo = <span class="string">&apos;&apos;</span>;</span><br><span class="line">        });</span><br><span class="line">};</span><br><span class="line"><span class="comment">// model change</span></span><br><span class="line">$scope.addTodo = <span class="function"><span class="keyword">function</span> (<span class="params">name</span>) </span>{</span><br><span class="line">    <span class="keyword">if</span> (!name) {</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    }</span><br><span class="line">    <span class="keyword">var</span> newTodo = {</span><br><span class="line">        title: name.trim(),</span><br><span class="line">        completed: <span class="literal">false</span></span><br><span class="line">    };</span><br><span class="line">    $scope.saving = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">return</span> store.insert(newTodo)</span><br><span class="line">        .finally(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">            $scope.saving = <span class="literal">false</span>;</span><br><span class="line">        });</span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<p>Notice how the model method <code>$scope.addTodo</code> returns a promise, allowing the UI method <code>$scope.addTodoClicked</code>
+to clear the input property <code>$scope.newTodo</code> on successful add.</p>
+<p>We could keep dividing the code further and move the model methods into a service for example, but for now
+this is enough.</p>
+<h2 id="communicate-with-the-todomvc-example-via-iframe-api">Communicate with the TodoMVC example via iframe API</h2><p>I have written <a href="https://github.com/bahmutov/iframe-api" target="_blank" rel="external">iframe-api</a> library to allow bidirectional promise-returning communication
+between the external and iframed websites. We can create an external page that will drive the TodoMVC
+app via external model level commands</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="doctype">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">html</span> <span class="attribute">lang</span>=<span class="value">&quot;en-us&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">&quot;utf-8&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">title</span>&gt;</span>ng todomvc + iframe api<span class="tag">&lt;/<span class="title">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;bower_components/es5-shim/es5-shim.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;bower_components/iframe-api/dist/iframe-api.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">body</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">h2</span>&gt;</span>External site that iframes todomvc angularjs example<span class="tag">&lt;/<span class="title">h2</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">iframe</span> <span class="attribute">id</span>=<span class="value">&quot;todomvc&quot;</span> <span class="attribute">src</span>=<span class="value">&quot;todomvc.html&quot;</span> <span class="attribute">width</span>=<span class="value">&quot;100%&quot;</span> <span class="attribute">height</span>=<span class="value">&quot;500&quot;</span>&gt;</span><span class="tag">&lt;/<span class="title">iframe</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript"></span><br><span class="line">  <span class="keyword">var</span> todoApi;</span><br><span class="line">  iframeApi().then(<span class="function"><span class="keyword">function</span> (<span class="params">api</span>) </span>{</span><br><span class="line">    todoApi = api;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;send commands to iframed TodoMVC via todoApi object&apos;</span>);</span><br><span class="line">  });</span><br><span class="line">  </span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>The external page has no method for the iframed site to call, so it calls <code>iframeApi()</code> without arguments.
+It will receive an API object to communicate with the iframed TodoMVC app. In the TodoMVC application,
+I put the same login into the <code>app.js</code> file.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">angular.module(<span class="string">&apos;todomvc&apos;</span>, [])</span><br><span class="line">    ...</span><br><span class="line">    .run(<span class="function"><span class="keyword">function</span> <span class="title">connectToOutside</span>(<span class="params"></span>) </span>{</span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">getScope</span>(<span class="params"></span>) </span>{</span><br><span class="line">            <span class="keyword">return</span> angular.element(<span class="built_in">document</span>.getElementById(<span class="string">&apos;todoapp&apos;</span>)).scope();</span><br><span class="line">        }</span><br><span class="line">        <span class="keyword">var</span> todoApi = {</span><br><span class="line">            add: <span class="function"><span class="keyword">function</span> (<span class="params">name</span>) </span>{</span><br><span class="line">                getScope().addTodo(name);</span><br><span class="line">                getScope().$apply();</span><br><span class="line">            }</span><br><span class="line">        };</span><br><span class="line">        iframeApi(todoApi);</span><br><span class="line">    });</span><br></pre></td></tr></table></figure>
+<p>The external website can now call a single method <code>add(name);</code> on the returned <code>todoApi</code> object.
+In the iframe&apos;s context, the <code>todoApi</code> grabs the scope object via <code>angular.element</code> call, and calls <code>$scope.$apply()</code>
+to drive the digest cycle after changing the model.</p>
+<h2 id="test-the-model">Test the model</h2><p>In any test, we want to execute an action and then check the results. In the case of TodoMVC,
+we can expose the following 3 methods: add a todo, remove all, return todos. Then we can
+run the following test</p>
+<ul>
+<li>remove all todos</li>
+<li>add N todos</li>
+<li>get todos and make sure there are N incomplete todo items</li>
+</ul>
+<p>I added <code>removeAll</code> and <code>returnAll</code> methods to the api object returned by the TodoMVC</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// external api</span></span><br><span class="line"><span class="keyword">var</span> todoApi = {</span><br><span class="line">    add: <span class="function"><span class="keyword">function</span> (<span class="params">name</span>) </span>{</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&apos;api: adding todo&apos;</span>, name);</span><br><span class="line">        getScope().addTodo(name);</span><br><span class="line">        getScope().$apply();</span><br><span class="line">    },</span><br><span class="line">    removeAll: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&apos;api: removing all todos&apos;</span>);</span><br><span class="line">        getScope().removeAll();</span><br><span class="line">        getScope().$apply();</span><br><span class="line">    },</span><br><span class="line">    returnAll: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&apos;api: returning all todos&apos;</span>);</span><br><span class="line">        <span class="keyword">return</span> getScope().todos;</span><br><span class="line">    }</span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<p>We can execute these actions from the iframe website. I connected a test button to the following function</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">testAddTodos</span>(<span class="params">api</span>) </span>{</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">assertTodos</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> api.returnAll()</span><br><span class="line">      .then(<span class="function"><span class="keyword">function</span> <span class="title">check</span>(<span class="params">todos</span>) </span>{</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&apos;has&apos;</span>, todos.length, <span class="string">&apos;todos&apos;</span>);</span><br><span class="line">        <span class="built_in">console</span>.table(todos);</span><br><span class="line">        <span class="built_in">console</span>.assert(<span class="built_in">Array</span>.isArray(todos), <span class="string">&apos;expected array of todos&apos;</span>);</span><br><span class="line">        <span class="built_in">console</span>.assert(todos.length === <span class="number">3</span>, <span class="string">&apos;expected 3 todos&apos;</span>);</span><br><span class="line">      });</span><br><span class="line">  }</span><br><span class="line">  api.removeAll()</span><br><span class="line">    .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      api.add(<span class="string">&apos;foo&apos;</span>);</span><br><span class="line">    })</span><br><span class="line">    .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      api.add(<span class="string">&apos;bar&apos;</span>);</span><br><span class="line">    })</span><br><span class="line">    .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      api.add(<span class="string">&apos;baz&apos;</span>);</span><br><span class="line">    })</span><br><span class="line">    .then(assertTodos);</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>The communication with the iframed TodoMVC app is via promise-returning functions. If you do not feel comfortable
+with promises, read my <a href="../tags/promises/">blog posts about them</a>.</p>
+<h2 id="benefits-and-conclusions">Benefits and conclusions</h2><p>The above approach to testing complete website has multiple advantages</p>
+<ul>
+<li>Explicit separation between the application&apos;s model logic and its user interface. The model changes less
+often than the interface, thus the tests will not become obsolete if someone changes list of todos to be shown
+with different CSS class, or moved the input text, etc.</li>
+<li>The test runs visually and can be controlled step by step. For example, we can pause after each command.</li>
+</ul>
+<p>I wrote a small ES6 promise-returning <code>delay</code> function that sleeps for 1 second, then resolves the promise</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">delay</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> (<span class="params">resolve</span>) </span>{</span><br><span class="line">    setTimeout(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      resolve();</span><br><span class="line">    }, <span class="number">1000</span>);</span><br><span class="line">  });</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>I inserted the <code>delay()</code> calls between the steps</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">api.removeAll()</span><br><span class="line">  .then(delay)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    api.add(<span class="string">&apos;foo&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .then(delay)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    api.add(<span class="string">&apos;bar&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .then(delay)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    api.add(<span class="string">&apos;baz&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .then(delay)</span><br><span class="line">  .then(assertTodos);</span><br></pre></td></tr></table></figure>
+<p>The above code is very user-friendly, and the result is simple to see</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/todomvc-angularjs-iframe-test/master/todomvc-iframe.gif" alt="todo test"></p>
+<ul>
+<li>The test runs inside any real browser, as opposed to the headless PhantomJS.</li>
+<li>The external test driver can <em>still be automated to run inside PhantomJS / CasperJS</em>.</li>
+<li>Other testing tools iframe website under test, but only drive the application through the DOM elements.</li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/model-level-feature-testing-angular-application-via-iframe-api/" data-id="cihtr6w3x00hkl3urja7mrfcg" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/model-level-feature-testing-angular-application-via-iframe-api/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/advice/">advice</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/angularjs/">angularjs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../too-much-point-free/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Too much point-free
+        
+      </div>
+    </a>
+  
+  
+    <a href="../better-short-javascript-demos/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Better short JavaScript demos</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/model-level-feature-testing-angular-application-via-iframe-api/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

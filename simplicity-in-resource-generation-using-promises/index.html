@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Simplicity in resource generation using promises | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Take the small &amp;quot;Hello World&amp;quot; Node webserver from nodejs.org
+home page as a starting point.
+123456var http = require(&amp;apos;http&amp;apos;);http.createServer(function onRequest(req, res) {  res.wr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Simplicity in resource generation using promises">
+<meta property="og:url" content="http://glebbahmutov.com/blog/simplicity-in-resource-generation-using-promises/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Take the small &amp;quot;Hello World&amp;quot; Node webserver from nodejs.org
+home page as a starting point.
+123456var http = require(&amp;apos;http&amp;apos;);http.createServer(function onRequest(req, res) {  res.wr">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Simplicity in resource generation using promises">
+<meta name="twitter:description" content="Take the small &amp;quot;Hello World&amp;quot; Node webserver from nodejs.org
+home page as a starting point.
+123456var http = require(&amp;apos;http&amp;apos;);http.createServer(function onRequest(req, res) {  res.wr">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-simplicity-in-resource-generation-using-promises" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2014-05-05T04:00:00.000Z" itemprop="datePublished">May 5 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Simplicity in resource generation using promises
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Simplify on deman resource loading with promises.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Take the small &quot;Hello World&quot; Node webserver from <a href="http://nodejs.org/" target="_blank" rel="external">nodejs.org</a>
+home page as a starting point.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">&apos;http&apos;</span>);</span><br><span class="line">http.createServer(<span class="function"><span class="keyword">function</span> <span class="title">onRequest</span>(<span class="params">req, res</span>) </span>{</span><br><span class="line">  res.writeHead(<span class="number">200</span>, {<span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/plain&apos;</span>});</span><br><span class="line">  res.end(<span class="string">&apos;Hello World\n&apos;</span>);</span><br><span class="line">}).listen(<span class="number">1337</span>, <span class="string">&apos;127.0.0.1&apos;</span>);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&apos;Server running at http://127.0.0.1:1337/&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>Imagine we need to return a text file instead of &quot;Hello World&quot;. We can read
+the file asynchronously to follow the node&apos;s way.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">&apos;http&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> fs = <span class="built_in">require</span>(<span class="string">&apos;fs&apos;</span>), hello;</span><br><span class="line">fs.readFile(<span class="string">&apos;hello.txt&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err, data</span>) </span>{</span><br><span class="line">  hello = data;</span><br><span class="line">});</span><br><span class="line"><span class="comment">// create web server ...</span></span><br></pre></td></tr></table></figure>
+<p>How does the <code>onRequest</code> function know when the <code>hello</code> variable has data?
+Well, we could check periodically</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">http.createServer(<span class="function"><span class="keyword">function</span> <span class="title">onRequest</span>(<span class="params">req, res</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> i = setInterval(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">if</span> (hello) {</span><br><span class="line">      clearInterval(i);</span><br><span class="line">      res.writeHead(<span class="number">200</span>, {<span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/plain&apos;</span>});</span><br><span class="line">      res.end(hello);</span><br><span class="line">    }</span><br><span class="line">  }, <span class="number">100</span>);</span><br><span class="line">}).listen(<span class="number">1337</span>, <span class="string">&apos;127.0.0.1&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>What if we want to return <code>hello</code> if it is available without setting an interval?</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> hello;</span><br><span class="line">http.createServer(<span class="function"><span class="keyword">function</span> <span class="title">onRequest</span>(<span class="params">req, res</span>) </span>{</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">writeHello</span>(<span class="params"></span>) </span>{</span><br><span class="line">    res.writeHead(<span class="number">200</span>, {<span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/plain&apos;</span>});</span><br><span class="line">    res.end(hello);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">if</span> (hello) { <span class="keyword">return</span> writeHello(); }</span><br><span class="line">  <span class="keyword">var</span> i = setInterval(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">if</span> (hello) {</span><br><span class="line">      clearInterval(i);</span><br><span class="line">      writeHello();</span><br><span class="line">    }</span><br><span class="line">  }, <span class="number">100</span>);</span><br><span class="line">}).listen(<span class="number">1337</span>, <span class="string">&apos;127.0.0.1&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>What if we want to load a file on the <em>first</em> request for it?</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> hello;</span><br><span class="line">http.createServer(<span class="function"><span class="keyword">function</span> <span class="title">onRequest</span>(<span class="params">req, res</span>) </span>{</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">writeHello</span>(<span class="params">txt</span>) </span>{</span><br><span class="line">    res.writeHead(<span class="number">200</span>, {<span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/plain&apos;</span>});</span><br><span class="line">    res.end(txt);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">if</span> (hello) { <span class="keyword">return</span> writeHello(hello); }</span><br><span class="line">  fs.readFile(<span class="string">&apos;hello.txt&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err, data</span>) </span>{</span><br><span class="line">    hello = data;</span><br><span class="line">    writeHello(hello);</span><br><span class="line">  });</span><br><span class="line">}).listen(<span class="number">1337</span>, <span class="string">&apos;127.0.0.1&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>Finally, what happens if there is second request for <code>hello</code> while we are loading it?
+It need to somehow tell other requests to wait until <code>hello</code> is ready. We can use
+a timer interval again, but we need to know if someone is loading the <em>hello.txt</em> already</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> hello, helloIsLoading;</span><br><span class="line">http.createServer(<span class="function"><span class="keyword">function</span> <span class="title">onRequest</span>(<span class="params">req, res</span>) </span>{</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">writeHello</span>(<span class="params">txt</span>) </span>{</span><br><span class="line">    res.writeHead(<span class="number">200</span>, {<span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/plain&apos;</span>});</span><br><span class="line">    res.end(txt);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">if</span> (hello) { <span class="keyword">return</span> writeHello(hello); }</span><br><span class="line">  <span class="keyword">if</span> (helloIsLoading) {</span><br><span class="line">    <span class="keyword">var</span> i = setInterval(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      <span class="keyword">if</span> (hello) {</span><br><span class="line">        clearInterval(i);</span><br><span class="line">        writeHello(hello);</span><br><span class="line">      }</span><br><span class="line">    }, <span class="number">100</span>);</span><br><span class="line">  } <span class="keyword">else</span> {</span><br><span class="line">    helloIsLoading = <span class="literal">true</span>;</span><br><span class="line">    fs.readFile(<span class="string">&apos;hello.txt&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err, data</span>) </span>{</span><br><span class="line">      hello = data;</span><br><span class="line">      helloIsLoading = <span class="literal">false</span>;</span><br><span class="line">      writeHello(hello);</span><br><span class="line">    });</span><br><span class="line">  }</span><br><span class="line">}).listen(<span class="number">1337</span>, <span class="string">&apos;127.0.0.1&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>We now have 2 problems:</p>
+<ol>
+<li>We need to use 2 variables to track the data and the state of the data: <code>hello</code> and <code>helloIsLoading</code>.
+They are dependent on each other: if <code>helloIsLoading</code> is true, then we assume
+<code>hello</code> is null, etc. They might get out of sync really quickly.</li>
+<li>The loading and waiting logic is already complex, and will only become more complicated as we introduce
+error handling and multiple resources.</li>
+</ol>
+<h2 id="promises-to-the-rescue">Promises to the rescue</h2><p>Promises offer an elegant solution to async resoure loading problem. Instead of <code>hello</code>
+holding the data, it will hold a <em>promise to load data</em>. Promises resolve only once, every call
+afterwards returns the resolved data. I will use my favorite promise implementation library
+<a href="https://github.com/kriskowal/q" target="_blank" rel="external">Q</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> hello;</span><br><span class="line">http.createServer(<span class="function"><span class="keyword">function</span> <span class="title">onRequest</span>(<span class="params">req, res</span>) </span>{</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">writeHello</span>(<span class="params">txt</span>) </span>{</span><br><span class="line">    res.writeHead(<span class="number">200</span>, {<span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/plain&apos;</span>});</span><br><span class="line">    res.end(txt);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">if</span> (!hello) {</span><br><span class="line">    hello = Q.nfcall(fs.readFile, <span class="string">&apos;hello.txt&apos;</span>); <span class="comment">// 1</span></span><br><span class="line">  }</span><br><span class="line">  Q(hello).then(writeHello); <span class="comment">// 2</span></span><br><span class="line">}).listen(<span class="number">1337</span>, <span class="string">&apos;127.0.0.1&apos;</span>);</span><br></pre></td></tr></table></figure>
+<p>The very first request will call <code>fs.readFile</code>, creating the promise to read a file
+and return its content. The promise is stored in <code>hello</code> variable (line <code>// 1</code>).
+The same first request and every request arriving afterwards will wait while the promise
+has not been resolved (line <code>// 2</code>). Once the file is read, its content will be the first
+argument to the <code>writeHello</code> function. The <code>Q()</code> function is a shortcut for
+<a href="https://github.com/kriskowal/q/wiki/API-Reference#promise-methods" target="_blank" rel="external">Q.when</a>
+that accepts a value or a promise to that resolves with a value, and is similar to jQuery&apos;s
+<a href="https://api.jquery.com/jQuery.when/" target="_blank" rel="external">$.when()</a> function.</p>
+<p>Any request that arrives after that will check the <code>hello</code> promise, see that it has been
+resolved and will execute <code>writeHello</code> without waiting.</p>
+<h2 id="cache-of-promises">Cache of promises</h2><p>The above example showed a single resource loaded on demand using promises. Here is a more
+realistic example with multiple resources loaded on demand. Let us imagine we need to load
+multiple text files and cache them. This is how our file cache could look without promises</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> cache = {</span><br><span class="line">  <span class="string">&apos;path/to/foo.txt&apos;</span>: fs.readSync(<span class="string">&apos;path/to/foo.txt&apos;</span>, <span class="string">&apos;utf8&apos;</span>),</span><br><span class="line">  ...</span><br><span class="line">};</span><br></pre></td></tr></table></figure>
+<p>Instead of keeping the file source, we are going to keep <em>promise</em> to load the file.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> cache = {</span><br><span class="line">  <span class="string">&apos;path/to/foo.txt&apos;</span>: Q.nfcall(fs.readFile, <span class="string">&apos;path/to/foo.txt&apos;</span>, <span class="string">&apos;utf8&apos;</span>)</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>Here is how we are going to do this on demand</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// cache is empty at first</span></span><br><span class="line"><span class="keyword">var</span> cache = {};</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">readFile</span>(<span class="params">filename</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (!check.has(cache, filename)) {</span><br><span class="line">    <span class="comment">// first request: put promise as a placeholder right away</span></span><br><span class="line">    <span class="comment">// whenever it gets resolved, replace promise with a value</span></span><br><span class="line">    <span class="comment">// if there are any other people waiting on the promise already</span></span><br><span class="line">    <span class="comment">// they will be resolved by the promise itself</span></span><br><span class="line">    cache[filename] = Q.nfcall(fs.readFile, filename, <span class="string">&apos;utf8&apos;</span>).then(<span class="function"><span class="keyword">function</span> (<span class="params">txt</span>) </span>{</span><br><span class="line">      <span class="keyword">return</span> txt;</span><br><span class="line">    });</span><br><span class="line">  }</span><br><span class="line">  <span class="comment">// always returns the promise, even after resolving it</span></span><br><span class="line">  <span class="keyword">return</span> Q(cache[filename]);</span><br><span class="line">}</span><br><span class="line"><span class="built_in">module</span>.exports = readFile;</span><br></pre></td></tr></table></figure>
+<p>The key to understand this code is to notice that at first load the promise will be placed
+into the cache. If someone requests same file, the new request will be chained and will be
+resolved at the same time as first one. Any request after that will get the resolved promise,
+resolving on the next turn of the event loop.</p>
+<p>You can even replace the first promise after resolving it with actual file contents, and the code
+will still work</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">readFile</span>(<span class="params">filename</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (!check.has(cache, filename)) {</span><br><span class="line">    cache[filename] = Q.nfcall(fs.readFile, filename, <span class="string">&apos;utf8&apos;</span>).then(<span class="function"><span class="keyword">function</span> (<span class="params">txt</span>) </span>{</span><br><span class="line">      cache[filename] = txt; <span class="comment">// 1</span></span><br><span class="line">      <span class="keyword">return</span> txt;</span><br><span class="line">    });</span><br><span class="line">  }</span><br><span class="line">  <span class="comment">// return a promise at first, and promise resolved with text after // 1</span></span><br><span class="line">  <span class="keyword">return</span> Q(cache[filename]);</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>I prefer the later code because it allows simpler cache inspection.</p>
+<h2 id="conclusion">Conclusion</h2><p>The promise offer an elegant and beautiful solution by removing the extra code and variables.
+You can see this approach in action in my
+<a href="https://github.com/bahmutov/proud-connect/blob/master/src/app.js#L88" target="_blank" rel="external">proud-connect</a> source
+that calculates metrics and generates a badge image on demand, while caching previously
+generated results.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/simplicity-in-resource-generation-using-promises/" data-id="cihtr6vva0084l3urtli9fj0j" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/simplicity-in-resource-generation-using-promises/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/">javascript</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/promises/">promises</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../assertions/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Assertions
+        
+      </div>
+    </a>
+  
+  
+    <a href="../partial-argument-binding-with-heroin/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Partial argument binding with heroin</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/simplicity-in-resource-generation-using-promises/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Starting promises | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="JavaScript promises are the best way I know for working with asynchronous logic. 
+I have described every aspect of using promises in my blog posts, except
+how to start them correctly. The most importa">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Starting promises">
+<meta property="og:url" content="http://glebbahmutov.com/blog/starting-promises/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="JavaScript promises are the best way I know for working with asynchronous logic. 
+I have described every aspect of using promises in my blog posts, except
+how to start them correctly. The most importa">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Starting promises">
+<meta name="twitter:description" content="JavaScript promises are the best way I know for working with asynchronous logic. 
+I have described every aspect of using promises in my blog posts, except
+how to start them correctly. The most importa">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-starting-promises" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-02-08T05:00:00.000Z" itemprop="datePublished">Feb 8 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Starting promises
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Good way to call the first promise-returning function.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>JavaScript promises are the best way I know for working with asynchronous logic. 
+I have described every aspect of using promises in my <a href="../tags/promises/">blog posts</a>, except
+how to start them correctly. The most important aspect when starting the promise chain
+is how to handle the unexpected errors. To start, let us review how we handle the errors
+that happen inside <code>.then()</code> callbacks</p>
+<h2 id="handling-errors-in-the-middle-of-the-promise-chain">Handling errors in the middle of the promise chain</h2><p>Imagine we have a function that returns a promise, for example to delay the execution by N milliseconds.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">delay</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line">  <span class="keyword">var</span> defer = Q.defer();</span><br><span class="line">  setTimeout(defer.resolve, n);</span><br><span class="line">  <span class="keyword">return</span> defer.promise;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>Let us use <code>delay</code> method to wait for 1 second before printing a message &quot;finished&quot;.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">delay(<span class="number">1000</span>)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> <span class="title">finished</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .done();</span><br><span class="line"><span class="comment">// prints &quot;finished&quot; after 1 second</span></span><br></pre></td></tr></table></figure>
+<p>What happens if there is an exception in the <code>finished</code> function? Promise runtime catches this error and passes
+it to the next step, hoping that there is an error handler registered somewhere down the chain. If no error
+handler is found before reaching <code>.done()</code> call, then an exception is thrown.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">delay(<span class="number">1000</span>)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&apos;problem&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .done();</span><br><span class="line">  <span class="comment">// prints &quot;finished&quot; after 1 second</span></span><br><span class="line">  <span class="comment">// Error: problem</span></span><br></pre></td></tr></table></figure>
+<p>We can handle the exception down the promise chain. For example using <code>catch()</code> callback</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">delay(<span class="number">1000</span>)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> <span class="title">finished</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&apos;problem&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .catch(<span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;Caught a problem&apos;</span>, err.message);</span><br><span class="line">  })</span><br><span class="line">  .done();</span><br><span class="line"><span class="comment">// prints</span></span><br><span class="line"><span class="comment">// finished</span></span><br><span class="line"><span class="comment">// Caught a problem problem</span></span><br></pre></td></tr></table></figure>
+<p>The promises offer a systematic way to handle any unexpected errors, but there is a missing piece:
+how to handle an error inside the very <em>first</em> promise-returning function that kicks of the chain. 
+There are two approaches to kicking off the initial promise and handling the errors. First is to
+let error bubble synchronously. The second approach is to wrap the first function call using
+promise engine&apos;s methods.</p>
+<h2 id="sync-error-async-result">Sync error, async result</h2><p>Let us go back to the original function <code>delay</code>. Let us validate the input delay argument <code>n</code>. 
+It should be positive number of milliseconds. 
+Otherwise, the delay is invalid. We will throw an error right away (sync error), if <code>n</code> is  negative.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">delay</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (n &lt; <span class="number">0</span>) {</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&apos;invalid delay &apos;</span> + n);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line">  <span class="keyword">var</span> defer = Q.defer();</span><br><span class="line">  setTimeout(defer.resolve, n);</span><br><span class="line">  <span class="keyword">return</span> defer.promise;</span><br><span class="line">}</span><br><span class="line">delay(-<span class="number">1000</span>)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .done();</span><br><span class="line"><span class="comment">// immediately prints</span></span><br><span class="line"><span class="comment">// Error: invalid delay -1000</span></span><br></pre></td></tr></table></figure>
+<p>Throwing a sync error, instead of using <code>defer.reject(...)</code> allows the caller to handle the error right away.
+For example we could use user-entered delay value, or if <code>delay</code> throws an error use default delay</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> n = -<span class="number">1000</span>;</span><br><span class="line"><span class="keyword">var</span> chain;</span><br><span class="line"><span class="keyword">try</span> {</span><br><span class="line">  chain = delay(n);</span><br><span class="line">} <span class="keyword">catch</span> (err) {</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;using default delay because&apos;</span>, err.message);</span><br><span class="line">  chain = delay(<span class="number">1000</span>);</span><br><span class="line">}</span><br><span class="line">chain.then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">})</span><br><span class="line">.done();</span><br><span class="line"><span class="comment">// prints</span></span><br><span class="line"><span class="comment">// using default delay because invalid delay -1000</span></span><br><span class="line"><span class="comment">// finished</span></span><br></pre></td></tr></table></figure>
+<h2 id="async-error-and-result">Async error and result</h2><p>I do not particularly like the above &quot;sync error, async result&quot;. Mostly because this assumes that the caller
+can actually do something about the error and restart the chain. If the caller could restart the chain
+with correct parameters, it should have validated the parameters in the first place.
+Often, the most the caller can do is pass the error back to the outside world, just like <code>defere.reject(...)</code>
+or a thrown exception does.</p>
+<p>If we expect an invalid input, we could reject the promise at the start, giving the following code a change
+to handle the rejection.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">delay</span>(<span class="params">n</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line">  <span class="keyword">var</span> defer = Q.defer();</span><br><span class="line">  <span class="keyword">if</span> (n &lt; <span class="number">0</span>) {</span><br><span class="line">    defer.reject(<span class="string">&apos;invalid delay &apos;</span> + n);</span><br><span class="line">  } <span class="keyword">else</span> {</span><br><span class="line">    setTimeout(defer.resolve, n);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> defer.promise;</span><br><span class="line">}</span><br><span class="line">delay(-<span class="number">1000</span>)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">  }, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;problem delaying&apos;</span>, err);</span><br><span class="line">  })</span><br><span class="line">  .done();</span><br><span class="line"><span class="comment">// prints</span></span><br><span class="line"><span class="comment">// problem delaying invalid delay -1000</span></span><br></pre></td></tr></table></figure>
+<p>But what if the exception is truly unexpected? For example the same code, if we named the argument
+incorrectly does NOT handle the raised error.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">delay</span>(<span class="params">N</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line">  <span class="keyword">var</span> defer = Q.defer();</span><br><span class="line">  <span class="keyword">if</span> (n &lt; <span class="number">0</span>) {</span><br><span class="line">    defer.reject(<span class="string">&apos;invalid delay &apos;</span> + n);</span><br><span class="line">  } <span class="keyword">else</span> {</span><br><span class="line">    setTimeout(defer.resolve, n);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> defer.promise;</span><br><span class="line">}</span><br><span class="line">delay(-<span class="number">1000</span>)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">  }, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;problem delaying&apos;</span>, err);</span><br><span class="line">  })</span><br><span class="line">  .done();</span><br><span class="line"><span class="comment">/*</span><br><span class="line">  prints exception</span><br><span class="line">  if (n &lt; 0) {</span><br><span class="line">    ReferenceError: n is not defined</span><br><span class="line">*/</span></span><br></pre></td></tr></table></figure>
+<p>If the <code>ReferenceError</code> happened in the <code>.then()</code> callback, it would have been handled by the promise engine,
+maybe by the next error handler. Because it happens <em>before</em> the promise engine wraps the callback, the
+error goes unhandled. This is why we can use a helper utility, usually provided by the promise library
+to execute the given function and start the promise chain. In the case of my favorite Node library <a href="https://www.npmjs.com/package/q" target="_blank" rel="external">q</a>,
+there is <a href="https://github.com/kriskowal/q/wiki/API-Reference#promisefcallargs" target="_blank" rel="external">Q.try</a>. We just pass our function and its arguments to <code>Q.try</code> and any runtime exceptions
+inside our function will be passed along the promise chain.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">delay</span>(<span class="params">N</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> defer = Q.defer();</span><br><span class="line">  <span class="keyword">if</span> (n &lt; <span class="number">0</span>) {</span><br><span class="line">    defer.reject(<span class="string">&apos;invalid delay &apos;</span> + n);</span><br><span class="line">  } <span class="keyword">else</span> {</span><br><span class="line">    setTimeout(defer.resolve, n);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> defer.promise;</span><br><span class="line">}</span><br><span class="line">Q.try(delay, -<span class="number">1000</span>)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">  }, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;problem delaying&apos;</span>, err.message);</span><br><span class="line">  })</span><br><span class="line">  .done();</span><br><span class="line"><span class="comment">// prints</span></span><br><span class="line"><span class="comment">// problem delaying n is not defined</span></span><br></pre></td></tr></table></figure>
+<p>The same <code>ReferenceError</code> now will be handled by the error handler, unifying the first step of the chain with
+the regular error or rejection handling.</p>
+<h2 id="angularjs-q-service">AngularJS $q service</h2><p>If you use AngularJS <a href="https://docs.angularjs.org/api/ng/service/$q" target="_blank" rel="external">$q</a> in the browser, you do not have <code>Q.try</code> 
+($q service is a small subset of the Q library). Fortunately, adding the feature equivalent to <code>Q.try</code> is simple.
+Ben Nadel shows one way in <a href="http://www.bennadel.com/blog/2775-monkey-patching-the-q-service-using-provide-decorator-in-angularjs.htm" target="_blank" rel="external">Monkey-Patching The $q Service Using $provide.decorator() In AngularJS</a>.
+I hope he releases it as a stand alone library on NPM / Bower.</p>
+<h2 id="starting-with-dummy-promise">Starting with &quot;dummy&quot; promise</h2><p>Another way to start the promise and have the error handling is to start with a &quot;dummy&quot; promise.
+In case of Q, you can do the following (<code>delay</code> throws ReferenceError because I used wrong variable on purpose).</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Q = <span class="built_in">require</span>(<span class="string">&apos;q&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">delay</span>(<span class="params">N</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> defer = Q.defer();</span><br><span class="line">  setTimeout(defer.resolve, n);</span><br><span class="line">  <span class="keyword">return</span> defer.promise;</span><br><span class="line">}</span><br><span class="line">Q()</span><br><span class="line">  .then(delay.bind(<span class="literal">null</span>, <span class="number">1000</span>))</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> <span class="title">finished</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&apos;problem&apos;</span>);</span><br><span class="line">  })</span><br><span class="line">  .catch(<span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;Caught a problem&apos;</span>, err.message);</span><br><span class="line">  })</span><br><span class="line">  .done();</span><br><span class="line"><span class="comment">// prints</span></span><br><span class="line"><span class="comment">// Caught a problem n is not defined</span></span><br></pre></td></tr></table></figure>
+<p>Because we shifted our promise-returning function to be inside <code>.then</code> callback, we direct the error
+to the <code>.catch</code> handler.</p>
+<p>The above example works even better if we resolve the dummy promise with the first argument needed
+for the actual function <code>delay</code>. We can also factor our the little callback functions.
+Then the steps look very natural and eady to read.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">finished</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;finished&apos;</span>);</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&apos;problem&apos;</span>);</span><br><span class="line">}</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">problem</span>(<span class="params">err</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;Caught a problem&apos;</span>, err.message);</span><br><span class="line">}</span><br><span class="line">Q(<span class="number">1000</span>)</span><br><span class="line">  .then(delay)</span><br><span class="line">  .then(finished)</span><br><span class="line">  .catch(problem)</span><br><span class="line">  .done();</span><br><span class="line"><span class="comment">// prints</span></span><br><span class="line"><span class="comment">// Caught a problem n is not defined</span></span><br></pre></td></tr></table></figure>
+<p>This is as simple as it gets - but the entire chain runs asynchronously!</p>
+<p>Related: <a href="../why-promises-need-to-be-done/">Why promises need to be done</a></p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/starting-promises/" data-id="cihtr6vun0075l3uroqp5g0zp" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/starting-promises/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/angularjs/">angularjs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/promises/">promises</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../the-awful-inconsistency-of-firebase-api/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          The awful inconsistency of Firebase API
+        
+      </div>
+    </a>
+  
+  
+    <a href="../too-much-point-free/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Too much point-free</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/starting-promises/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

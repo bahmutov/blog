@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Express sessions | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="This is a few notes on sessions in ExpressJS server and how to observe / debug them. You can
+find the companion code at github.com/bahmutov/express-sessions-tutorial. 
+Several checkpoints are tagged,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Express sessions">
+<meta property="og:url" content="http://glebbahmutov.com/blog/express-sessions/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="This is a few notes on sessions in ExpressJS server and how to observe / debug them. You can
+find the companion code at github.com/bahmutov/express-sessions-tutorial. 
+Several checkpoints are tagged,">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Express sessions">
+<meta name="twitter:description" content="This is a few notes on sessions in ExpressJS server and how to observe / debug them. You can
+find the companion code at github.com/bahmutov/express-sessions-tutorial. 
+Several checkpoints are tagged,">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-express-sessions" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-08-17T04:00:00.000Z" itemprop="datePublished">Aug 17 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Express sessions
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Using and observing ExpressJS sessions from the client code.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>This is a few notes on sessions in ExpressJS server and how to observe / debug them. You can
+find the companion code at <a href="https://github.com/bahmutov/express-sessions-tutorial" target="_blank" rel="external">github.com/bahmutov/express-sessions-tutorial</a>. 
+Several checkpoints are tagged, you can play with the code by cloning the repo and going to
+any of them</p>
+<pre><code>git <span class="keyword">clone</span> <span class="title">https</span>://github.com/bahmutov/express-sessions-tutorial
+cd express-sessions-tutorial
+npm install
+git checkout step-<span class="number">0</span>
+</code></pre><h2 id="step-0-expressjs-server-with-local-sessions-save">step-0: ExpressJS server with local sessions save</h2><p>Start a new project using <code>npm init</code> and install <a href="http://expressjs.com/" target="_blank" rel="external">expressjs</a></p>
+<pre><code>npm <span class="operator"><span class="keyword">install</span> <span class="comment">--save express</span></span>
+</code></pre><p>Create main file <code>server.js</code></p>
+<figure class="highlight js"><figcaption><span>server.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> app = <span class="built_in">require</span>(<span class="string">&apos;express&apos;</span>)();</span><br><span class="line">app.get(<span class="string">&apos;/&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>{</span><br><span class="line">  res.send(<span class="string">&apos;hi there&apos;</span>);</span><br><span class="line">});</span><br><span class="line"><span class="keyword">var</span> server = app.listen(<span class="number">3000</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> host = server.address().address;</span><br><span class="line">  <span class="keyword">var</span> port = server.address().port;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;Example app listening at http://%s:%s&apos;</span>, host, port);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>We can run the server, but it does nothing, not even serving stating index page yet.
+Just answering &apos;Hi there&apos; to any request.</p>
+<p>Before we proceed, I would add <a href="https://www.npmjs.com/package/nodemon" target="_blank" rel="external">nodemon</a> to automatically 
+restart the server on any source file changes.</p>
+<pre><code>npm install --<span class="built_in">save</span>-<span class="built_in">dev</span> nodemon
+</code></pre><p>Create <code>watch</code> script in the <code>package.json</code></p>
+<figure class="highlight"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&quot;scripts&quot;: {</span><br><span class="line">    &quot;watch&quot;: &quot;nodemon server.js&quot;</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>Now start the server via <code>nodemon</code> that watches source files and restarts the server whenever
+you make local file modifications</p>
+<pre><code>npm <span class="command">run</span> watch
+</code></pre><p>You can make a <code>curl http://localhost:3000/</code> request from another terminal, I prefer using 
+<a href="https://github.com/jkbrzt/httpie" target="_blank" rel="external">httpie</a>.</p>
+<p>This is the output</p>
+<pre><code>$ http http:<span class="comment">//localhost:3000/</span>
+HTTP/<span class="number">1.1</span> <span class="number">200</span> OK
+Connection: keep-alive
+Content-Length: <span class="number">8</span>
+Content-Type: text/html; charset=utf-<span class="number">8</span>
+Date: Mon, <span class="number">17</span> Aug <span class="number">2015</span> <span class="number">18</span>:<span class="number">46</span>:<span class="number">06</span> GMT
+ETag: W/<span class="string">&quot;8-/TPi6K08sb3T6o9WM/z1xw&quot;</span>
+X-Powered-By: Express
+hi there
+</code></pre><h2 id="step-1-add-session-persistance">step-1 - add session persistance</h2><p>Whenever a new browser connects the server, we can initialize a <em>session cookie</em>. Using this cookie
+we can determine if this is the same user making multiple visits for example. Let us install a couple
+of modules for handling the sessions and for storing them into the file system</p>
+<pre><code>npm install --<span class="keyword">save</span> express-session session-<span class="keyword">file</span>-store morgan
+</code></pre><ul>
+<li><a href="https://github.com/expressjs/session" target="_blank" rel="external">express-session</a> parses session cookie, validates it, etc.</li>
+<li><a href="https://www.npmjs.com/package/session-file-store" target="_blank" rel="external">session-file-store</a> saves the session object in
+JSON files in the local folder (<code>sessions</code> by default). This is not as advanced as 
+<a href="https://github.com/expressjs/session#compatible-session-stores" target="_blank" rel="external">other sessions stores</a>, but great for
+debugging and learning</li>
+<li><a href="npmjs.org/package/morgan">morgan</a> is the usual logger middleware for Express</li>
+</ul>
+<p>Add the session middleware to the server stack</p>
+<figure class="highlight js"><figcaption><span>server.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> app = <span class="built_in">require</span>(<span class="string">&apos;express&apos;</span>)();</span><br><span class="line">app.use(<span class="built_in">require</span>(<span class="string">&apos;morgan&apos;</span>)(<span class="string">&apos;dev&apos;</span>));</span><br><span class="line"><span class="keyword">var</span> session = <span class="built_in">require</span>(<span class="string">&apos;express-session&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> FileStore = <span class="built_in">require</span>(<span class="string">&apos;session-file-store&apos;</span>)(session);</span><br><span class="line">app.use(session({</span><br><span class="line">  name: <span class="string">&apos;server-session-cookie-id&apos;</span>,</span><br><span class="line">  secret: <span class="string">&apos;my express secret&apos;</span>,</span><br><span class="line">  saveUninitialized: <span class="literal">true</span>,</span><br><span class="line">  resave: <span class="literal">true</span>,</span><br><span class="line">  store: <span class="keyword">new</span> FileStore()</span><br><span class="line">}));</span><br><span class="line">app.get(<span class="string">&apos;/&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>{</span><br><span class="line">  res.send(<span class="string">&apos;hi there&apos;</span>);</span><br><span class="line">});</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>You can find the session options in the <a href="https://github.com/expressjs/session" target="_blank" rel="external">express-session</a> documentation.</p>
+<p>The behavior of the application has not changed, but the <code>session</code> middleware now adds a new property
+to the <code>req</code> object passed to each middleware callback after it. Let us print the <code>session</code> property</p>
+<figure class="highlight js"><figcaption><span>server.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">app.use(session({</span><br><span class="line">  ...</span><br><span class="line">}));</span><br><span class="line">app.use(<span class="function"><span class="keyword">function</span> <span class="title">printSession</span>(<span class="params">req, res, next</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;req.session&apos;</span>, req.session);</span><br><span class="line">  <span class="keyword">return</span> next();</span><br><span class="line">});</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>If you make a curl request, the session object will be printed to the standard output</p>
+<pre><code>req.session { <span class="string">cookie:</span> 
+   { <span class="string">path:</span> <span class="string">&apos;/&apos;</span>,
+<span class="label">     _expires:</span> <span class="literal">null</span>,
+<span class="label">     originalMaxAge:</span> <span class="literal">null</span>,
+<span class="label">     httpOnly:</span> <span class="literal">true</span> } }
+GET / <span class="number">200</span> <span class="number">7.493</span> ms - <span class="number">8</span>
+</code></pre><p>And the curl will print almost the same output, except it has additional property - the <code>server-session-cookie-id</code>
+cookie.</p>
+<pre><code>$ http http:<span class="comment">//localhost:3000/</span>
+HTTP/<span class="number">1.1</span> <span class="number">200</span> OK
+Connection: keep-alive
+Content-Length: <span class="number">8</span>
+Content-Type: text/html; charset=utf-<span class="number">8</span>
+Date: Mon, <span class="number">17</span> Aug <span class="number">2015</span> <span class="number">18</span>:<span class="number">58</span>:<span class="number">04</span> GMT
+ETag: W/<span class="string">&quot;8-/TPi6K08sb3T6o9WM/z1xw&quot;</span>
+X-Powered-By: Express
+<span class="built_in">set</span>-cookie: server-session-cookie-id=s%<span class="number">3</span>ASacx84tlozr...; Path=/; HttpOnly
+hi there
+</code></pre><p>This cookie was generated automatically by the <code>express-session</code> middleware and is unique to the browser session.
+If you open <code>http://localhost:3000/</code> in the browser and inspect the &quot;Resources / Cookies&quot;, you will find it present
+too.</p>
+<p>You can also look at the <code>sessions/</code> local folder to see individual JSON file with session info, for example</p>
+<pre><code>$ cat sessions/cgMyI0mMSGB_zSmsy5WoLuArZvWSgIok.json 
+{
+  <span class="string">&quot;cookie&quot;</span>: {
+    <span class="string">&quot;originalMaxAge&quot;</span>: <span class="literal">null</span>,
+    <span class="string">&quot;expires&quot;</span>: <span class="literal">null</span>,
+    <span class="string">&quot;httpOnly&quot;</span>: <span class="literal">true</span>,
+    <span class="string">&quot;path&quot;</span>: <span class="string">&quot;/&quot;</span>
+  },
+  <span class="string">&quot;__lastAccess&quot;</span>: <span class="number">1439838463473</span>
+}
+</code></pre><p>The cool thing is, <code>express-session</code> automatically looks at the cookie <code>server-session-cookie-id</code>,
+and it is not present, creates new one, creates new session object and sets it on the request. If there is a cookie,
+it is parsed, and then the right session is fetched from the session store.</p>
+<h2 id="step-2-count-session-views">step-2 - count session views</h2><p>We can add more information to the <code>session</code> object, and it will be serialized just the same. For example
+we can can keep the number of views in the session.</p>
+<figure class="highlight js"><figcaption><span>server.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">app.use(session({</span><br><span class="line">  ...</span><br><span class="line">  resave: <span class="literal">true</span></span><br><span class="line">}));</span><br><span class="line">app.get(<span class="string">&apos;/&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">initViewsCount</span>(<span class="params">req, res, next</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> req.session.views === <span class="string">&apos;undefined&apos;</span>) {</span><br><span class="line">    req.session.views = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> res.end(<span class="string">&apos;Welcome to the file session demo. Refresh page!&apos;</span>);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> next();</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>If we execute several curl requests, because the session cookie is not present, each will initialize a new
+counter.</p>
+<pre><code>$ http http:<span class="comment">//localhost:3000/</span>
+HTTP/<span class="number">1.1</span> <span class="number">200</span> OK
+Connection: keep-alive
+Date: Mon, <span class="number">17</span> Aug <span class="number">2015</span> <span class="number">19</span>:<span class="number">28</span>:<span class="number">48</span> GMT
+Transfer-Encoding: chunked
+X-Powered-By: Express
+<span class="built_in">set</span>-cookie: server-session-cookie-id=s%<span class="number">3</span>A65byNjKYiFbnKl...; Path=/; HttpOnly
+Welcome to the file session demo. Refresh page!
+</code></pre><p>We can open the session folder and find the new file to see that the session object does in fact have
+a <code>views</code> property</p>
+<pre><code>$ cat sessions/y6qdHmRw5eu1OCr0JYpzoMkb_QPxJCYJ.json 
+{
+  <span class="string">&quot;cookie&quot;</span>: {
+    <span class="string">&quot;originalMaxAge&quot;</span>: <span class="literal">null</span>,
+    <span class="string">&quot;expires&quot;</span>: <span class="literal">null</span>,
+    <span class="string">&quot;httpOnly&quot;</span>: <span class="literal">true</span>,
+    <span class="string">&quot;path&quot;</span>: <span class="string">&quot;/&quot;</span>
+  },
+  <span class="string">&quot;views&quot;</span>: <span class="number">1</span>,
+  <span class="string">&quot;__lastAccess&quot;</span>: <span class="number">1439839726898</span>
+}
+</code></pre><p>If we access the url through the browser, because of the cookie persistance, we will not generate a new session.
+Let us increment the counter for sessions that already have <code>views</code>.</p>
+<figure class="highlight js"><figcaption><span>server.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">app.get(<span class="string">&apos;/&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">initViewsCount</span>(<span class="params">req, res, next</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> req.session.views === <span class="string">&apos;undefined&apos;</span>) {</span><br><span class="line">    req.session.views = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">return</span> res.end(<span class="string">&apos;Welcome to the file session demo. Refresh page!&apos;</span>);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> next();</span><br><span class="line">});</span><br><span class="line">app.get(<span class="string">&apos;/&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">incrementViewsCount</span>(<span class="params">req, res, next</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.assert(<span class="keyword">typeof</span> req.session.views === <span class="string">&apos;number&apos;</span>,</span><br><span class="line">    <span class="string">&apos;missing views count in the session&apos;</span>, req.session);</span><br><span class="line">  req.session.views++;</span><br><span class="line">  <span class="keyword">return</span> next();</span><br><span class="line">});</span><br><span class="line">app.use(<span class="function"><span class="keyword">function</span> <span class="title">printSession</span>(<span class="params">req, res, next</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;req.session&apos;</span>, req.session);</span><br><span class="line">  <span class="keyword">return</span> next();</span><br><span class="line">});</span><br><span class="line">app.get(<span class="string">&apos;/&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">sendPageWithCounter</span>(<span class="params">req, res</span>) </span>{</span><br><span class="line">  res.setHeader(<span class="string">&apos;Content-Type&apos;</span>, <span class="string">&apos;text/html&apos;</span>);</span><br><span class="line">  res.write(<span class="string">&apos;&lt;p&gt;views: &apos;</span> + req.session.views + <span class="string">&apos;&lt;/p&gt;\n&apos;</span>);</span><br><span class="line">  res.end();</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>We are going to increment the counter, and embed it in the page. The console shows the session
+for each page refresh</p>
+<pre><code>Example app listening at <span class="string">http:</span><span class="comment">//:::3000</span>
+req.session { <span class="string">cookie:</span> 
+   { <span class="string">path:</span> <span class="string">&apos;/&apos;</span>,
+<span class="label">     _expires:</span> <span class="literal">null</span>,
+<span class="label">     originalMaxAge:</span> <span class="literal">null</span>,
+<span class="label">     httpOnly:</span> <span class="literal">true</span> },
+<span class="label">  __lastAccess:</span> <span class="number">1439840352586</span>,
+<span class="label">  views:</span> <span class="number">2</span> }
+GET / <span class="number">200</span> <span class="number">13.147</span> ms - -
+req.session { <span class="string">cookie:</span> 
+   { <span class="string">path:</span> <span class="string">&apos;/&apos;</span>,
+<span class="label">     _expires:</span> <span class="literal">null</span>,
+<span class="label">     originalMaxAge:</span> <span class="literal">null</span>,
+<span class="label">     httpOnly:</span> <span class="literal">true</span> },
+<span class="label">  __lastAccess:</span> <span class="number">1439840375987</span>,
+<span class="label">  views:</span> <span class="number">3</span> }
+GET / <span class="number">200</span> <span class="number">2.239</span> ms - -
+</code></pre><p>Nice!</p>
+<h2 id="step-3-same-session-from-the-command-line">step-3 - same session from the command line</h2><p>The browser can send the same session cookie <code>server-session-cookie-id</code> with each request. Can we send do
+the same form the command line? The <a href="http://curl.haxx.se/docs/http-cookies.html" target="_blank" rel="external">curl</a> help page explains
+how the cookies can be stored in a &quot;jar&quot;. First we start the &quot;cookie jar&quot;</p>
+<pre><code>curl --cookie-jar cookies http:<span class="comment">//localhost:3000/</span>
+cat cookies
+<span class="preprocessor"># Netscape HTTP Cookie File</span>
+<span class="preprocessor"># http://curl.haxx.se/docs/http-cookies.html</span>
+<span class="preprocessor"># This file was generated by libcurl! Edit at your own risk.</span>
+<span class="preprocessor">#HttpOnly_localhost FALSE   /   FALSE   0   server-session-cookie-id    s%3AW_fN2t8ImZPyn_gZH...</span>
+</code></pre><p>On the next request, use this file again and the session will be valid</p>
+<pre><code>$ curl --cookie cookies <span class="string">http:</span><span class="comment">//localhost:3000/</span>
+&lt;p&gt;<span class="string">views:</span> <span class="number">1</span>&lt;/p&gt;
+$ curl --cookie cookies <span class="string">http:</span><span class="comment">//localhost:3000/</span>
+&lt;p&gt;<span class="string">views:</span> <span class="number">2</span>&lt;/p&gt;
+$ curl --cookie cookies <span class="string">http:</span><span class="comment">//localhost:3000/</span>
+&lt;p&gt;<span class="string">views:</span> <span class="number">3</span>&lt;/p&gt;
+</code></pre><p>Saving / sending the same cookies using <a href="https://github.com/jkbrzt/httpie" target="_blank" rel="external">httpie</a> is even simpler. Just
+specify the same filename for storing / loading</p>
+<pre><code>$ http --session=my <span class="string">http:</span><span class="comment">//localhost:3000/</span>
+HTTP/<span class="number">1.1</span> <span class="number">200</span> OK
+<span class="string">Connection:</span> keep-alive
+<span class="string">Date:</span> Tue, <span class="number">18</span> Aug <span class="number">2015</span> <span class="number">02</span>:<span class="number">05</span>:<span class="number">43</span> GMT
+Transfer-<span class="string">Encoding:</span> chunked
+X-Powered-<span class="string">By:</span> Express
+set-<span class="string">cookie:</span> server-session-cookie-id=s%<span class="number">3</span>AvK-ddDZo3jK6BrQDhtS...; Path=/; HttpOnly
+Welcome to the file session demo. Refresh page!
+
+$ http --session=my <span class="string">http:</span><span class="comment">//localhost:3000/</span>
+HTTP/<span class="number">1.1</span> <span class="number">200</span> OK
+<span class="string">Connection:</span> keep-alive
+Content-<span class="string">Type:</span> text/html
+<span class="string">Date:</span> Tue, <span class="number">18</span> Aug <span class="number">2015</span> <span class="number">02</span>:<span class="number">05</span>:<span class="number">47</span> GMT
+Transfer-<span class="string">Encoding:</span> chunked
+X-Powered-<span class="string">By:</span> Express
+&lt;p&gt;<span class="string">views:</span> <span class="number">1</span>&lt;/p&gt;
+
+$ http --session=my <span class="string">http:</span><span class="comment">//localhost:3000/</span>
+HTTP/<span class="number">1.1</span> <span class="number">200</span> OK
+<span class="string">Connection:</span> keep-alive
+Content-<span class="string">Type:</span> text/html
+<span class="string">Date:</span> Tue, <span class="number">18</span> Aug <span class="number">2015</span> <span class="number">02</span>:<span class="number">05</span>:<span class="number">48</span> GMT
+Transfer-<span class="string">Encoding:</span> chunked
+X-Powered-<span class="string">By:</span> Express
+&lt;p&gt;<span class="string">views:</span> <span class="number">2</span>&lt;/p&gt;
+</code></pre><p>The file <code>~/.httpie/sessions/localhost_3000/my.json</code> contains the following</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">    &quot;<span class="attribute">__meta__</span>&quot;: <span class="value">{</span><br><span class="line">        &quot;<span class="attribute">about</span>&quot;: <span class="value"><span class="string">&quot;HTTPie session file&quot;</span></span>, </span><br><span class="line">        &quot;<span class="attribute">help</span>&quot;: <span class="value"><span class="string">&quot;https://github.com/jkbr/httpie#sessions&quot;</span></span>, </span><br><span class="line">        &quot;<span class="attribute">httpie</span>&quot;: <span class="value"><span class="string">&quot;0.8.0&quot;</span></span><br><span class="line">    </span>}</span>, </span><br><span class="line">    &quot;<span class="attribute">auth</span>&quot;: <span class="value">{</span><br><span class="line">        &quot;<span class="attribute">password</span>&quot;: <span class="value"><span class="literal">null</span></span>, </span><br><span class="line">        &quot;<span class="attribute">type</span>&quot;: <span class="value"><span class="literal">null</span></span>, </span><br><span class="line">        &quot;<span class="attribute">username</span>&quot;: <span class="value"><span class="literal">null</span></span><br><span class="line">    </span>}</span>, </span><br><span class="line">    &quot;<span class="attribute">cookies</span>&quot;: <span class="value">{</span><br><span class="line">        &quot;<span class="attribute">server-session-cookie-id</span>&quot;: <span class="value">{</span><br><span class="line">            &quot;<span class="attribute">expires</span>&quot;: <span class="value"><span class="literal">null</span></span>, </span><br><span class="line">            &quot;<span class="attribute">path</span>&quot;: <span class="value"><span class="string">&quot;/&quot;</span></span>, </span><br><span class="line">            &quot;<span class="attribute">secure</span>&quot;: <span class="value"><span class="literal">false</span></span>, </span><br><span class="line">            &quot;<span class="attribute">value</span>&quot;: <span class="value"><span class="string">&quot;s%3AvK-ddDZo3jK6BrQDhtS...&quot;</span></span><br><span class="line">        </span>}</span><br><span class="line">    </span>}</span>, </span><br><span class="line">    &quot;<span class="attribute">headers</span>&quot;: <span class="value">{}</span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<h2 id="step-4-same-session-across-node-requests">step-4 - same session across Node requests</h2><p>Let us execute GET requests not from a browser or a command line tool, but from a client Node
+program. For example, we can use <a href="https://github.com/request/request-promise" target="_blank" rel="external">request-promise</a></p>
+<pre><code>npm <span class="operator"><span class="keyword">install</span> <span class="comment">--save request-promise</span></span>
+</code></pre><p>The write a simple client in a separate file, for example <code>client.js</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> rp = <span class="built_in">require</span>(<span class="string">&apos;request-promise&apos;</span>);</span><br><span class="line">rp(<span class="string">&apos;http://localhost:3000/&apos;</span>)</span><br><span class="line">  .then(<span class="built_in">console</span>.dir)</span><br><span class="line">  .catch(<span class="built_in">console</span>.error);</span><br></pre></td></tr></table></figure>
+<p>Each run of the program will return new session</p>
+<pre><code>$ <span class="keyword">node</span><span class="identifier"> </span><span class="title">client</span>.js 
+&apos;Welcome to the file session demo. Refresh page!&apos;
+$ <span class="keyword">node</span><span class="identifier"> </span><span class="title">client</span>.js 
+&apos;Welcome to the file session demo. Refresh page!&apos;
+</code></pre><p>We need to store the cookies and send them with each request, at least while the application
+is running. Just using several requests does not work - the cookie is not stored / saved with
+each request.</p>
+<figure class="highlight js"><figcaption><span>client.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> rp = <span class="built_in">require</span>(<span class="string">&apos;request-promise&apos;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">requestPage</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> rp(<span class="string">&apos;http://localhost:3000/&apos;</span>);</span><br><span class="line">}</span><br><span class="line">requestPage()</span><br><span class="line">  .then(<span class="built_in">console</span>.dir)</span><br><span class="line">  .then(requestPage)</span><br><span class="line">  .then(<span class="built_in">console</span>.dir)</span><br><span class="line">  .then(requestPage)</span><br><span class="line">  .then(<span class="built_in">console</span>.dir)</span><br><span class="line">  .catch(<span class="built_in">console</span>.error);</span><br></pre></td></tr></table></figure>
+<pre><code>$ node client.js 
+<span class="attribute">&apos;Welcome</span> <span class="keyword">to</span> the <span class="keyword">file</span> session demo. Refresh page!&apos;
+<span class="attribute">&apos;Welcome</span> <span class="keyword">to</span> the <span class="keyword">file</span> session demo. Refresh page!&apos;
+<span class="attribute">&apos;Welcome</span> <span class="keyword">to</span> the <span class="keyword">file</span> session demo. Refresh page!&apos;
+</code></pre><p>Luckily, it is simple to configure the request code to save / send cookies. Just set the default
+options <code>jar</code> (as in &quot;cookie jar&quot;) to true.</p>
+<figure class="highlight js"><figcaption><span>client.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> rp = <span class="built_in">require</span>(<span class="string">&apos;request-promise&apos;</span>).defaults({</span><br><span class="line">  jar: <span class="literal">true</span></span><br><span class="line">});</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<pre><code>$ node client.js 
+<span class="comment">&apos;Welcome to the file session demo. Refresh page!&apos;</span>
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 1<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 2<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+</code></pre><p>Can we inspect the saved cookies, similarly to how we saved the cookies into the plain local files using 
+<code>curl</code> and <a href="https://github.com/jkbrzt/httpie" target="_blank" rel="external">httpie</a> tools? Yes, but we need to use a different cookie implementation.</p>
+<pre><code>npm <span class="operator"><span class="keyword">install</span> <span class="comment">--save tough-cookie-filestore</span></span>
+</code></pre><p>Due to the <a href="https://github.com/mitsuru/tough-cookie-filestore/issues/2" target="_blank" rel="external">bug</a>
+we need to create an empty output file first to store future cookies</p>
+<pre><code><span class="tag">touch</span> <span class="tag">cookies</span><span class="class">.json</span>
+</code></pre><p>Now create a cookie jar backed by a plain JSON file in our code</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> FileCookieStore = <span class="built_in">require</span>(<span class="string">&apos;tough-cookie-filestore&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> requestPromise = <span class="built_in">require</span>(<span class="string">&apos;request-promise&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> rp = requestPromise.defaults({</span><br><span class="line">  jar: requestPromise.jar(<span class="keyword">new</span> FileCookieStore(<span class="string">&apos;cookies.json&apos;</span>))</span><br><span class="line">});</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">requestPage</span>(<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> rp(<span class="string">&apos;http://localhost:3000/&apos;</span>);</span><br><span class="line">}</span><br><span class="line">requestPage()</span><br><span class="line">  .then(<span class="built_in">console</span>.dir)</span><br><span class="line">  .then(requestPage)</span><br><span class="line">  .then(<span class="built_in">console</span>.dir)</span><br><span class="line">  .then(requestPage)</span><br><span class="line">  .then(<span class="built_in">console</span>.dir)</span><br><span class="line">  .catch(<span class="built_in">console</span>.error);</span><br></pre></td></tr></table></figure>
+<p>We now can execute multiple requests using the same session and inspect the cookies</p>
+<pre><code>$ node client.js 
+<span class="comment">&apos;Welcome to the file session demo. Refresh page!&apos;</span>
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 1<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 2<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+$ node client.js 
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 3<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 4<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 5<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+</code></pre><figure class="highlight"><figcaption><span>cookies.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ c cookies.json </span><br><span class="line">{&quot;localhost&quot;:{&quot;/&quot;:{&quot;server-session-cookie-id&quot;:{</span><br><span class="line">    &quot;key&quot;:&quot;server-session-cookie-id&quot;,</span><br><span class="line">    &quot;value&quot;:&quot;s%3AqSHbMfG4G0SIl1pdI...&quot;,</span><br><span class="line">    &quot;domain&quot;:&quot;localhost&quot;,</span><br><span class="line">    &quot;path&quot;:&quot;/&quot;,</span><br><span class="line">    &quot;httpOnly&quot;:true,</span><br><span class="line">    &quot;hostOnly&quot;:true,</span><br><span class="line">    &quot;creation&quot;:&quot;2015-08-20T21:42:46.878Z&quot;,</span><br><span class="line">    &quot;lastAccessed&quot;:&quot;2015-08-20T21:42:46.878Z&quot;}</span><br><span class="line">}}}</span><br></pre></td></tr></table></figure>
+<h2 id="step-5-running-expressjs-in-https-mode">step-5 - Running ExpressJS in HTTPS mode</h2><p>We will create a self-signed certificate to allow our test server to work over HTTPS locally.
+I followed the <a href="http://blog.mgechev.com/2014/02/19/create-https-tls-ssl-application-with-express-nodejs/" target="_blank" rel="external">Express over HTTPS</a> instructions. The initial command to create the
+certificate can be found in <code>package.json</code> under <code>npm run make-certificate</code>. It generates
+<code>cert.pem</code> and <code>key.pem</code> files. We need to load these files when starting the Express server.</p>
+<figure class="highlight js"><figcaption><span>server.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> https = <span class="built_in">require</span>(<span class="string">&apos;https&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> fs = <span class="built_in">require</span>(<span class="string">&apos;fs&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> app = <span class="built_in">require</span>(<span class="string">&apos;express&apos;</span>)();</span><br><span class="line">...</span><br><span class="line"><span class="keyword">var</span> server = https.createServer({</span><br><span class="line">  key: fs.readFileSync(<span class="string">&apos;key.pem&apos;</span>),</span><br><span class="line">  cert: fs.readFileSync(<span class="string">&apos;cert.pem&apos;</span>)</span><br><span class="line">}, app).listen(<span class="number">3000</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> host = server.address().address;</span><br><span class="line">  <span class="keyword">var</span> port = server.address().port;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;Example app listening at https://%s:%s&apos;</span>, host, port);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>When I tried running the server, I got <code>error:0907B068:PEM routines:PEM_READ_BIO_PRIVATEKEY:bad password read</code>,
+so I removed the passphrase (using <code>npm run remove-passphrase</code>). Then start the server <code>node server.js</code> and
+open the browser</p>
+<pre><code><span class="keyword">open</span> http<span class="variable">s:</span>//localhos<span class="variable">t:3000</span>/
+</code></pre><p>After the security warning you should see the HTTPS website with the session counter</p>
+<h2 id="step-6-update-client-code">step-6 - update client code</h2><p>Because we use self-signed certificate, we need to update our Node client code to allow connecting.
+Otherwise we get a <code>[RequestError: Error: self signed certificate]</code></p>
+<figure class="highlight js"><figcaption><span>client.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> FileCookieStore = <span class="built_in">require</span>(<span class="string">&apos;tough-cookie-filestore&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> requestPromise = <span class="built_in">require</span>(<span class="string">&apos;request-promise&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> rp = requestPromise.defaults({</span><br><span class="line">  strictSSL: <span class="literal">false</span>, <span class="comment">// allow us to use our self-signed cert for testing</span></span><br><span class="line">  rejectUnauthorized: <span class="literal">false</span>,</span><br><span class="line">  jar: requestPromise.jar(<span class="keyword">new</span> FileCookieStore(<span class="string">&apos;cookies.json&apos;</span>))</span><br><span class="line">});</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>You should be able to connect to the server and see the incremented counter again</p>
+<pre><code>$ node client.js 
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 9<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 10<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+<span class="comment">&apos;<span class="xmlDocTag">&lt;p&gt;</span>views: 11<span class="xmlDocTag">&lt;/p&gt;</span>\n&apos;</span>
+</code></pre><p>Similarly, other CLI tools should skip the certificate validation when trying to connect to our local
+server. For example, <a href="https://github.com/jkbrzt/httpie" target="_blank" rel="external">httpie</a></p>
+<pre><code>http --verify=<span class="keyword">no</span> --session=my http<span class="variable">s:</span>//localhos<span class="variable">t:3000</span>/
+</code></pre><h2 id="step-7-passing-referer-header-from-the-server-to-the-next-request">step-7 - passing Referer header from the server to the next request</h2><p>Sometimes as a security measure, the server checks <code>Referer</code> header included in the client&apos;s
+request to make sure it matches whatever the server sent before. Let us simulate this in the
+server code</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">app.get(<span class="string">&apos;/&apos;</span>, <span class="function"><span class="keyword">function</span> <span class="title">sendPageWithCounter</span>(<span class="params">req, res</span>) </span>{</span><br><span class="line">  res.setHeader(<span class="string">&apos;Content-Type&apos;</span>, <span class="string">&apos;text/html&apos;</span>);</span><br><span class="line">  res.setHeader(<span class="string">&apos;Referer&apos;</span>, <span class="string">&apos;server referer&apos;</span>);</span><br><span class="line">  res.write(<span class="string">&apos;&lt;p&gt;views: &apos;</span> + req.session.views + <span class="string">&apos;&lt;/p&gt;\n&apos;</span>);</span><br><span class="line">  res.end();</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>We can even print this header in the middleware</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">app.use(<span class="function"><span class="keyword">function</span> <span class="title">printSession</span>(<span class="params">req, res, next</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;req.session&apos;</span>, req.session);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;req header referer&apos;</span>, req.header(<span class="string">&apos;Referer&apos;</span>));</span><br><span class="line">  <span class="keyword">return</span> next();</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>The client application code needs to read the header <code>Referer</code> (the headers are case-insensitive)
+from each response and pass it with the next request to the server. We can modify the client code
+to achieve this; but we now need to deal with full response, not just the body</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> rp = requestPromise.defaults({</span><br><span class="line">  strictSSL: <span class="literal">false</span>, <span class="comment">// allow us to use our self-signed cert for testing</span></span><br><span class="line">  rejectUnauthorized: <span class="literal">false</span>,</span><br><span class="line">  jar: requestPromise.jar(<span class="keyword">new</span> FileCookieStore(<span class="string">&apos;cookies.json&apos;</span>))</span><br><span class="line">});</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">requestPage</span>(<span class="params">previousResponse</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> referer = previousResponse ? previousResponse.headers.referer : <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">if</span> (previousResponse) {</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;previous response referer &quot;%s&quot;&apos;</span>, referer);</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">return</span> rp({</span><br><span class="line">    url: <span class="string">&apos;https://localhost:3000/&apos;</span>,</span><br><span class="line">    resolveWithFullResponse: <span class="literal">true</span>,</span><br><span class="line">    headers: {</span><br><span class="line">      referer: referer</span><br><span class="line">    }</span><br><span class="line">  });</span><br><span class="line">}</span><br><span class="line">requestPage()</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params">response</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(response.body);</span><br><span class="line">    <span class="keyword">return</span> requestPage(response);</span><br><span class="line">  })</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params">response</span>) </span>{</span><br><span class="line">    <span class="built_in">console</span>.log(response.body);</span><br><span class="line">    <span class="keyword">return</span> requestPage(response);</span><br><span class="line">  })</span><br><span class="line">  .catch(<span class="built_in">console</span>.error);</span><br></pre></td></tr></table></figure>
+<p>The server will print its own value whenever receiving a client&apos;s request</p>
+<pre><code>GET / <span class="number">200</span> <span class="number">0.773</span> ms - -
+req<span class="built_in">.</span>session { cookie: 
+   { path: <span class="string">&apos;/&apos;</span>,
+     _expires: <span class="built_in">null</span>,
+     originalMaxAge: <span class="built_in">null</span>,
+     httpOnly: <span class="literal">true</span> },
+  views: <span class="number">40</span>,
+  __lastAccess: <span class="number">1440172136711</span> }
+req <span class="keyword">header</span> <span class="keyword">referer</span> server <span class="keyword">referer</span>
+</code></pre><p>Nice.</p>
+<h2 id="additional-resources">Additional resources</h2><ul>
+<li><a href="https://github.com/bahmutov/express-sessions-tutorial" target="_blank" rel="external">Example code</a> used in this post</li>
+<li><a href="https://www.airpair.com/express/posts/expressjs-and-passportjs-sessions-deep-dive" target="_blank" rel="external">ExpressJS and PassportJS Sessions Deep Dive</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/express-sessions/" data-id="cihtr6w8400o0l3urpshd6917" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/express-sessions/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/security/">security</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/tutorial/">tutorial</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../return-a-promise-for-cleaner-api/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Return a promise for cleaner API
+        
+      </div>
+    </a>
+  
+  
+    <a href="../1-2-3-tested/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">1, 2, 3, tested</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/express-sessions/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

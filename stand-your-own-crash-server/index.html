@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Stand your own crash server | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="I highly recommend trying a crash reporting services, like Sentry
+or Raygun. You will discover a lot of errors that you have never discovered
+during testing.
+What if your organization feels uneasy tru">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Stand your own crash server">
+<meta property="og:url" content="http://glebbahmutov.com/blog/stand-your-own-crash-server/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="I highly recommend trying a crash reporting services, like Sentry
+or Raygun. You will discover a lot of errors that you have never discovered
+during testing.
+What if your organization feels uneasy tru">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Stand your own crash server">
+<meta name="twitter:description" content="I highly recommend trying a crash reporting services, like Sentry
+or Raygun. You will discover a lot of errors that you have never discovered
+during testing.
+What if your organization feels uneasy tru">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-stand-your-own-crash-server" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-11-13T05:00:00.000Z" itemprop="datePublished">Nov 13 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Stand your own crash server
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to deploy your own server to receive real time crash data.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>I <a href="../know-unknown-unknowns-with-sentry/">highly recommend</a> trying a crash reporting services, like <a href="https://app.getsentry.com/" target="_blank" rel="external">Sentry</a>
+or <a href="https://raygun.io/" target="_blank" rel="external">Raygun</a>. You will discover a lot of errors that you have never discovered
+during testing.</p>
+<p>What if your organization feels uneasy trusting crash data (and source) to a 3rd party?
+Luckily, you can stand your own Sentry server, because it is an open source project,
+hosted at <a href="https://github.com/getsentry/sentry" target="_blank" rel="external">github.com/getsentry/sentry</a>. But for
+purely client-side browser crash reporting it has a huge drawback: it only allows
+sending exceptions via GET transport. There are open issues and even a
+<a href="https://github.com/getsentry/raven-js/pull/420" target="_blank" rel="external">pull request</a> but no resolution yet.</p>
+<p>The main drawback of using GET requests is that all information must be encoded
+in the URL, that has limits (most importantly, IE limits the length of the URL to about
+1-2 KB). Thus all my extra information about the state of the program when the crash
+happened might be trimmed.</p>
+<p>On the other hand, Raygun uses POST to send the exceptions by default and it works
+beautifully. Yet, Raygun is not open source, and we cannot just deploy and host it ourselves.</p>
+<p>In this blog post I will show how stand your own simple crash server. The code is hosted
+at <a href="https://github.com/bahmutov/error-receiver" target="_blank" rel="external">bahmutov/error-receiver</a></p>
+<ul>
+<li>Runs on Nodejs</li>
+<li>Compatible with Raygun clients, like <a href="https://github.com/MindscapeHQ/raygun4js" target="_blank" rel="external">raygun4js</a></li>
+<li>Only exposes a single end point that receives the crash data via POST</li>
+<li>Checks the API key against environment variable to prevent unauthorized submissions</li>
+</ul>
+<h2 id="raygun4js-client">Raygun4js client</h2><p>First, I investigated the <a href="https://github.com/MindscapeHQ/raygun4js" target="_blank" rel="external">raygun4js</a> client library that catches the
+JavaScript exceptions in the browser and sends the data to the server. It is MIT
+licensed (nice!) and seems to be well-maintained and under active development.
+I created a sample page, trying to see what it takes to send the error to our own
+server. I am using the unminified Raygun client straight from the CDN for this demo.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="doctype">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript"></span><br><span class="line">    <span class="comment">// raygun snippet from https://github.com/MindscapeHQ/raygun4js</span></span><br><span class="line">    !<span class="function"><span class="keyword">function</span>(<span class="params">a,b,c,d,e,f,g,h</span>)</span>{a.RaygunObject=e,a[e]=a[e]||<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{</span><br><span class="line">    (a[e].o=a[e].o||[]).push(<span class="built_in">arguments</span>)},f=b.createElement(c),g=b.getElementsByTagName(c)[<span class="number">0</span>],</span><br><span class="line">    f.async=<span class="number">1</span>,f.src=d,g.parentNode.insertBefore(f,g),h=a.onerror,a.onerror=<span class="function"><span class="keyword">function</span>(<span class="params">b,c,d,f,g</span>)</span>{</span><br><span class="line">    h&amp;&amp;h(b,c,d,f,g),g||(g=<span class="keyword">new</span> <span class="built_in">Error</span>(b)),a[e].q=a[e].q||[],a[e].q.push({</span><br><span class="line">    e:g})}}(<span class="built_in">window</span>,<span class="built_in">document</span>,<span class="string">&quot;script&quot;</span>,<span class="string">&quot;//cdn.raygun.io/raygun4js/raygun.js&quot;</span>,<span class="string">&quot;rg4js&quot;</span>);</span><br><span class="line">  </span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="actionscript"></span><br><span class="line">    <span class="comment">// configure Raygun4js client</span></span><br><span class="line">    rg4js(<span class="string">&apos;apiKey&apos;</span>, <span class="string">&apos;demo-api-key&apos;</span>);</span><br><span class="line">    rg4js(<span class="string">&apos;enableCrashReporting&apos;</span>, <span class="literal">true</span>);</span><br><span class="line">    rg4js(<span class="string">&apos;options&apos;</span>, {</span><br><span class="line">      apiUrl: <span class="string">&apos;//localhost:3004/crash&apos;</span></span><br><span class="line">    });</span><br><span class="line">  </span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript"></span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&apos;This is wrong&apos;</span>);</span><br><span class="line"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>I hosted the page using <a href="https://github.com/indexzero/http-server" target="_blank" rel="external">http-server</a> running on port 3004</p>
+<p>The error was sent by the <code>rg4js</code> to the server</p>
+<pre><code>Request URL:http:<span class="comment">//localhost:3004/crash/entries?apikey=demo-api-key</span>
+Request <span class="function"><span class="keyword">Method</span>:</span>POST
+</code></pre><p>The important request headers</p>
+<pre><code><span class="constant">Content</span>-<span class="constant">Length</span><span class="symbol">:</span><span class="number">1104</span>
+<span class="constant">Content</span>-<span class="constant">Type</span><span class="symbol">:text/plain</span>;charset=<span class="constant">UTF</span>-<span class="number">8</span>
+<span class="constant">Cookie</span><span class="symbol">:raygun4js-userid=</span><span class="number">63</span>db206a-e9c4-<span class="number">13</span>df-<span class="number">25</span>b<span class="number">0</span>-a8c091f041f5
+</code></pre><p>The error object has the following data</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">  &quot;<span class="attribute">OccurredOn</span>&quot;:<span class="value"><span class="string">&quot;2015-11-13T19:11:59.380Z&quot;</span></span>,</span><br><span class="line">  &quot;<span class="attribute">Details</span>&quot;:<span class="value">{</span><br><span class="line">    &quot;<span class="attribute">Error</span>&quot;:<span class="value">{</span><br><span class="line">      &quot;<span class="attribute">ClassName</span>&quot;:<span class="value"><span class="string">&quot;Error&quot;</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Message</span>&quot;:<span class="value"><span class="string">&quot;This is wrong&quot;</span></span>,</span><br><span class="line">      &quot;<span class="attribute">StackTrace</span>&quot;:<span class="value">[{</span><br><span class="line">        &quot;<span class="attribute">LineNumber</span>&quot;:<span class="value"><span class="number">38</span></span>,</span><br><span class="line">        &quot;<span class="attribute">ColumnNumber</span>&quot;:<span class="value"><span class="number">11</span></span>,</span><br><span class="line">        &quot;<span class="attribute">ClassName</span>&quot;:<span class="value"><span class="string">&quot;line 38, column 11&quot;</span></span>,</span><br><span class="line">        &quot;<span class="attribute">FileName</span>&quot;:<span class="value"><span class="string">&quot;http://localhost:3004/&quot;</span></span>,</span><br><span class="line">        &quot;<span class="attribute">MethodName</span>&quot;:<span class="value"><span class="string">&quot;at &quot;</span></span><br><span class="line">      </span>}]</span><br><span class="line">    </span>}</span>,</span><br><span class="line">    &quot;<span class="attribute">Environment</span>&quot;:<span class="value">{</span><br><span class="line">      &quot;<span class="attribute">UtcOffset</span>&quot;:<span class="value">-<span class="number">5</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Browser-Width</span>&quot;:<span class="value"><span class="number">1256</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Browser-Height</span>&quot;:<span class="value"><span class="number">370</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Screen-Width</span>&quot;:<span class="value"><span class="number">2560</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Screen-Height</span>&quot;:<span class="value"><span class="number">1440</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Color-Depth</span>&quot;:<span class="value"><span class="number">24</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Browser</span>&quot;:<span class="value"><span class="string">&quot;Mozilla&quot;</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Browser-Name</span>&quot;:<span class="value"><span class="string">&quot;Netscape&quot;</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Browser-Version</span>&quot;:<span class="value"><span class="string">&quot;5.0 (Macintosh; ...&quot;</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Platform</span>&quot;:<span class="value"><span class="string">&quot;MacIntel&quot;</span></span><br><span class="line">    </span>}</span>,</span><br><span class="line">    &quot;<span class="attribute">Client</span>&quot;:<span class="value">{</span><br><span class="line">      &quot;<span class="attribute">Name</span>&quot;:<span class="value"><span class="string">&quot;raygun-js&quot;</span></span>,</span><br><span class="line">      &quot;<span class="attribute">Version</span>&quot;:<span class="value"><span class="string">&quot;2.0.3&quot;</span></span><br><span class="line">    </span>}</span>,</span><br><span class="line">    &quot;<span class="attribute">UserCustomData</span>&quot;:<span class="value">{</span><br><span class="line">      &quot;<span class="attribute">handler</span>&quot;:<span class="value"><span class="string">&quot;From Raygun4JS snippet global error handler&quot;</span></span><br><span class="line">    </span>}</span>,</span><br><span class="line">    &quot;<span class="attribute">Tags</span>&quot;:<span class="value">[]</span>,</span><br><span class="line">    &quot;<span class="attribute">Request</span>&quot;:<span class="value">{</span><br><span class="line">      &quot;<span class="attribute">Url</span>&quot;:<span class="value"><span class="string">&quot;http://localhost:3004/&quot;</span></span>,</span><br><span class="line">      &quot;<span class="attribute">QueryString</span>&quot;:<span class="value">{}</span>,</span><br><span class="line">      &quot;<span class="attribute">Headers</span>&quot;:<span class="value">{</span><br><span class="line">        &quot;<span class="attribute">User-Agent</span>&quot;:<span class="value"><span class="string">&quot;Mozilla/5.0 ...&quot;</span></span>,</span><br><span class="line">        &quot;<span class="attribute">Referer</span>&quot;:<span class="value"><span class="string">&quot;&quot;</span></span>,</span><br><span class="line">        &quot;<span class="attribute">Host</span>&quot;:<span class="value"><span class="string">&quot;localhost&quot;</span></span><br><span class="line">      </span>}</span><br><span class="line">    </span>}</span>,</span><br><span class="line">    &quot;<span class="attribute">Version</span>&quot;:<span class="value"><span class="string">&quot;Not supplied&quot;</span></span>,</span><br><span class="line">    &quot;<span class="attribute">User</span>&quot;:<span class="value">{</span><br><span class="line">      &quot;<span class="attribute">Identifier</span>&quot;:<span class="value"><span class="string">&quot;63db206a-e9c4-13df-25b0-a8c091f041f5&quot;</span></span>,</span><br><span class="line">      &quot;<span class="attribute">IsAnonymous</span>&quot;:<span class="value"><span class="literal">true</span></span>,</span><br><span class="line">      &quot;<span class="attribute">UUID</span>&quot;:<span class="value"><span class="string">&quot;63db206a-e9c4-13df-25b0-a8c091f041f5&quot;</span></span><br><span class="line">    </span>}</span><br><span class="line">  </span>}</span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<p>I highly recommend to provide tags, version and (if available) user information with
+each error, for now these fields are sent empty.</p>
+<h2 id="server-implementation">Server implementation</h2><p>I decided to use the simplest HTTP server implementation. The first implementation
+is below. To see the latest code, look at the <a href="https://github.com/bahmutov/error-receiver/blob/master/index.js" target="_blank" rel="external">server source file</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> config = <span class="built_in">require</span>(<span class="string">&apos;./src/config&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> pkg = <span class="built_in">require</span>(<span class="string">&apos;./package.json&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">&apos;http&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> url = <span class="built_in">require</span>(<span class="string">&apos;url&apos;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> allowedApiKey = config.get(<span class="string">&apos;apiKey&apos;</span>);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&apos;allowed api key &quot;%s&quot;&apos;</span>, allowedApiKey);</span><br><span class="line"></span><br><span class="line"><span class="comment">// handle data encoded in json or text body</span></span><br><span class="line"><span class="keyword">var</span> bodyParser = <span class="built_in">require</span>(<span class="string">&apos;body-parser&apos;</span>);</span><br><span class="line"><span class="keyword">var</span> jsonParser = bodyParser.json();</span><br><span class="line"><span class="keyword">var</span> textParser = bodyParser.text();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">respondToInvalid</span>(<span class="params">res</span>) </span>{</span><br><span class="line">  res.writeHead(<span class="number">400</span>, {<span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/plain&apos;</span>});</span><br><span class="line">  res.end(<span class="string">&apos;Invalid request\n&apos;</span>);</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isValid</span>(<span class="params">req, parsed</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> req.method === <span class="string">&apos;POST&apos;</span> &amp;&amp;</span><br><span class="line">    parsed &amp;&amp;</span><br><span class="line">    parsed.query &amp;&amp;</span><br><span class="line">    parsed.query.apiKey === allowedApiKey;</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">saveCrashReport</span>(<span class="params">req</span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(req.body);</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">writeResponse</span>(<span class="params">res</span>) </span>{</span><br><span class="line">  res.writeHead(<span class="number">200</span>, {</span><br><span class="line">    <span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/plain&apos;</span>,</span><br><span class="line">    <span class="string">&apos;Access-Control-Allow-Origin&apos;</span>: <span class="string">&apos;*&apos;</span>,</span><br><span class="line">    <span class="string">&apos;Access-Control-Allow-Methods&apos;</span>: <span class="string">&apos;POST&apos;</span>,</span><br><span class="line">    <span class="string">&apos;Access-Control-Allow-Headers&apos;</span>: <span class="string">&apos;Content-Type&apos;</span></span><br><span class="line">  });</span><br><span class="line">  res.end(<span class="string">&apos;Hello there\n&apos;</span>);</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line">http.createServer(<span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> parsed = url.parse(req.url, <span class="literal">true</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;%s - %s query&apos;</span>, req.method, parsed.href, parsed.query);</span><br><span class="line">  <span class="keyword">if</span> (!isValid(req, parsed)) {</span><br><span class="line">    <span class="keyword">return</span> respondToInvalid(res);</span><br><span class="line">  }</span><br><span class="line">  jsonParser(req, res, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    textParser(req, res, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      saveCrashReport(req);</span><br><span class="line">      writeResponse(res);</span><br><span class="line">    });</span><br><span class="line">  });</span><br><span class="line">}).listen(config.get(<span class="string">&apos;PORT&apos;</span>), <span class="string">&apos;127.0.0.1&apos;</span>);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&apos;%s running on port %d&apos;</span>, pkg.name, config.get(<span class="string">&apos;PORT&apos;</span>));</span><br></pre></td></tr></table></figure>
+<p>To test the server from the command line, I used <a href="https://github.com/jkbrzt/httpie" target="_blank" rel="external">httpie</a> tool.</p>
+<pre><code>$ http POST localhost:<span class="number">3004</span>/foo?apiKey=demo-api-key key=value another=value
+HTTP/<span class="number">1.1</span> <span class="number">200</span> OK
+Access-Control-Allow-Headers: Content-Type
+Access-Control-Allow-Methods: POST
+Access-Control-Allow-Origin: *
+Connection: keep-alive
+Content-Type: text/plain
+Date: Fri, <span class="number">13</span> Nov <span class="number">2015</span> <span class="number">20</span>:<span class="number">52</span>:<span class="number">50</span> GMT
+Transfer-Encoding: chunked
+Hello there
+</code></pre><p>The server parsed the query and the payload parameters</p>
+<pre><code>POST - /foo?apiKey=demo-api-key query { apiKey: <span class="string">&apos;demo-api-key&apos;</span> }
+{ <span class="string">key:</span> <span class="string">&apos;value&apos;</span>, <span class="string">another:</span> <span class="string">&apos;value&apos;</span> }
+</code></pre><p>Any other request gets 4xx response</p>
+<pre><code>$ http localhost:<span class="number">3004</span>
+HTTP/<span class="number">1.1</span> <span class="number">400</span> Bad Request
+Connection: keep-alive
+Content-Type: text/plain
+Date: Fri, <span class="number">13</span> Nov <span class="number">2015</span> <span class="number">20</span>:<span class="number">17</span>:<span class="number">28</span> GMT
+Transfer-Encoding: chunked
+Invalid request
+</code></pre><p>To test from the actual page, I opened the above HTML (saved in <code>test-page/index.html</code>)
+and the server received the correct data</p>
+<figure class="highlight d"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">allowed api key <span class="string">&quot;demo-api-key&quot;</span> at end point <span class="string">&quot;/crash/entries</span><br><span class="line">error-receiver running on port 3004</span><br><span class="line">POST - /crash/entries?apikey=demo-api-key query { apikey: &apos;demo-api-key&apos; }</span><br><span class="line">{&quot;</span>OccurredOn<span class="string">&quot;:&quot;</span><span class="number">2015</span>-<span class="number">11</span>-<span class="number">13</span>T21:<span class="number">40</span>:<span class="number">38.796</span>Z<span class="string">&quot;,</span><br><span class="line">&quot;</span>Details<span class="string">&quot;:{</span><br><span class="line">  &quot;</span>Erro<span class="string">r&quot;:{</span><br><span class="line">    &quot;</span>ClassName<span class="string">&quot;:&quot;</span>Erro<span class="string">r&quot;,</span><br><span class="line">    &quot;</span>Message<span class="string">&quot;:&quot;</span>This <span class="keyword">is</span> wrong<span class="string">&quot;,&quot;</span>StackTrace<span class="string">&quot;:[{&quot;</span>LineNumbe<span class="string">r&quot;:38 ...</span></span><br></pre></td></tr></table></figure>
+<h2 id="future-work">Future work</h2><p>I just showed the error receiver, and even this code is just the beginning. There is plenty of
+features that can be implemented to intelligently group and process exceptions. For example,
+one can open GitHub issues or attach comments to existing ones using my
+<a href="https://github.com/bahmutov/github-issue-filer" target="_blank" rel="external">github-issue-filer</a> module. One should also support a dynamic list
+of API keys to check. Each project should get its own API key to prevent error collisions.</p>
+<p>Follow me at <a href="https://twitter.com/bahmutov" target="_blank" rel="external">@bahmutov</a> and
+<a href="https://github.com/bahmutov" target="_blank" rel="external">github.com/bahmutov</a> to get updates on this project.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/stand-your-own-crash-server/" data-id="cihtr6vuq0079l3urm98euvaw" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/stand-your-own-crash-server/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/">javascript</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/sentry/">sentry</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../smaller-published-NPM-modules/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Smaller published NPM modules
+        
+      </div>
+    </a>
+  
+  
+    <a href="../winning-hackathons/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Winning hackathons</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/stand-your-own-crash-server/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

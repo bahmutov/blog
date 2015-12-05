@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Run Angular in Web Worker | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="demo,
+demo code
+Recently I have shown how to load and render a simple AngularJS application in a synthetic
+browser environment under NodeJS. One can use this technique to fully test the application&amp;ap">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Run Angular in Web Worker">
+<meta property="og:url" content="http://glebbahmutov.com/blog/run-angular-in-web-worker/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="demo,
+demo code
+Recently I have shown how to load and render a simple AngularJS application in a synthetic
+browser environment under NodeJS. One can use this technique to fully test the application&amp;ap">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Run Angular in Web Worker">
+<meta name="twitter:description" content="demo,
+demo code
+Recently I have shown how to load and render a simple AngularJS application in a synthetic
+browser environment under NodeJS. One can use this technique to fully test the application&amp;ap">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-run-angular-in-web-worker" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-03-30T04:00:00.000Z" itemprop="datePublished">Mar 30 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Run Angular in Web Worker
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Load and run full AngularJS 1.x in browser&#39;s separate thread.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="http://glebbahmutov.com/angular-in-web-worker/" target="_blank" rel="external">demo</a>,
+<a href="https://github.com/bahmutov/angular-in-web-worker" target="_blank" rel="external">demo code</a></p>
+<p>Recently I have shown how to <a href="../server-side-vanilla-angular-rendering-under-node/">load and render</a> a simple AngularJS application in a synthetic
+browser environment under NodeJS. One can use this technique to fully test the application&apos;s code using
+a clean environment for <a href="../unit-testing-angular-load-using-node/">each unit test</a>. At <a href="http://www.ng-conf.org/" target="_blank" rel="external">ng-conf 2015</a> I showed how to run a simple
+implementation of Angular&apos;s dirty checking and digest cycle <a href="http://youtu.be/lceLw8ROUP8?list=PLOETEcp3DkCoNnlhE-7fovYvqwVPrRiY7" target="_blank" rel="external">inside a web worker</a>.</p>
+<p>In this blog post I will show how to load and run <em>the full standard Angular 1.x</em> inside a browser&apos;s Web Worker.
+This instance of Angular will run separately from the main browser&apos;s window (where the original AngularJS can
+be running or not), will communicate with the main window via <code>postMessage</code> API, and will not block the
+browser&apos;s responses while processing data.</p>
+<p>Before proceeding, let me state the differences in the three environments where I got AngularJS running:
+browser, NodeJS and Web Worker. This will be helpful when trying to make Angular work inside a web worker.</p>
+<pre><code>browser           |<span class="string">        NodeJS        </span>|<span class="string">    NodeJS + jsdom (benv)   </span>|<span class="string">   Web Worker
+------------------------------------------------------------------------------------------
+window            </span>|<span class="string">  global              </span>|<span class="string">    global, window          </span>|<span class="string">     self
+document          </span>|<span class="string">  -                   </span>|<span class="string">    document                </span>|<span class="string">       -
+-                 </span>|<span class="string">  module, require     </span>|<span class="string">    module, require         </span>|<span class="string">       -
+window.location   </span>|<span class="string">  __filename          </span>|<span class="string">    __filename              </span>|<span class="string">       -</span>
+</code></pre><p>Compared to the browser environment, or even plain NodeJS runtime, the Web Worker runtime is very bare bones.
+AngularJS requires both window and document objects to run (the <code>window</code> object to do everything, and 
+the <code>document</code> object to mainly run <code>document.getElementById</code> and <code>document.attachEventListener</code> methods).</p>
+<p>Thus I have decided to do the following:</p>
+<h2 id="step-1-load-angular-under-node">Step 1 - load Angular under Node</h2><p>I created the synthetic environment using <a href="https://www.npmjs.com/package/jsdom" target="_blank" rel="external">jsdom</a> via <a href="https://www.npmjs.com/package/benv" target="_blank" rel="external">benv</a> wrappers. 
+These libraries create both <code>window</code> and <code>document</code> objects that can fool any other library.</p>
+<figure class="highlight js"><figcaption><span>NodeJS + jsdom (benv) environment</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> benv = <span class="built_in">require</span>(<span class="string">&apos;benv&apos;</span>);</span><br><span class="line">benv.setup(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;have window?&apos;</span>, <span class="keyword">typeof</span> <span class="built_in">window</span> !== <span class="string">&apos;undefined&apos;</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;have document?&apos;</span>, <span class="keyword">typeof</span> <span class="built_in">document</span> !== <span class="string">&apos;undefined&apos;</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;created window and document&apos;</span>);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>Creating a mock browser environment is pretty simple, but how to load the Angular framework into the mock window?
+Well, inside the <code>setup</code> callback we do have a window and a document, so we can just load <code>angular.js</code>
+as if it were a CommonJS module.</p>
+<figure class="highlight js"><figcaption><span>test.js NodeJS + jsdom (benv) environment</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> benv = <span class="built_in">require</span>(<span class="string">&apos;benv&apos;</span>);</span><br><span class="line">benv.setup(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;have window?&apos;</span>, <span class="keyword">typeof</span> <span class="built_in">window</span> !== <span class="string">&apos;undefined&apos;</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;have document?&apos;</span>, <span class="keyword">typeof</span> <span class="built_in">document</span> !== <span class="string">&apos;undefined&apos;</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;created window and document&apos;</span>);</span><br><span class="line">  <span class="built_in">require</span>(<span class="string">&apos;./bower_components/angular/angular.js&apos;</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;loaded angular&apos;</span>, <span class="built_in">window</span>.angular.version);</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>When run, this code displays</p>
+<pre><code>have <span class="built_in">window</span>? <span class="literal">true</span>
+have <span class="built_in">document</span>? <span class="literal">true</span>
+created <span class="built_in">window</span> <span class="keyword">and</span> <span class="built_in">document</span>
+loaded angular { <span class="attribute">full</span>: <span class="string">&apos;1.2.25&apos;</span>,
+  <span class="attribute">major</span>: <span class="number">1</span>,
+  <span class="attribute">minor</span>: <span class="number">2</span>,
+  <span class="attribute">dot</span>: <span class="number">25</span>,
+  <span class="attribute">codeName</span>: <span class="string">&apos;hypnotic-gesticulation&apos;</span> }
+</code></pre><p>Nice!</p>
+<h2 id="step-2-pack-everything-from-node-to-run-in-the-browser">Step 2 - pack everything from Node to run in the browser</h2><p>Wait, we need to pack the synthetic objects that mimic the browser environment to run
+<em>inside the browser?</em> </p>
+<p>Yes.</p>
+<p>We have loaded the Angular library in a synthetic environment running inside the Node runtime. Most parts of the
+code live in the CommonJS modules, like <code>node_modules/benv/index.js</code> and its dependencies. We need
+to pack everything together and create a bundle we can load inside the browser. Luckily there is a tool
+for that: <a href="http://browserify.org/" target="_blank" rel="external">browserify</a>. We will create a stand alone bundle from the code above</p>
+<pre><code>$ browserify <span class="keyword">test</span>.js -o <span class="keyword">test</span>-bundle.js
+</code></pre><p>The <code>test-bundle.js</code> will be huge - it will have all the code from out <code>test.js</code> plus <code>benv</code>, plus
+its dependencies (like <code>jsdom</code>), plus some parts of the Node system libraries.</p>
+<h2 id="step-3-remove-parts-that-assume-the-browser-environment">Step 3 - remove parts that assume the browser environment</h2><p>We cannot load the <code>test-bundle.js</code> right away, unfortunately. While browserify command packed everything
+and added shims to recreate the Node environment, some code inside <code>jsdom</code> and its dependencies assumed Node.
+For example, there are places where <code>__filename</code> variable was used directly. Remember, browserify
+only tried to bundle up our application that created a <em>synthetic</em> window for NodeJS environment.</p>
+<p>A second obstacle to loading the <code>test-bundle.js</code> in the browser was: we are NOT loading the bundle in the
+browser environment (the first column of the &quot;environments&quot; table). Instead we are going to load this bundle
+in the <code>web worker</code> column. Browserify assumes that it <em>has</em> a window object when shimming 
+the NodeJS system libraries.</p>
+<p>Luckily these parts were few and could be easily removed. For example, there were places where the CommonJS
+<code>require</code> call was patched over. There will be no need for <code>require</code> in the web worker, thus I could easily
+comment these out. My demo application also does not perform any Ajax calls, thus I could comment out the
+<code>xhrHttp</code> code that checked for the <code>window</code> object&apos;s presence. Again. the <code>window</code> and <code>document</code> will
+only be created inside the <code>benv.setup(...)</code> callback. These objects cannot be used anywhere before
+the <code>benv.setup</code> call executes. </p>
+<h2 id="step-4-bootstrap-angular-application-and-return-digested-html">Step 4 - bootstrap Angular application and return digested HTML</h2><p>The last step to show the AngularJS framework working inside a web worker is to bootstrap an angular 
+application and run a digest cycle. Here is a small application I placed inside the <code>benv.setup()</code>
+callback. The synthetic document got its HTML inside the <code>benv.setup</code> callback too.</p>
+<figure class="highlight js"><figcaption><span>angular application inside benv</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">benv.setup(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> html = <span class="string">&apos;&lt;h1 ng-controller=&quot;helloController&quot;&gt;Hello {{ title }}&lt;/h1&gt;&apos;</span>;</span><br><span class="line">    <span class="built_in">document</span>.body.innerHTML = html;</span><br><span class="line">    (<span class="function"><span class="keyword">function</span> <span class="title">setupApp</span>(<span class="params">angular</span>) </span>{</span><br><span class="line">      angular.module(<span class="string">&apos;myApp&apos;</span>, [])</span><br><span class="line">        .controller(<span class="string">&apos;helloController&apos;</span>, [<span class="string">&apos;$scope&apos;</span>, <span class="string">&apos;$timeout&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">$scope, $timeout</span>) </span>{</span><br><span class="line">          $timeout(<span class="function"><span class="keyword">function</span> <span class="title">setTitle</span>(<span class="params"></span>) </span>{</span><br><span class="line">            $scope.title = <span class="string">&apos;from Angular &apos;</span> + angular.version.full + <span class="string">&apos; running in Web Worker!&apos;</span>;</span><br><span class="line">            $timeout(<span class="function"><span class="keyword">function</span> <span class="title">afterDigest</span>(<span class="params"></span>) </span>{</span><br><span class="line">              <span class="comment">// communicate back to the page</span></span><br><span class="line">              self.postMessage(<span class="built_in">document</span>.body.innerHTML);</span><br><span class="line">            });</span><br><span class="line">          }, <span class="number">1000</span>);</span><br><span class="line">        }]);</span><br><span class="line">    }(<span class="built_in">window</span>.angular));</span><br><span class="line">    (<span class="function"><span class="keyword">function</span> <span class="title">startApp</span>(<span class="params">angular</span>) </span>{</span><br><span class="line">      angular.bootstrap(<span class="built_in">document</span>.body, [<span class="string">&apos;myApp&apos;</span>]);</span><br><span class="line">    }(<span class="built_in">window</span>.angular));</span><br><span class="line">});</span><br></pre></td></tr></table></figure>
+<p>For clarity I wrapped the application definition in the <code>setupApp</code> function, and 
+its bootstrapping in the <code>startApp</code> function. 
+The application has a single controller with a single two-way bound expression. I am using
+two classical Angular services <code>$scope</code> and <code>$timeout</code>. After the first 1 second time out finishes, 
+the scope property <code>title</code> changes. Then I let the digest run by setting another time out. 
+The digest cycle finds the changed scope property and updates the HTML inside the synthetic <code>document.body</code>.</p>
+<p>The callback <code>afterDigest</code> runs AFTER the DOM update and grabs the rendered HTML
+and sends it back to the main browser window using <code>self.postMessage</code>. The demo page listens for a message
+and sticks the received HTML directly into the output element.</p>
+<figure class="highlight html"><figcaption><span>browser page</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">&quot;output&quot;</span>&gt;</span>rendered HTML from web worker will replace this text.<span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript"></span><br><span class="line">  <span class="keyword">var</span> worker = <span class="keyword">new</span> Worker(<span class="string">&apos;angular-web-worker.js&apos;</span>);</span><br><span class="line">  worker.onmessage = <span class="function"><span class="keyword">function</span> (<span class="params">e</span>) </span>{</span><br><span class="line">    <span class="built_in">document</span>.getElementById(<span class="string">&apos;output&apos;</span>).innerHTML = e.data;</span><br><span class="line">  };</span><br><span class="line"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>That is it. Seems like the digest cycle is running, and at least some basic AngularJS services and directives 
+are working: <code>$scope</code>, <code>$timeout</code> and <code>ng-controller</code>. In the future I plan to simplify and separate the 
+application from the wrapped framework bundle to allow any arbitrary application to execute in a web worker context.</p>
+<h2 id="conclusion">Conclusion</h2><p>I hope to use the separate Web Worker threads each running an AngularJS framework to speed up certain tasks, 
+like loading the <a href="../angular-plus-react-equals-speed-revisited/">initial application code heavy page</a>.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/run-angular-in-web-worker/" data-id="cihtr6vwi009rl3urvdyp0itm" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/run-angular-in-web-worker/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/angularjs/">angularjs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/web-workers/">web workers</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../conference-talk-proposals/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Conference talk proposals
+        
+      </div>
+    </a>
+  
+  
+    <a href="../web-working-like-a-boss/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Web working like a boss</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/run-angular-in-web-worker/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

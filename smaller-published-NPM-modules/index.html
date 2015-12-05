@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Smaller published NPM modules | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="By default, the entire module is published to the NPM registry, except for
+files listed inside your .gitignore file. This filters out the dependencies but
+still allows quite a lot of files to be pushe">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Smaller published NPM modules">
+<meta property="og:url" content="http://glebbahmutov.com/blog/smaller-published-NPM-modules/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="By default, the entire module is published to the NPM registry, except for
+files listed inside your .gitignore file. This filters out the dependencies but
+still allows quite a lot of files to be pushe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Smaller published NPM modules">
+<meta name="twitter:description" content="By default, the entire module is published to the NPM registry, except for
+files listed inside your .gitignore file. This filters out the dependencies but
+still allows quite a lot of files to be pushe">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-smaller-published-NPM-modules" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-11-19T05:00:00.000Z" itemprop="datePublished">Nov 19 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Smaller published NPM modules
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to measure size and publish smaller modules to NPM.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>By default, the entire module is published to the NPM registry, except for
+files listed inside your <code>.gitignore</code> file. This filters out the dependencies but
+still allows quite a lot of files to be pushed. The users then have to wait
+for the package to download on every install. See the complaint in this
+<a href="http://www.rudeshko.com/web/2014/05/13/help-people-consume-your-npm-packages.html" target="_blank" rel="external">article</a>.
+As an example, the author reports than the <a href="http://gruntjs.com/" target="_blank" rel="external">grunt</a> module is a 6MB download.</p>
+<p>Can you measure your own modules and make them smaller? I have decided to find out.
+I will use <a href="https://github.com/kensho/check-more-types" target="_blank" rel="external">check-more-types</a> as an example.
+It has just a few files, plus unit tests and documentation folder used to build the
+README markdown file.</p>
+<p>First, we need to find out the size of the current package. NPM stores all files
+as tar archives, thus we need to make one and see its size. You can make a tar
+archive from the current folder using <code>npm pack .</code> command. Let us make a tar archive,
+show its contents and size using a script suggested by Mathias Bynens
+<a href="https://twitter.com/mathias" target="_blank" rel="external">mathias</a></p>
+<pre><code>tarball=<span class="string">&quot;<span class="variable">$(npm pack .)</span>&quot;</span>; wc -c <span class="string">&quot;<span class="variable">${tarball}</span>&quot;</span>; tar tvf <span class="string">&quot;<span class="variable">${tarball}</span>&quot;</span>; rm <span class="string">&quot;<span class="variable">${tarball}</span>&quot;</span>;
+</code></pre><p>I measured the tar size at the commit <a href="https://github.com/kensho/check-more-types/commit/3ada36075d163e4649978abf2d50a12bea5ccd57" target="_blank" rel="external">3ada360</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">$ tarball=<span class="string">&quot;$(npm pack .)&quot;</span>; wc -c <span class="string">&quot;${tarball}&quot;</span>; tar tvf <span class="string">&quot;${tarball}&quot;</span>; rm <span class="string">&quot;${tarball}&quot;</span>;</span><br><span class="line"></span><br><span class="line">   <span class="number">25184</span> check-more-types-<span class="number">2.1</span><span class="number">.2</span>.tgz</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>       <span class="number">1977</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">55</span> package/package.json</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>         <span class="number">64</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/.npmignore</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>      <span class="number">19703</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">49</span> package/README.md</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>       <span class="number">1073</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/LICENSE</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>       <span class="number">2534</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/Gruntfile.js</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>      <span class="number">18204</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/check-more-types.js</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>       <span class="number">6723</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">49</span> package/check-more-types.min.js</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>        <span class="number">600</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">49</span> package/bower.json</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>        <span class="number">162</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/.travis.yml</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>       <span class="number">1756</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/.jshintrc</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>        <span class="number">655</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/docs/README.tmpl.md</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>       <span class="number">1936</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/docs/badges.md</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>        <span class="number">255</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/docs/footer.md</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>        <span class="number">240</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/docs/install.md</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>      <span class="number">13707</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">49</span> package/docs/use.md</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>        <span class="number">127</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/test/check-more-types-minified-spec.js</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>         <span class="number">78</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/test/check-more-types-spec.js</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>        <span class="number">467</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/test/load-under-node-test.js</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>        <span class="number">738</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/test/synthetic-browser-spec.js</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>      <span class="number">37754</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/test/unit-tests.js</span><br></pre></td></tr></table></figure>
+<p>Lots of files, and the packed size is 25184 bytes. Let us first automate this process a little.
+I found a good utility for reporting the same size, but avoiding the shell command -
+<a href="https://www.npmjs.com/package/pkgfiles" target="_blank" rel="external">pkgfiles</a> by Tim Oxley <a href="https://twitter.com/secoif" target="_blank" rel="external">@secoif</a>.</p>
+<p>I installed this as dev dependency and added a prepublish script to the <code>package.json</code></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">  &quot;<span class="attribute">devDependencies</span>&quot;: <span class="value">{</span><br><span class="line">    &quot;<span class="attribute">pkgfiles</span>&quot;: <span class="value"><span class="string">&quot;2.3.0&quot;</span></span><br><span class="line">  </span>}</span>,</span><br><span class="line">  &quot;<span class="attribute">scripts</span>&quot;: <span class="value">{</span><br><span class="line">    &quot;<span class="attribute">prepublish</span>&quot;: <span class="value"><span class="string">&quot;pkgfiles&quot;</span></span><br><span class="line">  </span>}</span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<p>The prepublish script will run every time on <em>local</em> install and when I run <code>npm publish</code> command.
+Let us see the output right now from <code>npm run publish</code> command</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">$ npm run prepublish</span><br><span class="line"></span><br><span class="line">&gt; check-more-types@<span class="number">2.1</span><span class="number">.2</span> prepublish /Users/kensho/git/check-more-types</span><br><span class="line">&gt; pkgfiles</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">PATH                                    SIZE       %</span><br><span class="line">.npmignore                              <span class="number">0</span> B        <span class="number">0</span>%</span><br><span class="line">test/check-more-types-spec.js           <span class="number">78</span> B       <span class="number">0</span>%</span><br><span class="line">test/check-more-types-minified-spec.js  <span class="number">127</span> B      <span class="number">0</span>%</span><br><span class="line">.travis.yml                             <span class="number">162</span> B      <span class="number">0</span>%</span><br><span class="line">docs/install.md                         <span class="number">240</span> B      <span class="number">0</span>%</span><br><span class="line">docs/footer.md                          <span class="number">255</span> B      <span class="number">0</span>%</span><br><span class="line">test/load-under-node-test.js            <span class="number">467</span> B      <span class="number">0</span>%</span><br><span class="line">bower.json                              <span class="number">600</span> B      <span class="number">1</span>%</span><br><span class="line">docs/README.tmpl.md                     <span class="number">655</span> B      <span class="number">1</span>%</span><br><span class="line">test/synthetic-browser-spec.js          <span class="number">738</span> B      <span class="number">1</span>%</span><br><span class="line">LICENSE                                 <span class="number">1.07</span> kB    <span class="number">1</span>%</span><br><span class="line">.jshintrc                               <span class="number">1.76</span> kB    <span class="number">2</span>%</span><br><span class="line">docs/badges.md                          <span class="number">1.94</span> kB    <span class="number">2</span>%</span><br><span class="line">package.json                            <span class="number">2.05</span> kB    <span class="number">2</span>%</span><br><span class="line">Gruntfile.js                            <span class="number">2.53</span> kB    <span class="number">2</span>%</span><br><span class="line">check-more-types.min.js                 <span class="number">6.72</span> kB    <span class="number">6</span>%</span><br><span class="line">docs/use.md                             <span class="number">13.71</span> kB   <span class="number">13</span>%</span><br><span class="line">check-more-types.js                     <span class="number">18.2</span> kB    <span class="number">17</span>%</span><br><span class="line">README.md                               <span class="number">19.7</span> kB    <span class="number">18</span>%</span><br><span class="line">test/unit-tests.js                      <span class="number">37.75</span> kB   <span class="number">35</span>%</span><br><span class="line"></span><br><span class="line">DIR                                     SIZE       %</span><br><span class="line">docs/                                   <span class="number">16.79</span> kB   <span class="number">15</span>%</span><br><span class="line">test/                                   <span class="number">39.16</span> kB   <span class="number">36</span>%</span><br><span class="line">.                                       <span class="number">108.77</span> kB  <span class="number">100</span>%</span><br><span class="line"></span><br><span class="line">PKGFILES SUMMARY</span><br><span class="line">Size on Disk with Dependencies  ~<span class="number">126.72</span> MB</span><br><span class="line">Size with Dependencies          ~<span class="number">88.58</span> MB</span><br><span class="line">Publishable Size                ~<span class="number">108.77</span> kB</span><br><span class="line">Number of Directories           <span class="number">3</span></span><br><span class="line">Number of Files                 <span class="number">20</span></span><br></pre></td></tr></table></figure>
+<p>Very detailed information, and the heaviest files are reported last, making it convenient
+to see in the terminal. The heaviest is the <code>docs</code> and <code>tests</code> folders - we don&apos;t actually want to
+publish them!</p>
+<p>There are 3 ways to limit the files published to the NPM registry. We are using the default -
+the files listed in <code>.gitignore</code> are black listed. We could write a separate <code>.npmignore</code> file
+to black list more files. Or we could white list files inside <code>package.json</code>. I prefer to white list
+files. Note that some files (like <code>package.json</code>, <code>README</code>, etc) are <a href="https://docs.npmjs.com/files/package.json#files" target="_blank" rel="external">always white listed</a>.</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">  &quot;<span class="attribute">files</span>&quot;: <span class="value">[</span><br><span class="line">    <span class="string">&quot;bower.json&quot;</span>,</span><br><span class="line">    <span class="string">&quot;check-more-types.js&quot;</span>,</span><br><span class="line">    <span class="string">&quot;check-more-types.min.js&quot;</span></span><br><span class="line">  ]</span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<p>Note that you in the <code>files</code> list you can exclude files using <code>!</code> notation. For example
+if we have a test subfolder inside <code>src</code> folder, we can exclude it</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">  &quot;<span class="attribute">files</span>&quot;: <span class="value">[</span><br><span class="line">    <span class="string">&quot;src&quot;</span>,</span><br><span class="line">    <span class="string">&quot;!src/test&quot;</span></span><br><span class="line">  ]</span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<p>The new commit is <a href="https://github.com/kensho/check-more-types/commit/bc3e2a1b2618f499a4718cc0b88a21d98b92709e" target="_blank" rel="external">bc3e2a1</a>, let us see the size break down</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">$ npm run prepublish</span><br><span class="line"></span><br><span class="line">&gt; check-more-types@<span class="number">2.1</span><span class="number">.2</span> prepublish /Users/kensho/git/check-more-types</span><br><span class="line">&gt; pkgfiles</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">PATH                     SIZE      %</span><br><span class="line">bower.json               <span class="number">600</span> B     <span class="number">1</span>%</span><br><span class="line">LICENSE                  <span class="number">1.07</span> kB   <span class="number">2</span>%</span><br><span class="line">package.json             <span class="number">2.15</span> kB   <span class="number">4</span>%</span><br><span class="line">check-more-types.min.js  <span class="number">6.72</span> kB   <span class="number">14</span>%</span><br><span class="line">check-more-types.js      <span class="number">18.2</span> kB   <span class="number">38</span>%</span><br><span class="line">README.md                <span class="number">19.7</span> kB   <span class="number">41</span>%</span><br><span class="line"></span><br><span class="line">DIR                      SIZE      %</span><br><span class="line">.                        <span class="number">48.45</span> kB  <span class="number">100</span>%</span><br><span class="line"></span><br><span class="line">PKGFILES SUMMARY</span><br><span class="line">Size on Disk with Dependencies  ~<span class="number">126.72</span> MB</span><br><span class="line">Size with Dependencies          ~<span class="number">88.58</span> MB</span><br><span class="line">Publishable Size                ~<span class="number">48.45</span> kB</span><br><span class="line">Number of Directories           <span class="number">1</span></span><br><span class="line">Number of Files                 <span class="number">6</span></span><br></pre></td></tr></table></figure>
+<p>The published size went down 55% - from 107 kB to 48 kB. This is just raw source size,
+let us see the change in the tar file. Unfortunately, the <code>npm pack .</code> command will call
+our <code>prepublish</code> script and getting confused by its output.
+Thus I renamed the <code>prepublish</code> step for now before running the tar command again.
+I even added the <code>tarball=...</code> command to the NPM scripts (under the name <code>size</code>) for reuse.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">kensho at Kenshos-MacBook-Air.local  ~/git/check-more-types on master*</span><br><span class="line">$ npm run size</span><br><span class="line"></span><br><span class="line">&gt; check-more-types@<span class="number">2.1</span><span class="number">.2</span> size /Users/kensho/git/check-more-types</span><br><span class="line">&gt; tarball=<span class="string">&quot;$(npm pack .)&quot;</span>; wc -c <span class="string">&quot;${tarball}&quot;</span>; tar tvf <span class="string">&quot;${tarball}&quot;</span>; rm <span class="string">&quot;${tarball}&quot;</span>;</span><br><span class="line"></span><br><span class="line">   <span class="number">13179</span> check-more-types-<span class="number">2.1</span><span class="number">.2</span>.tgz</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>       <span class="number">2256</span> Nov <span class="number">19</span> <span class="number">14</span>:<span class="number">09</span> package/package.json</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>      <span class="number">19703</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">58</span> package/README.md</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>       <span class="number">1073</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">18</span> package/LICENSE</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>      <span class="number">18204</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">58</span> package/check-more-types.js</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>       <span class="number">6723</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">58</span> package/check-more-types.min.js</span><br><span class="line">-rw-r--r--  <span class="number">0</span> <span class="number">501</span>    <span class="number">20</span>        <span class="number">600</span> Nov <span class="number">19</span> <span class="number">13</span>:<span class="number">58</span> package/bower.json</span><br></pre></td></tr></table></figure>
+<p>Any dependent client will have to download only 13 kB instead of 25 kB, 50% size reduction down the wire!</p>
+<p>Finally, I have decided to show the npm published size on every code push from the local repo to
+the remote master. I use my own [pre-git][pre-git] for managing Git hooks. I just added both
+the <code>size</code> and <code>pkgfiles</code> commands to the <code>pre-push</code> steps to run</p>
+<pre><code>npm <span class="operator"><span class="keyword">install</span> -<span class="keyword">D</span> pre-git</span>
+</code></pre><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">  &quot;<span class="attribute">scripts</span>&quot;: <span class="value">{</span><br><span class="line">    &quot;<span class="attribute">pkgfiles</span>&quot;: <span class="value"><span class="string">&quot;pkgfiles&quot;</span></span>,</span><br><span class="line">    &quot;<span class="attribute">size</span>&quot;: <span class="value"><span class="string">&quot;tarball=\&quot;$(npm pack .)\&quot;; wc -c \&quot;${tarball}\&quot;; tar tvf \&quot;${tarball}\&quot;; rm \&quot;${tarball}\&quot;;&quot;</span></span><br><span class="line">  </span>}</span>,</span><br><span class="line">  &quot;<span class="attribute">config</span>&quot;: <span class="value">{</span><br><span class="line">    &quot;<span class="attribute">pre-git</span>&quot;: <span class="value">{</span><br><span class="line">      &quot;<span class="attribute">pre-push</span>&quot;: <span class="value">[</span><br><span class="line">        <span class="string">&quot;npm run size&quot;</span>,</span><br><span class="line">        <span class="string">&quot;npm run pkgfiles&quot;</span></span><br><span class="line">      ]</span><br><span class="line">    </span>}</span><br><span class="line">  </span>}</span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<p>I bumped the package version from <code>2.1.2</code> to <code>2.2.0</code> to publish this smaller module.</p>
+<p>To verify, I used a temp folder and NPM version 3.4.0</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ time npm i check-more-types@<span class="number">2.1</span><span class="number">.2</span></span><br><span class="line">/<span class="keyword">private</span>/tmp/test-small</span><br><span class="line">&#x2514;&#x2500;&#x2500; check-more-types@<span class="number">2.1</span><span class="number">.2</span></span><br><span class="line">real  <span class="number">0</span>m2<span class="number">.706</span>s</span><br><span class="line">user  <span class="number">0</span>m1<span class="number">.419</span>s</span><br><span class="line">sys <span class="number">0</span>m0<span class="number">.323</span>s</span><br></pre></td></tr></table></figure>
+<p>Almost 3 seconds. Let us delete the <code>node_modules</code> folder and try the new package</p>
+<pre><code><span class="variable">$ </span>rm -rf node_modules/
+</code></pre><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ time npm i check-more-types@<span class="number">2.2</span><span class="number">.0</span></span><br><span class="line">/<span class="keyword">private</span>/tmp/test-small</span><br><span class="line">&#x2514;&#x2500;&#x2500; check-more-types@<span class="number">2.2</span><span class="number">.0</span></span><br><span class="line">real  <span class="number">0</span>m1<span class="number">.716</span>s</span><br><span class="line">user  <span class="number">0</span>m1<span class="number">.244</span>s</span><br><span class="line">sys <span class="number">0</span>m0<span class="number">.198</span>s</span><br></pre></td></tr></table></figure>
+<p>We have shaved 1 second, almost 30% from the installation time for our single tiny module!</p>
+<p>The final commands together in one place for simple copying
+(from <a href="https://github.com/kensho/check-more-types/blob/master/package.json" target="_blank" rel="external">kensho/check-more-types/package.json</a>)</p>
+<pre><code>npm <span class="operator"><span class="keyword">install</span> -<span class="keyword">D</span> pkgfiles pre-git</span>
+</code></pre><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">  &quot;<span class="attribute">devDependencies</span>&quot;: <span class="value">{</span><br><span class="line">    &quot;<span class="attribute">pkgfiles</span>&quot;: <span class="value"><span class="string">&quot;2.3.0&quot;</span></span>,</span><br><span class="line">    &quot;<span class="attribute">pre-git</span>&quot;: <span class="value"><span class="string">&quot;1.3.0&quot;</span></span><br><span class="line">  </span>}</span>,</span><br><span class="line">  &quot;<span class="attribute">scripts</span>&quot;: <span class="value">{</span><br><span class="line">    &quot;<span class="attribute">pkgfiles</span>&quot;: <span class="value"><span class="string">&quot;pkgfiles&quot;</span></span>,</span><br><span class="line">    &quot;<span class="attribute">size</span>&quot;: <span class="value"><span class="string">&quot;tarball=\&quot;$(npm pack .)\&quot;; wc -c \&quot;${tarball}\&quot;; tar tvf \&quot;${tarball}\&quot;; rm \&quot;${tarball}\&quot;;&quot;</span></span><br><span class="line">  </span>}</span>,</span><br><span class="line">  &quot;<span class="attribute">config</span>&quot;: <span class="value">{</span><br><span class="line">    &quot;<span class="attribute">pre-git</span>&quot;: <span class="value">{</span><br><span class="line">      &quot;<span class="attribute">pre-push</span>&quot;: <span class="value">[</span><br><span class="line">        <span class="string">&quot;npm run size&quot;</span>,</span><br><span class="line">        <span class="string">&quot;npm run pkgfiles&quot;</span></span><br><span class="line">      ]</span><br><span class="line">    </span>}</span><br><span class="line">  </span>}</span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<p>or even a shorter &quot;size&quot; command with variable &quot;t&quot; instead of &quot;tarball&quot; to keep the filename
+of the temporary archive</p>
+<figure class="highlight smalltalk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&quot;scripts&quot;</span>: {</span><br><span class="line">  <span class="comment">&quot;pkgfiles&quot;</span>: <span class="comment">&quot;pkgfiles&quot;</span>,</span><br><span class="line">  <span class="comment">&quot;size&quot;</span>: <span class="comment">&quot;t=\&quot;</span><span class="char">$(</span>npm pack .)\<span class="comment">&quot;; wc -c \&quot;</span><span class="char">${</span>t}\<span class="comment">&quot;; tar tvf \&quot;</span><span class="char">${</span>t}\<span class="comment">&quot;; rm \&quot;</span><span class="char">${</span>t}\<span class="comment">&quot;;&quot;</span></span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/smaller-published-NPM-modules/" data-id="cihtr6vv2007ol3urn882p1ti" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/smaller-published-NPM-modules/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/modular-development/">modular development</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/">nodejs</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../patching-global-Node-tools/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Patching global Node tools
+        
+      </div>
+    </a>
+  
+  
+    <a href="../stand-your-own-crash-server/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Stand your own crash server</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/smaller-published-NPM-modules/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>

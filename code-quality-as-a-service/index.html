@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Code quality as a service | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="I have been using continuous builds for many years.
+My favorite in-house tool is Jenkings,
+my favorite CI build as a service is travis-ci.
+I also have been using source code coverage tools during unit">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Code quality as a service">
+<meta property="og:url" content="http://glebbahmutov.com/blog/code-quality-as-a-service/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="I have been using continuous builds for many years.
+My favorite in-house tool is Jenkings,
+my favorite CI build as a service is travis-ci.
+I also have been using source code coverage tools during unit">
+<meta property="og:image" content="https://raw.github.com/bahmutov/talks/master/images/risk-map.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/sentry.png">
+<meta property="og:image" content="http://img.shields.io/badge/solidCode-basic%20%26%239650%3B%2025%25-red.svg">
+<meta property="og:image" content="http://img.shields.io/badge/solidCode-solid%20%26%239650%3B%2045%-yellow.svg">
+<meta property="og:image" content="http://img.shields.io/badge/solidCode-reliable%20%26%239660%3B%2072%-green.svg">
+<meta property="og:image" content="http://img.shields.io/badge/solidCode-robust%2092%-brightgreen.svg">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Code quality as a service">
+<meta name="twitter:description" content="I have been using continuous builds for many years.
+My favorite in-house tool is Jenkings,
+my favorite CI build as a service is travis-ci.
+I also have been using source code coverage tools during unit">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle">Software advice from <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-code-quality-as-a-service" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2014-09-08T04:00:00.000Z" itemprop="datePublished">Sep 8 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Code quality as a service
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      If I had to design static source code analysis service
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>I have been using continuous builds for many years.
+My favorite in-house tool is <a href="http://jenkins-ci.org/" target="_blank" rel="external">Jenkings</a>,
+my favorite CI build as a service is <a href="https://travis-ci.org/" target="_blank" rel="external">travis-ci</a>.
+I also have been using source code coverage tools during unit
+tests, and have been publishing results on <a href="https://coveralls.io/" target="_blank" rel="external">coveralls.io</a>.
+Recently I tried static source (JavaScript) analysis as a service at
+<a href="https://www.codacy.com/public/kensho/check-more-types.git/dashboard" target="_blank" rel="external">codacy.com</a>
+and <a href="https://codeclimate.com/github/kensho/check-more-types" target="_blank" rel="external">codeclimate.com</a>.</p>
+<p>I liked both static source analysis websites, they worked completely automatically
+with our github project. The results (and project badges) give me and my users
+a peace of mind.
+Software quality (and lack of it), was always an interest of mine, I and started thinking:</p>
+<blockquote>
+<p>If I had to design static source analysis as a service offer, what would it do?</p>
+</blockquote>
+<h2 id="pick-right-industry-name">Pick right industry name</h2><p>I prefer using more generic &quot;Code Quality as a Service (CQaaS)&quot;, rather than static source
+analysis as a service. This seems to be the current trend, according to this
+<a href="http://architects.dzone.com/articles/code-quality-service" target="_blank" rel="external">DZone article</a>. We want to
+measure quality rather than static code properties. For example, complex code that is well
+tested has higher quality than simple code without any tests.</p>
+<h2 id="assume-git-and-ci">Assume Git and CI</h2><p>I would assume that projects that enable code quality analysis use Git for source
+control and have continuous build setup. I would make code analysis a step in the CI
+build script (for example in .travis.yml file using <code>after_success:</code> step).</p>
+<h2 id="require-unit-tests-and-code-coverage-info">Require unit tests and code coverage info</h2><p>I seriously doubt that a good project is possible without unit tests. I also think that a lot
+of information can be derived from comparing code coverage and complexity information.
+This is why I designed <a href="http://glebbahmutov.com/risk-map/" target="_blank" rel="external">risk-map</a> - a treemap source code
+visualization that ties source file metrics (line of code, cyclomatic, any Halstead metric)
+and code coverage information. The treemap is good for visualizing source file tree
+properties since it groups files in the same folder next to each other; a much more
+meaningful grouping than listing files alphabetically.</p>
+<p><img src="https://raw.github.com/bahmutov/talks/master/images/risk-map.jpg" alt="risk-map"></p>
+<p>If you need JavaScript unit tests,
+<a href="../picking-javascript-testing-framework/">pick a right test framework</a>
+and start testing as soon as possible.</p>
+<p>If you need JavaScript code coverage:</p>
+<ul>
+<li>For browser code, use <a href="http://karma-runner.github.io/0.12/index.html" target="_blank" rel="external">Karma</a> with
+<a href="https://github.com/karma-runner/karma-coverage" target="_blank" rel="external">karma-coverage</a> plugin.</li>
+<li>For unit tests under Node, especially QUnit tests, use <a href="https://github.com/bahmutov/gt" target="_blank" rel="external">gt</a>.
+gt can even run simple BDD (aka Jasmine, Mocha) unit tests.</li>
+</ul>
+<p>If you need to collect code complexity metrics, there are several tools</p>
+<ul>
+<li>Stand alone <a href="https://github.com/bahmutov/js-complexity-viz" target="_blank" rel="external">js-complexity-viz</a></li>
+<li>As grunt plugin <a href="https://github.com/vigetlabs/grunt-complexity" target="_blank" rel="external">grunt-complexity</a></li>
+<li><a href="https://github.com/es-analysis/plato" target="_blank" rel="external">Plato</a> generates beautiful reports.</li>
+</ul>
+<p>I would design my service to take in generated reports, and not even try computing this
+information myself. Mainly because these tools run quickly, produce output useful to the
+developer and should be part of the default build pipeline. <a href="https://coveralls.io/" target="_blank" rel="external">coveralls.io</a>
+uses this approach - they only injest line coverage information and source code, but do
+not try to compute it themselves.</p>
+<h2 id="concentrate-on-tools-that-do-not-run-quickly">Concentrate on tools that do NOT run quickly</h2><ul>
+<li><p>I would detect code duplicate in the source code. This static analysis is time-consuming,
+especially in large code bases. Yet this is very useful service to prevent code bloat and
+cut down on the number of tests necessary.</p>
+</li>
+<li><p>I would detect number of public functions / methods / variables. Code that is simpler to
+reuse tries to hide details, and only export small number of variables. Static analysis tools
+that detect all the global variables and coupling among modules is slow to run - a great
+candidate for a service, rather than standard build.</p>
+</li>
+</ul>
+<h2 id="analyze-change">Analyze change</h2><p>A service that looks at the history of the source code can give interesting insights into
+how code evolves</p>
+<ul>
+<li><p>Is the code quality increasing or suddenly dropping? Who among the developers
+contributed the most to code refactoring and increased code coverage? Some people
+even made it into <a href="https://github.com/localytics/shamer" target="_blank" rel="external">a game / competition</a>.</p>
+</li>
+<li><p><a href="https://scrutinizer-ci.com" target="_blank" rel="external">scrutinizer-ci</a> does
+nice job showing previous grade, change direction and new grade. See
+<a href="https://scrutinizer-ci.com/tour/measure-and-improve-code-quality" target="_blank" rel="external">screenshots</a>.</p>
+</li>
+<li><p>Can we tie together low code complexity, low number of exposed functions, high unit
+test coverage with number of bugs? If my service could integrate with bug tracking
+service, I could see which files were modified in response to a bug, then <em>predict</em>
+where bugs would happen. My hunch is that bugs occur in high complexity, low test coverage
+files with high churn with recent changes by a developer who has not touched this code
+before. Code quality service could actually prove this!</p>
+</li>
+</ul>
+<h2 id="work-with-existing-tools">Work with existing tools</h2><p>I use several tools to tighten static code in my projects: linters, complexity metrics,
+etc (read about them in &quot;<a href="../tightening-project-with-grunt-build/">Tightening project</a>&quot;).
+Almost all these tools run as grunt or gulp plugins. Thus I would make my code quality service
+use the existing task settings</p>
+<ul>
+<li><p>Instead of manually configuring which source files to analyze, and which to exclude,
+the tool could look inside the <em>Gruntfile.js</em> (if it exists) and grab jshint file wild cards.</p>
+</li>
+<li><p>Support other (non source code) tools, for example <a href="https://github.com/bahmutov/grunt-filenames" target="_blank" rel="external">grunt-filenames</a>
+and <a href="https://github.com/kevinlacotaco/grunt-todos" target="_blank" rel="external">grunt-todos</a> collect secondary information
+from the source code, yet provide great insight into code uniformity and remaining technical debt.</p>
+</li>
+</ul>
+<h2 id="generate-prioritized-actionable-task-list">Generate prioritized actionable task list</h2><p>I have when a tool dumps 100s of errors and warnings on me. Instead I want a service to:</p>
+<ul>
+<li><p>Show me the top 5 most urgent issues, hiding the rest below the fold. The top issue should
+have the context information (like the source) right away.
+It should also explain why it is the most urgent one.</p>
+</li>
+<li><p>I should be able to see the author responsible for each issue (as determined from the version history).
+By integrating with issue tracker, I should be able to click one button and generate a detailed
+TODO issue. I should be able to assign the new issue either to the person responsible for the original code,
+or to anyone else. Of course the issue should not be creatable if I already have done it once.
+Instead my service should show the issue already created.</p>
+</li>
+</ul>
+<p><a href="https://getsentry.com/welcome/" target="_blank" rel="external">Sentry</a> has good UI with prioritized issue list I like.
+There is even Sentry-JIRA integration plugin that makes creating new issue from crash reports a breeze.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/sentry.png" alt="Sentry"></p>
+<h2 id="show-goals">Show goals</h2><p>Linting and unit testing should run on the local dev box, and should be quick enough to
+while I am developing. The tight lint - build - test loop makes sure I catch problems before
+committing code. The central continuous build server performs the same actions just to make sure we can
+build from clean state, and there are no merge problems.</p>
+<blockquote>
+<p>If we can lint source code locally, why would I need a separate code quality as a service?</p>
+</blockquote>
+<p>When I run lint locally, or when CI runs linter, it is a binary action. It either passes or not.
+If we setup lint to generate warnings instead of errors, the warnings just get ignored, in my
+experience. So the current lint settings only are as strict as possible without making the build
+fail.</p>
+<p>If I want to tighten lint settings, I can at least check how many lint settings are specified
+in my rule set, for example using <a href="https://github.com/bahmutov/jshint-solid" target="_blank" rel="external">jshint-solid</a>.
+If my <code>.jshintrc</code> file only specifies 10% of all possible jshint rules,</p>
+<ul>
+<li>how much effort would it take to enable all rules?</li>
+<li>how strict are my current rules?</li>
+</ul>
+<p>This is where a separate quality as a service becomes useful. Instead of just passing the linter
+over the code (binary pass / fail result), it can tighten the rules, run linter, and collect
+the results. Then the service can report how many warnings / errors are there if we bumped
+the rules&apos; strictness to various degrees from loose all the way to the most strict ruleset.</p>
+<p>For example, we can start with basic <code>.jshintrc</code> that only specifies basic settings,
+just like <a href="https://github.com/gruntjs/grunt-contrib-jshint/blob/master/.jshintrc" target="_blank" rel="external">grunt-contrib-jshint</a>
+project does</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">  <span class="string">&quot;curly&quot;</span>: <span class="literal">true</span>,    <span class="comment">// true: Require {} for every new block or scope</span></span><br><span class="line">  <span class="string">&quot;eqeqeq&quot;</span>: <span class="literal">true</span>,   <span class="comment">// true: Require triple equals (===) for comparison</span></span><br><span class="line">  <span class="string">&quot;immed&quot;</span>: <span class="literal">true</span>,    <span class="comment">// true: Require immediate invocations to be wrapped in parens e.g. `(function () { } ());`</span></span><br><span class="line">  <span class="string">&quot;latedef&quot;</span>: <span class="literal">true</span>,  <span class="comment">// true: Require variables/functions to be defined before being used</span></span><br><span class="line">  <span class="string">&quot;newcap&quot;</span>: <span class="literal">true</span>,   <span class="comment">// true: Require capitalization of all constructor functions e.g. `new F()`</span></span><br><span class="line">  <span class="string">&quot;noarg&quot;</span>: <span class="literal">true</span>,    <span class="comment">// true: Prohibit use of `arguments.caller` and `arguments.callee`</span></span><br><span class="line">  <span class="string">&quot;sub&quot;</span>: <span class="literal">true</span>,      <span class="comment">// true: Tolerate using `[]` notation when it can still be expressed in dot notation</span></span><br><span class="line">  <span class="string">&quot;undef&quot;</span>: <span class="literal">true</span>,    <span class="comment">// true: Require all non-global variables to be declared (prevents global leaks)</span></span><br><span class="line">  <span class="string">&quot;boss&quot;</span>: <span class="literal">true</span>,     <span class="comment">// true: Tolerate assignments where comparisons would be expected</span></span><br><span class="line">  <span class="string">&quot;eqnull&quot;</span>: <span class="literal">true</span>,   <span class="comment">// true: Tolerate use of `== null`</span></span><br><span class="line">  <span class="string">&quot;node&quot;</span>: <span class="literal">true</span>,     <span class="comment">// Node.js</span></span><br><span class="line">  <span class="string">&quot;-W117&quot;</span>: <span class="literal">true</span>     <span class="comment">// true: Ignore `not defined` errors as an example of using a rule (W117) by code.</span></span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>According to <em>jshint-solid</em> this rule set only covers 18% of all possible jshint settings. Some settings
+are also not the stricted possible, for example <code>sub</code> allows using <code>[]</code> notation for property access,
+when it is possible to express using dot notation.</p>
+<p>How many warnings would we have to fix if we turned on 50% of all rules? What if this 50% where all
+set to the stricted level? There is no tool currently that gives an answer. Thus it is hard to plan code quality
+improvements (linting is the first step towards more uniform code and catching some simple errors
+by static analysis) during sprint planning. If we had this information, we could include this as
+a very straight forward task during agile sprint planning.</p>
+<h2 id="instead-of-single-grade-show-progress-towards-levels">Instead of single grade, show progress towards levels</h2><p>To better show the roadmap to code quality improvement, I propose to show progress towards
+quality <em>level</em>. A good visual system in my mind shows level and progress towards fulfilling
+this level at 100%. Here is how levels could map to rule sets and badges.</p>
+<ul>
+<li><img src="http://img.shields.io/badge/solidCode-basic%20%26%239650%3B%2025%25-red.svg" alt="basic 25%"> -
+the project only specified some lint settings (25% of them) and recently fulfilled them.
+The red background color maps nicely to the project being at the basic level of code quality.
+The up arrow means the project has recently improved by fixing some issues or passing at higer
+/ stricter settings.</li>
+<li><img src="http://img.shields.io/badge/solidCode-solid%20%26%239650%3B%2045%-yellow.svg" alt="solid 45%"> -
+project is passing below 50% of settings but above 25%.</li>
+<li><img src="http://img.shields.io/badge/solidCode-reliable%20%26%239660%3B%2072%-green.svg" alt="reliable 72%"> -
+reliable projects specify &lt; 75% of settings and at pretty strict level too. The down arrows
+shows that the project has recently generated new warnings, lowering its quality.</li>
+<li><img src="http://img.shields.io/badge/solidCode-robust%2092%-brightgreen.svg" alt="robust 92%"> -
+almost all settings are listed, neither major rules are omitted, nor they are set to be loose.</li>
+</ul>
+<p>For each level, the project dashboard should show a prioritized list of issues to be addressed
+before next level can achieved. Maybe even with <code>git blame</code> used to determine who is responsible
+for the code to be modified to fix the identified issues.</p>
+<p>These levels could be combination of <a href="http://jshint.com/" target="_blank" rel="external">jshint</a>,
+<a href="http://eslint.org/" target="_blank" rel="external">eslint</a>, <a href="https://www.npmjs.org/package/jscs" target="_blank" rel="external">jscs</a> and other tools I described
+(TODOs, code coverage vs complexity metrics, etc).</p>
+<h2 id="conclusion">Conclusion</h2><p>Currently we have a wide variety of continuous build services, and static code analysis services
+have just started to show up. Opening a code quality specifically targeted at JavaScript language
+would influence the most exciting platform today. The command line tools for analysis are already
+available. One just needs to use them and make a useful 3rd party service.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/code-quality-as-a-service/" data-id="cihtr6wao00rpl3urqps3a5qg" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/code-quality-as-a-service/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/advice/">advice</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../good-examples/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Good examples
+        
+      </div>
+    </a>
+  
+  
+    <a href="../detecting-function-optimizations-in-v8/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Detecting function optimizations in V8</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">13</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">67</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">189</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">81</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">140</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">53</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.67px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.33px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.67px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.33px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14px;">browser</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.33px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.67px;">db</a><a href="../tags/es6/" style="font-size: 14px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 16.67px;">functional</a><a href="../tags/generators/" style="font-size: 12.67px;">generators</a><a href="../tags/git/" style="font-size: 13.33px;">git</a><a href="../tags/grunt/" style="font-size: 13.33px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.33px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.33px;">interview</a><a href="../tags/jade/" style="font-size: 12px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.33px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.33px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18px;">nodejs</a><a href="../tags/performance/" style="font-size: 14.67px;">performance</a><a href="../tags/promises/" style="font-size: 16px;">promises</a><a href="../tags/proposal/" style="font-size: 10.67px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.67px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.67px;">reactjs</a><a href="../tags/security/" style="font-size: 12px;">security</a><a href="../tags/sentry/" style="font-size: 13.33px;">sentry</a><a href="../tags/testing/" style="font-size: 17.33px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.67px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.67px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-the-logic/">Pass the logic</a>
+          </li>
+        
+          <li>
+            <a href="../use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>
+          </li>
+        
+          <li>
+            <a href="../1-2-3-linted/">1, 2, 3, linted</a>
+          </li>
+        
+          <li>
+            <a href="../how-to-setup-semantic-release-on-circle-ci/">How to setup semantic release on Circle CI</a>
+          </li>
+        
+          <li>
+            <a href="../the-great-conference-tour-of-october-2015/">The great conference tour of October 2015</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/code-quality-as-a-service/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>
