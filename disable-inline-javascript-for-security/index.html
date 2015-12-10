@@ -126,7 +126,16 @@ ga('send', 'pageview');
 and the demo showing the insecure page that allows inline JavaScript tags is at
 <a href="http://glebbahmutov.com/disable-inline-javascript-tutorial/" target="_blank" rel="external">insecure demo</a>. If you want to see the secure page right now, take a look at
 <a href="http://glebbahmutov.com/disable-inline-javascript-tutorial/index-secure.html" target="_blank" rel="external">secure demo</a>.</p>
-<h2 id="the-security-risk">The security risk</h2><p>Inserting &quot;evil&quot; script tags into a page is a common attack. If you ever allow the user-produced
+<h2 id="definitions">Definitions</h2><p>First, let us define what an <em>inline</em> and <em>external</em> scripts are. An HTML page can include
+a script code with the code right inside the tags - this is an <em>inline</em> script</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">p</span>&gt;</span>My page<span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="actionscript">alert(<span class="string">&apos;hi there&apos;</span>)</span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>An HTML can also include a reference to an <em>external</em> JavaScript file</p>
+<figure class="highlight js"><figcaption><span>greeting.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alert(<span class="string">&apos;hi there&apos;</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">p</span>&gt;</span>My page<span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;greeting.js&quot;</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>If the same tag has both <code>src</code> and inline javascript text, the inlined part is ignored; the external
+script is executed only.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">p</span>&gt;</span>My page<span class="tag">&lt;/<span class="title">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">&quot;greeting.js&quot;</span>&gt;</span><span class="actionscript"><span class="comment">/*... this contents is ignored ...*/</span></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="the-security-risk">The security risk</h2><p>Inserting &quot;evil&quot; inline script tags into a page is a common attack. If you ever allow the user-produced
 content to be linked into the DOM (to control its appearance for example), then your
 website is vulnerable to this attack. If you allow the user to enter this text</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">this is a <span class="tag">&lt;<span class="title">strong</span>&gt;</span>tag<span class="tag">&lt;/<span class="title">strong</span>&gt;</span> and this is <span class="tag">&lt;<span class="title">em</span>&gt;</span>emphasized<span class="tag">&lt;/<span class="title">em</span>&gt;</span></span><br></pre></td></tr></table></figure>
@@ -216,6 +225,34 @@ so I recommend against it.</p>
 <li>Checkout this CSP header / string validator <a href="https://cspvalidator.org/" target="_blank" rel="external">cspvalidator.org/</a></li>
 <li>Web frameworks like AngularJS require configuration to work with CSP <a href="https://docs.angularjs.org/api/ng/directive/ngCsp" target="_blank" rel="external">ngCsp</a></li>
 </ul>
+<h2 id="questions">Questions</h2><ul>
+<li>What happens if the attacker replaces an external script?<ul>
+<li>If an attacker can replace an external script served from your domain, or change a
+script served by a CDN then
+<strong>you have a big big problem</strong>. Your website is serving malware at this point and any client-side
+protection is useless. Secure your servers, download every external script via HTTPS.</li>
+</ul>
+</li>
+<li>Can an attacker change the meta <code>Content-Security-Policy</code> tag, by injecting a new one for example?<ul>
+<li>Yes, this is why you should include your own tag at the very top of the HEAD tag, or
+better send the same info using response headers.</li>
+<li>There is the <a href="http://caniuse.com/#feat=contentsecuritypolicy2" target="_blank" rel="external">second level of content security</a> specification,
+which is not yet supported by most browsers.
+In this case you can specify SHA for each external script. If someone takes over the external
+domain and serves changed files, the browser will not execute it, since the SHA received is
+different from SHA allowed.</li>
+</ul>
+</li>
+<li>Can you lock down allowed domains more precisely?<ul>
+<li>Yes, instead of specifying just a domain like <code>https://ajax.googleapis.com</code> to serve
+<code>&lt;script src=&apos;https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js&apos;&gt;&lt;/script&gt;</code>
+you can allow <code>https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/</code> for example.
+Don&apos;t forget the trailing slash! You can even allow a specific file, like
+<code>srcipt-src: https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js</code> to lock
+everything down.</li>
+</ul>
+</li>
+</ul>
 
       
     </div>
@@ -229,7 +266,7 @@ so I recommend against it.</p>
     
 
     <footer class="article-footer">
-      <a data-url="http://glebbahmutov.com/blog/disable-inline-javascript-for-security/" data-id="cihtr6w8w00p9l3uru8ydkk0m" class="article-share-link">Share</a>
+      <a data-url="http://glebbahmutov.com/blog/disable-inline-javascript-for-security/" data-id="cii0nxtnl00p9lruruxo6cxyk" class="article-share-link">Share</a>
       
         <a href="http://glebbahmutov.com/blog/disable-inline-javascript-for-security/#disqus_thread" class="article-comment-link">Comments</a>
       

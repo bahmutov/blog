@@ -144,9 +144,12 @@ is made</li>
 <p>Ok, but this means every call probably will have to add this piece of code, including the
 <code>if</code> branch, making it more <a href="https://en.wikipedia.org/wiki/Cyclomatic_complexity" target="_blank" rel="external">complex</a>.</p>
 <p>If we push the default value check into the function itself, we can avoid the code
-duplication, giving the user a new feature at very little cost.
-One is tempted to extend the <code>grabKeywords</code> function with second parameter - the default
-value.</p>
+duplication, giving the user a new feature at very little cost.</p>
+<p>At first, we could have the default value right inside the function</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">grabKeywords</span>(<span class="params">filename</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">require</span>(filename).keywords || [];</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>But this is very hard-coded. What if the users consider <code>[]</code> to be a wrong default value?
+One is tempted to extend the <code>grabKeywords</code> function with second parameter -
+the default value the user can optionally receive.</p>
 <figure class="highlight js"><figcaption><span>index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">grabKeywords</span>(<span class="params">filename, defaultValue</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">require</span>(filename).keywords || defaultValue;</span><br><span class="line">}</span><br><span class="line"><span class="built_in">module</span>.exports = grabKeywords;</span><br></pre></td></tr></table></figure>
 <p>We are passing the default value (data) into the function and we had to add some more logic
 (behavior === code) to the function itself: we had to add the logical OR operator
@@ -178,14 +181,15 @@ the value comparison logic should be. Instead a provided function will be called
 can make the decision in whatever manner the client needs. For example, one can implement
 a logic to assume that 3 keywors is NOT enough.</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">needAtLeast4</span>(<span class="params">value</span>) </span>{</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">Array</span>.isArray(value) &amp;&amp; value.length &gt; <span class="number">3</span> ?</span><br><span class="line">    value : [<span class="string">&apos;not&apos;</span>, <span class="string">&apos;enough&apos;</span>, <span class="string">&apos;key&apos;</span>, <span class="string">&apos;words&apos;</span>];</span><br><span class="line">}</span><br><span class="line"><span class="keyword">const</span> keywords = grab(<span class="string">&apos;./package.json&apos;</span>, needAtLeast4)</span><br><span class="line"><span class="comment">// keywords will be [&apos;not&apos;, &apos;enough&apos;, &apos;key&apos;, &apos;words&apos;]</span></span><br><span class="line"><span class="comment">// because [&apos;foo&apos;, &apos;bar&apos;, &apos;baz&apos;] is not enough</span></span><br></pre></td></tr></table></figure>
-<p>A quick note why passing a function around is better than some software pattern
+<h2 id="fp-vs-oop">FP vs OOP</h2><p>A quick note why passing a function around is better than some software pattern
 from the &quot;Gang of Four&quot; book. A single function is a very simple entity.
 It has only 1 possible action - calling it.
 No need to initialize an object in some specific way, or create a callback object,
 etc. In most cases one can even see what a function expects by calling <code>fn.toString()</code>
 and reading the source code, especially its signature line.</p>
 <p>This is it. The functional programming is all about passing behavior (functions) around,
-rather than hardcoding it.</p>
+rather than hardcoding it. One can argue with the implementation in this example, but
+it is simple to demo the point, not be an ideal code.</p>
 
       
     </div>
@@ -199,7 +203,7 @@ rather than hardcoding it.</p>
     
 
     <footer class="article-footer">
-      <a data-url="http://glebbahmutov.com/blog/pass-the-logic/" data-id="cihtr6w1c00fdl3ur92prbl13" class="article-share-link">Share</a>
+      <a data-url="http://glebbahmutov.com/blog/pass-the-logic/" data-id="cii0nxt4g00fdlrurmwiziljz" class="article-share-link">Share</a>
       
         <a href="http://glebbahmutov.com/blog/pass-the-logic/#disqus_thread" class="article-comment-link">Comments</a>
       
