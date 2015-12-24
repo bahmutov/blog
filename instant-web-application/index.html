@@ -3,23 +3,29 @@
 <head>
   <meta charset="utf-8">
   
-  <title>JavaScript stack size | Better world by better software</title>
+  <title>Instant Web Application | Better world by better software</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Variables in JavaScript (and most other programming languages) are
-stored in two places: stack and heap. A stack is usually a continuous
-region of memory allocating local context for each executing fu">
+  <meta name="description" content="Instant TodoMVC demo, source
+Uses bottle-service library to implement self-rewriting
+
+Open your favorite web application, even a simple TodoMVC would work.
+Let it load. Change some data, for example a">
 <meta property="og:type" content="article">
-<meta property="og:title" content="JavaScript stack size">
-<meta property="og:url" content="http://glebbahmutov.com/blog/javascript-stack-size/index.html">
+<meta property="og:title" content="Instant Web Application">
+<meta property="og:url" content="http://glebbahmutov.com/blog/instant-web-application/index.html">
 <meta property="og:site_name" content="Better world by better software">
-<meta property="og:description" content="Variables in JavaScript (and most other programming languages) are
-stored in two places: stack and heap. A stack is usually a continuous
-region of memory allocating local context for each executing fu">
+<meta property="og:description" content="Instant TodoMVC demo, source
+Uses bottle-service library to implement self-rewriting
+
+Open your favorite web application, even a simple TodoMVC would work.
+Let it load. Change some data, for example a">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="JavaScript stack size">
-<meta name="twitter:description" content="Variables in JavaScript (and most other programming languages) are
-stored in two places: stack and heap. A stack is usually a continuous
-region of memory allocating local context for each executing fu">
+<meta name="twitter:title" content="Instant Web Application">
+<meta name="twitter:description" content="Instant TodoMVC demo, source
+Uses bottle-service library to implement self-rewriting
+
+Open your favorite web application, even a simple TodoMVC would work.
+Let it load. Change some data, for example a">
 <meta name="twitter:creator" content="@bahmutov">
   
     <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
@@ -87,14 +93,14 @@ ga('send', 'pageview');
 </header>
 
       <div class="outer">
-        <section id="main"><article id="post-javascript-stack-size" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-instant-web-application" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="" class="article-date">
-  <time datetime="2014-05-16T04:00:00.000Z" itemprop="datePublished">May 16 2014</time>
+  <time datetime="2015-12-24T05:00:00.000Z" itemprop="datePublished">Dec 24 2015</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="../categories/products/">products</a>
+    <a class="article-category-link" href="../categories/process/">process</a>
   </div>
 
   </div>
@@ -105,11 +111,11 @@ ga('send', 'pageview');
         
   
     <h1 class="article-title" itemprop="name">
-      JavaScript stack size
+      Instant Web Application
     </h1>
 
     <h2 class="article-title" itemprop="name">
-      Finding the size of the memory allocated for the stack.
+      A curious, instant, self-rewriting application using ServiceWorker - it is like server rendering inside your browser.
     </h2>
 
   
@@ -119,72 +125,96 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>Variables in JavaScript (and most other programming languages) are
-stored in two places: stack and heap. A stack is usually a continuous
-region of memory allocating local context for each executing function.
-Heap is a much larger region storing everything allocated dynamically.
-This separation is useful to make the execution safer from corruption
-(stack is more protected) and faster (no need for dynamic garbage collection
-of the stack frames, fast new frame allocation).</p>
-<p>A typical stack example</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params"></span>) </span>{ <span class="keyword">var</span> a = <span class="number">1</span>; }</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">bar</span>(<span class="params"></span>) </span>{ <span class="keyword">var</span> b = <span class="number">2</span>; foo(); }</span><br><span class="line">bar();</span><br></pre></td></tr></table></figure>
-<p>stack when the execution is paused inside <code>foo</code></p>
-<pre><code><span class="built_in">start</span> <span class="operator">of</span> <span class="operator">the</span> stack
-<span class="comment">---------------------------</span>
-bar <span class="built_in">local</span> frame
-  * <span class="operator">a</span> couple <span class="operator">of</span> OS pointers
-  * <span class="built_in">local</span> <span class="built_in">variable</span> b (<span class="number">2</span>)
-  * place <span class="keyword">for</span> returned <span class="built_in">value</span>
-  * pointer <span class="built_in">to</span> next frame
-<span class="comment">---------------------------</span>
-foo <span class="built_in">local</span> frame
-  * <span class="operator">a</span> couple <span class="operator">of</span> OS pointers
-  * <span class="built_in">local</span> <span class="built_in">variable</span> <span class="operator">a</span> (<span class="number">1</span>)
-  * place <span class="keyword">for</span> returned <span class="built_in">value</span>
-</code></pre><p>Even if a function calls itself recursively, each frame has its own
-copy of all local variables.</p>
-<p>When a function finishes execution, its frame is removed from
-the stack, freeing memory allocated by all local variables. This is why
-even in languages like C or C++ you never have to worry about freeing
-local variables.</p>
-<h2 id="stack-size">Stack size</h2><p>We can try calculating size of the stack. If a recursive function allocates
-too many frames on the stack, the JavaScript environment throws an exception
-<code>[RangeError: Maximum call stack size exceeded]</code>. Under Node 0.11.10 x64 the
-following recursive program can report how many times a small function executes
-before dying</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> counter = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">try</span> {</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params"></span>) </span>{</span><br><span class="line">    counter += <span class="number">1</span>;</span><br><span class="line">    foo();</span><br><span class="line">  }</span><br><span class="line">  foo();</span><br><span class="line">} <span class="keyword">catch</span>(e) {</span><br><span class="line">  <span class="built_in">console</span>.error(e);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;counter =&apos;</span>, counter);</span><br><span class="line">}</span><br><span class="line"><span class="comment">// output</span></span><br><span class="line">[<span class="built_in">RangeError</span>: Maximum call stack size exceeded]</span><br><span class="line">counter = <span class="number">20961</span></span><br></pre></td></tr></table></figure>
-<p>Lets increase the size of each frame by having a single local variable</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> counter = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">try</span> {</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> local = <span class="number">1</span>;</span><br><span class="line">    counter += <span class="number">1</span>;</span><br><span class="line">    foo();</span><br><span class="line">  }</span><br><span class="line">  foo();</span><br><span class="line">} <span class="keyword">catch</span>(e) {</span><br><span class="line">  <span class="built_in">console</span>.error(e);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;counter =&apos;</span>, counter);</span><br><span class="line">}</span><br><span class="line"><span class="comment">// output</span></span><br><span class="line">[<span class="built_in">RangeError</span>: Maximum call stack size exceeded]</span><br><span class="line">counter = <span class="number">17967</span></span><br></pre></td></tr></table></figure>
-<p>A number in JavaScript takes up 8 bytes, this allows us to calculate the
-maximum stack size and the size of each frame</p>
-<pre><code>N - size of single <span class="built_in">stack</span> frame
-<span class="number">20961</span> * N = <span class="number">17967</span> * (N + <span class="number">8</span>)
-(<span class="number">20961</span> - <span class="number">17967</span>) * N = <span class="number">17967</span> * <span class="number">8</span>
-<span class="number">2994</span> * N = <span class="number">143736</span>
-N = <span class="number">143736</span> / <span class="number">2994</span> = <span class="number">48</span> bytes = <span class="number">6</span> numbers
-Total <span class="built_in">stack</span> size = <span class="number">20961</span> * <span class="number">48</span> = <span class="number">1006128</span> &lt; <span class="number">1</span>MB
-</code></pre><p>Without any local variables, each function call takes up 48 bytes during
-the execution, and you are limited to less than 1MB for all local function
-frames.</p>
-<p>We can confirm the stack size by adding second local variable</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> counter = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">try</span> {</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> local = <span class="number">1</span>, local2 = <span class="literal">true</span>;</span><br><span class="line">    counter += <span class="number">1</span>;</span><br><span class="line">    foo();</span><br><span class="line">  }</span><br><span class="line">  foo();</span><br><span class="line">} <span class="keyword">catch</span>(e) {</span><br><span class="line">  <span class="built_in">console</span>.error(e);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;counter =&apos;</span>, counter);</span><br><span class="line">}</span><br><span class="line"><span class="comment">// output</span></span><br><span class="line">[<span class="built_in">RangeError</span>: Maximum call stack size exceeded]</span><br><span class="line">counter = <span class="number">15721</span></span><br></pre></td></tr></table></figure>
-<p>Using the previous total stack size and dividing by the counter</p>
-<pre><code><span class="number">1006128</span> / <span class="number">15721</span> = <span class="number">64</span> bytes per frame
-<span class="number">64</span> = <span class="number">48</span> + <span class="number">8</span> (<span class="keyword">for</span> local) + <span class="number">8</span> (<span class="keyword">for</span> local2)
-</code></pre><p>Each boolean and number variable takes 8 bytes of memory.</p>
-<h2 id="heap-variables">Heap variables</h2><p>Only primitive types passed by value (Number, Boolean, references to objecs)
-are stored on the stack. Everything else is allocated dynamically from the shared
-pool of memory called heap. In JavaScript you do not have to worry about deallocating
-objects inside the heap, the garbage collector frees them whenever no one is
-referencing them. Of course, creating large number of objects takes its performance
-toll (someone needs to keep all the bookkeeping) plus memory fragmentation.</p>
-<p>You can see that objects are not allocated on the stack by changing the type of
-the local variable from a number to an object</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> counter = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">try</span> {</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="keyword">var</span> local = {</span><br><span class="line">      foo: <span class="string">&apos;foo&apos;</span></span><br><span class="line">    };</span><br><span class="line">    counter += <span class="number">1</span>;</span><br><span class="line">    foo();</span><br><span class="line">  }</span><br><span class="line">  foo();</span><br><span class="line">} <span class="keyword">catch</span>(e) {</span><br><span class="line">  <span class="built_in">console</span>.error(e);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;counter =&apos;</span>, counter);</span><br><span class="line">}</span><br><span class="line"><span class="comment">// output</span></span><br><span class="line">[<span class="built_in">RangeError</span>: Maximum call stack size exceeded]</span><br><span class="line">counter = <span class="number">17967</span></span><br></pre></td></tr></table></figure>
-<p>Notice that having a local object <code>{foo: &apos;foo&apos;}</code> has not affected the number of frames
-on the stack before we ran out of space. This is because only the <code>local</code> variable is
-stored in each frame pointing at objects allocated on the heap. Same for functions,
-dates, arrays and other objects passed by reference, including strings.</p>
+        <ul>
+<li>Instant TodoMVC <a href="https://instant-todo.herokuapp.com/" target="_blank" rel="external">demo</a>, <a href="https://github.com/bahmutov/instant-vdom-todo" target="_blank" rel="external">source</a></li>
+<li>Uses <a href="https://github.com/bahmutov/bottle-service" target="_blank" rel="external">bottle-service</a> library to implement self-rewriting</li>
+</ul>
+<p>Open your favorite web application, even a simple <a href="http://todomvc.com/" target="_blank" rel="external">TodoMVC</a> would work.
+Let it load. Change some data, for example add a new item to the list. Now reload the page.
+What happens? The page goes blank, then some initial markup appears. Then all of the sudden,
+everything shifts - the application&apos;s code took over, rewriting the page&apos;s tree structure,
+forcing the browser to render the loaded data. Here is one example: the screen recording
+of Angular2 TodoMVC application where I add items and reload the page.</p>
+<iframe width="960" height="720" src="https://www.youtube.com/embed/-1mJ4Tay-8A?rel=0" frameborder="0" allowfullscreen></iframe>
+
+<p>Before someone starts Angular-bashing, here is the screen recording of a React application,
+showing exactly the same problem</p>
+<iframe width="960" height="720" src="https://www.youtube.com/embed/RBVZquQzCVc?rel=0" frameborder="0" allowfullscreen></iframe>
+
+<p>The <a href="http://todomvc.com/examples/vanillajs/" target="_blank" rel="external">vanilla JavaScript</a> implementation has a better
+experience in my view, because only part of the page is updated (the items list), 
+while the top stays static</p>
+<iframe width="960" height="720" src="https://www.youtube.com/embed/ZQECnByUIpA?rel=0" frameborder="0" allowfullscreen></iframe>
+
+<p>Every application in the list suffers from the same problem - during the page reload there
+is a time gap between the initial page load and the application rendering the &quot;right&quot; HTML.
+Some libraries are faster (<a href="http://todomvc.com/examples/mithril/#/" target="_blank" rel="external">Mithril</a> is great!), some
+are slower, but none approaches the server-side rendering for smooth user experience.</p>
+<p>In server-side rendering, the page is rendered in the complete form on the server, thus when it
+arrives the user sees the right layout instantly. The web application can then take over,
+&quot;hydrating&quot; the static page. Some frameworks make such hydration simple, some might use
+my tiny <a href="https://github.com/bahmutov/hydrate-app" target="_blank" rel="external">hydration utility</a>.</p>
+<p>The larger question I want to answer is this:</p>
+<blockquote>
+<p>Can we recreate the same &quot;instant&quot; page loading experience in our web application
+without the server-side rendering?</p>
+</blockquote>
+<h2 id="instant-web-applications">Instant web applications</h2><p>Before we proceed, here is a screen recording of my TodoMVC implementation. You can try the
+live demo at <a href="https://instant-todo.herokuapp.com/" target="_blank" rel="external">instant-todo.herokuapp.com</a>.
+There is no server, but it does require a modern 
+<a href="http://caniuse.com/#feat=serviceworkers" target="_blank" rel="external">browser supporting ServiceWorkers</a></p>
+<iframe width="960" height="720" src="https://www.youtube.com/embed/KRVoibtht84?rel=0" frameborder="0" allowfullscreen></iframe>
+
+<p>Notice several things this web app has</p>
+<ul>
+<li>Absolutely no flicker at page load. Only some small CSS effects (like check marks) appear once
+the web application takes over (I am using the <a href="https://github.com/Matt-Esch/virtual-dom" target="_blank" rel="external">virtual-dom</a> library).</li>
+<li>The state (the todo items) is stored in the <code>localStorage</code>, while the snapshot
+of the last rendered HTML is stored inside the ServiceWorker.</li>
+<li>Every time the state changes, and the application has rendered itself, it sends the command
+to the ServiceWorker to store the serialized HTML text</li>
+<li>When the browser requests the page again on reload, the ServiceWorker <em>updates the fetched page</em>
+with the HTML text.</li>
+</ul>
+<p>This &quot;instant&quot; technology is called <a href="https://github.com/bahmutov/bottle-service" target="_blank" rel="external">bottle-service</a>; 
+is web framework-agnostic and should work with any library: Virtual-Dom,
+Angular, React, etc. The communication with the ServiceWorker part only has 1 API method, called
+<code>refill</code>. The application should call <code>refill</code> <em>after</em> the page has been rendered to save the
+snapshot. </p>
+<p>Here is the application code that runs on every change to the data, you can
+see the full source in 
+<a href="https://github.com/bahmutov/instant-vdom-todo/blob/master/src/app.js#L41" target="_blank" rel="external">src/app.js</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">saveApp</span>(<span class="params"></span>) </span>{</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">saveApp</span> (<span class="params"></span>) </span>{</span><br><span class="line">    localStorage.setItem(todosStorageLabel, <span class="built_in">JSON</span>.stringify(Todos.items))</span><br><span class="line">    setTimeout(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>{</span><br><span class="line">      <span class="comment">// application has renderd itself</span></span><br><span class="line">      <span class="comment">// web application controls element &lt;div id=&quot;app&quot;&gt;</span></span><br><span class="line">      bottleService.refill(appLabel, <span class="string">&apos;app&apos;</span>)</span><br><span class="line">    }, <span class="number">0</span>);</span><br><span class="line">  }</span><br><span class="line">}</span><br><span class="line">renderApp()</span><br><span class="line">saveApp()</span><br></pre></td></tr></table></figure>
+<p>The method <code>refill()</code> is very simple - it just grabs the rendered HTML and sends it
+to the service worker to be stored. See full code in 
+<a href="https://github.com/bahmutov/bottle-service/blob/master/src/bottle.js#L77" target="_blank" rel="external">bottle.js</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">refill</span> (<span class="params">applicationName, id</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> el = <span class="built_in">document</span>.getElementById(id)</span><br><span class="line">  <span class="keyword">var</span> html = el.innerHTML</span><br><span class="line">  send({</span><br><span class="line">    cmd: <span class="string">&apos;refill&apos;</span>,</span><br><span class="line">    html: html,</span><br><span class="line">    name: applicationName,</span><br><span class="line">    id: id</span><br><span class="line">  })</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>Let us look how the page&apos;s source is updated during the reload. This is the code
+inside the <a href="https://github.com/bahmutov/bottle-service/blob/master/src/bottle-service.js#L45" target="_blank" rel="external">bottle-service service worker</a>. Assume that HTML snapshot has been sent from the app
+at some point using <code>bottleService.refill()</code> and is available</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">self.addEventListener(<span class="string">&apos;fetch&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">event</span>) </span>{</span><br><span class="line">  <span class="comment">// ignore everything but the request to fetch the index.html</span></span><br><span class="line">  event.respondWith(</span><br><span class="line">    fetch(event.request)</span><br><span class="line">      .then(<span class="function"><span class="keyword">function</span> (<span class="params">response</span>) </span>{</span><br><span class="line">        <span class="comment">// we have fetched the page from the server</span></span><br><span class="line">        <span class="keyword">var</span> copy = response.clone()</span><br><span class="line">        <span class="comment">// in order to rewrite the response we need to clone it</span></span><br><span class="line">        <span class="keyword">return</span> copy.text().then(<span class="function"><span class="keyword">function</span> (<span class="params">html</span>) </span>{</span><br><span class="line">          <span class="comment">// find div with give id &quot;app&quot;</span></span><br><span class="line">          <span class="comment">// replace with HTML snapshot</span></span><br><span class="line">          <span class="keyword">var</span> updatedHtml = update(html, ...)</span><br><span class="line">          <span class="keyword">var</span> responseOptions = {</span><br><span class="line">            status: <span class="number">200</span>,</span><br><span class="line">            headers: {</span><br><span class="line">              <span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/html charset=UTF-8&apos;</span></span><br><span class="line">            }</span><br><span class="line">          }</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">new</span> Response(updatedHtml, responseOptions)</span><br><span class="line">        })</span><br><span class="line">      })</span><br><span class="line">  )</span><br><span class="line">})</span><br></pre></td></tr></table></figure>
+<p>You can even play with the <code>bottle-service</code> features using the demo
+at <a href="https://bottle-service.herokuapp.com/" target="_blank" rel="external">bottle-service.herokuapp.com</a> where you can
+create new DOM nodes, print the ones caches inside the ServiceWorker and clear the state.</p>
+<h2 id="conclusion">Conclusion</h2><p>In a sense, we have removed the need to render the application server-side (with its problems,
+framework compatability, etc) and instead are using the best page rendering engine - the browser
+itself. Every time the state changes, the application needs to store both the state and the
+rendered HTML snapshot. The state can be stored inside the page, even inside the <code>localStorage</code>,
+while the HTML snapshot is sent to the ServiceWorker code where it will be available
+on page reload.</p>
+<p>During page load, the ServiceWorker code is responsible for inserting the HTML snapshot into the
+fetched page, producing the complete page that the browser will see and render. 
+Then the web application can take over. Of course, there is a delay between the page load and
+the instant it becomes it fully responsive application - but at least this is better than
+hiding the page behind the loading screens, or sudden violent page layout shifts.</p>
+<h2 id="ideas-for-further-research-and-experimentation">Ideas for further research and experimentation</h2><p>How much code does one need to load in order to make the first static page appear
+functional? Do you need the full framework + application code? Or can you just attach a couple of
+event listeners that will queue up all user commands to be executed once the application
+is fully loaded?</p>
+<p>I want to explore dividing the library + web code into a tiny &quot;above-the-fold&quot; code fragment +
+the rest. We then can store the &quot;above-the-fold&quot; code together with the HTML snapshot in the 
+ServiceWorker, loading it right away, making the application appear and respond 
+to the user &quot;instantly&quot;.</p>
 
       
     </div>
@@ -198,12 +228,12 @@ dates, arrays and other objects passed by reference, including strings.</p>
     
 
     <footer class="article-footer">
-      <a data-url="http://glebbahmutov.com/blog/javascript-stack-size/" data-id="ciikqsb2t00jqvzurpehz2y8y" class="article-share-link">Share</a>
+      <a data-url="http://glebbahmutov.com/blog/instant-web-application/" data-id="ciikqsb3n00kjvzurlfilyd8z" class="article-share-link">Share</a>
       
-        <a href="http://glebbahmutov.com/blog/javascript-stack-size/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://glebbahmutov.com/blog/instant-web-application/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/">javascript</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/performance/">performance</a></li></ul>
 
     </footer>
   </div>
@@ -211,19 +241,10 @@ dates, arrays and other objects passed by reference, including strings.</p>
     
 <nav id="article-nav">
   
-    <a href="../no-binding-necessary/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          No binding necessary
-        
-      </div>
-    </a>
   
-  
-    <a href="../recursive-angular-directive/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="../hydrate-at-build-time/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">Recursive Angular Directive</div>
+      <div class="article-nav-title">Hydrate at build time</div>
     </a>
   
 </nav>
@@ -285,7 +306,7 @@ dates, arrays and other objects passed by reference, including strings.</p>
       <ul>
         
           <li>
-            <a href="../instant-web-application/">Instant Web Application</a>
+            <a href="">Instant Web Application</a>
           </li>
         
           <li>
@@ -331,7 +352,7 @@ dates, arrays and other objects passed by reference, including strings.</p>
 <script>
   var disqus_shortname = 'betterworldbybettersoftware';
   
-  var disqus_url = 'http://glebbahmutov.com/blog/javascript-stack-size/';
+  var disqus_url = 'http://glebbahmutov.com/blog/instant-web-application/';
   
   (function(){
     var dsq = document.createElement('script');
