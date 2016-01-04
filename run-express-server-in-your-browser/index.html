@@ -158,7 +158,7 @@ sees it is in <a href="https://github.com/bahmutov/instant-vdom-todo/blob/925234
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// intercept HTML request and return updated HTML</span></span><br><span class="line">self.addEventListener(<span class="string">&apos;fetch&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">event</span>) </span>{</span><br><span class="line">  <span class="keyword">if</span> (!isIndexPageRequest(event)) {</span><br><span class="line">    <span class="keyword">return</span> fetch(event.request)</span><br><span class="line">  }</span><br><span class="line">  event.respondWith(</span><br><span class="line">    fetch(event.request)</span><br><span class="line">      .then(<span class="function"><span class="keyword">function</span> (<span class="params">response</span>) </span>{</span><br><span class="line">        <span class="comment">// get raw HTML text from response</span></span><br><span class="line">        <span class="comment">// update the web application area with previous HTML</span></span><br><span class="line">        <span class="comment">// in variable pageHTml</span></span><br><span class="line">        <span class="keyword">var</span> responseOptions = {</span><br><span class="line">          status: <span class="number">200</span>,</span><br><span class="line">          headers: {</span><br><span class="line">            <span class="string">&apos;Content-Type&apos;</span>: <span class="string">&apos;text/html charset=UTF-8&apos;</span></span><br><span class="line">          }</span><br><span class="line">        }</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Response(pageHtml, responseOptions)</span><br><span class="line">      })</span><br><span class="line">  )</span><br><span class="line">})</span><br></pre></td></tr></table></figure>
 <p>The instant page content achieved!</p>
 <h2 id="server-side-rendering">Server-side rendering</h2><p>I have never been a big fan or server-side rendering, because I know how painful 
-Atlassian Jira feels - every click forces a full page reload, often for now reason!
+Atlassian Jira feels - every click forces a full page reload, often for no reason!
 Yet from the search engine optimization and performance stand point, the server-side
 rendering has its advantages. </p>
 <ul>
@@ -253,6 +253,19 @@ being served from the ServiceWorker</p>
 After the original service worker registration script runs, you can use the application
 with JavaScript completely disabled! The rendered pages do not have any client-side code.</p>
 <p><sup>*</sup> - the very first application load time still requires JavaScript.</p>
+<h2 id="discussion">Discussion</h2><p>I believe that running Express as a web application is an interesting experiment. A typical
+Express app has advantages over a web application - performance, simple to unit test. 
+We could even make a hybrid - for clients with browsers that support ServiceWorkers, we could
+load the server into the ServiceWorker, and for every one else we could use server-side render
+from a remote server.</p>
+<p>I was thinking how to call the server running in the browser. Typically, it would be called
+&quot;universal&quot; JavaScript, but I think this is a little different. We had to bundle and patch
+the environment for the server code to run in the different environment. I propose
+we call it &quot;boxable&quot; code; meaning the code that can be placed in a box. This is also
+similar to &quot;black box&quot; and &quot;white box&quot; testing; meaning we had to patch the environment
+in the box (the &quot;white&quot; box). 
+We also had to convert environment-specific inputs and outputs before passing them into the
+box - the &quot;black&quot; box approach.</p>
 
       
     </div>
@@ -266,7 +279,7 @@ with JavaScript completely disabled! The rendered pages do not have any client-s
     
 
     <footer class="article-footer">
-      <a data-url="http://glebbahmutov.com/blog/run-express-server-in-your-browser/" data-id="cij03cwgn009yafurdbubm4yk" class="article-share-link">Share</a>
+      <a data-url="http://glebbahmutov.com/blog/run-express-server-in-your-browser/" data-id="cij04m2yu009yfpurkg7wflya" class="article-share-link">Share</a>
       
         <a href="http://glebbahmutov.com/blog/run-express-server-in-your-browser/#disqus_thread" class="article-comment-link">Comments</a>
       
