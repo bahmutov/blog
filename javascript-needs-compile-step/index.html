@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>JavaScript needs the compile step (on install) | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="We all pretend that JavaScript is unique because it does not require a build or compile step
+on the client. Yet, this is patently untrue. At the minimum, one has to admit the native bindings
+compilati">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript needs the compile step (on install)">
+<meta property="og:url" content="http://glebbahmutov.com/blog/javascript-needs-compile-step/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="We all pretend that JavaScript is unique because it does not require a build or compile step
+on the client. Yet, this is patently untrue. At the minimum, one has to admit the native bindings
+compilati">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JavaScript needs the compile step (on install)">
+<meta name="twitter:description" content="We all pretend that JavaScript is unique because it does not require a build or compile step
+on the client. Yet, this is patently untrue. At the minimum, one has to admit the native bindings
+compilati">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/style.css" type="text/css">
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="..//" id="logo">Better world by better software</a>
+      </h1>
+      <!--
+      
+        <h2 id="subtitle-wrap">
+          <a href="..//" id="subtitle">Software advice from Dr. Gleb Bahmutov PhD</a>
+        </h2>
+      
+      -->
+      <h2 id="subtitle-wrap">
+        <span class="subtitle"><span class="no-mobile">Software advice from</span>
+        <a id="subtitle" href="http://glebbahmutov.com">Dr. Gleb Bahmutov PhD</a></span>
+      </h2>
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="..//">Home</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="q" value="site:http://glebbahmutov.com/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-javascript-needs-compile-step" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-01-16T05:00:00.000Z" itemprop="datePublished">Jan 16 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      JavaScript needs the compile step (on install)
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      My build process that can precisely target any Nodejs environment using Rollup, ES6 Feature tests and Babel.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>We all pretend that JavaScript is unique because it does not require a build or compile step
+on the client. Yet, this is patently untrue. At the minimum, one has to admit the native bindings
+compilation step during NPM module install. At the maximum, one has to admit that 
+<em>every library requires building to the least common denominator, which is ES5</em>.
+Despite having the evolving standards and wide support for most of them 
+(see <a href="http://kangax.github.io/compat-table/es6/" target="_blank" rel="external">this table</a>), the module&apos;s author has NO
+idea what JavaScript features a particular client installation has. Does a particular version of
+client&apos;s NodeJS have Promises or not? Does it support the arrow functions and the spread operator?
+Without 100% NodeJS v5 adoption (and seems the world is still stuck at Node 0.10) 
+we have to transpile our concise, elegant and performant ES6/ES7 code to ES5.</p>
+<p>Even worse, NodeJS 5 does NOT support all the features of ES6 standard. Even when using
+the <code>--harmony</code> flag 
+(as I recommend doing in <a href="use-some-es6-in-cli-apps/">Use some ES6 in CLI apps</a>),
+some of the best parts are unavailable: module import and export, default parameters, etc.</p>
+<p>The same situation (or worse) is when the JavaScript runs in the browser. The variety
+of engines is good for the industry, but bad for the module&apos;s author. </p>
+<p>Is there something we can do to write ES6/7 today and be able to run the original code
+without mangling it to death using transpilers?</p>
+<h2 id="an-example-solution">An example solution</h2><p>Let us start with an example. Imagine I have the following source code</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">package<span class="class">.json</span></span><br><span class="line">    src/</span><br><span class="line">        main<span class="class">.js</span></span><br><span class="line">        calc.js</span><br></pre></td></tr></table></figure>
+<p>We are using ES6 syntax in both source files: import and export, arrow function,
+even template literals</p>
+<figure class="highlight js"><figcaption><span>calc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> add = (a, b) =&gt; a + b</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> sub = (a, b) =&gt; a - b</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><figcaption><span>main.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> { add } <span class="keyword">from</span> <span class="string">&apos;./calc&apos;</span></span><br><span class="line">const a = 10</span><br><span class="line">const b = 2</span><br><span class="line">const sum = add(a, b)</span><br><span class="line">console.log(`${a} + ${b} = ${sum}<span class="string">`)</span></span><br></pre></td></tr></table></figure>
+<h2 id="step-1-roll-it-up">Step 1 - Roll it up</h2><p>Let us transform all our individual ES6 modules into a single bundle. We can use an
+excellent tool <a href="http://rollupjs.org/" target="_blank" rel="external">rollup</a>. The beauty of this tool (and the ES6 standard 
+that allows it to work) is that ES6 <code>import / export</code> statements can be traced statically, 
+unlike the CommonJS code that uses the <code>require</code> calls (see the presentation 
+<a href="http://benjamn.github.io/empirenode-2015/" target="_blank" rel="external">The Importance of import and export</a> by Ben Newman).</p>
+<pre><code><span class="comment">rollup</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">output</span> <span class="comment">dist/bundle</span><span class="string">.</span><span class="comment">js</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">format</span> <span class="comment">es6</span> <span class="comment">src/main</span><span class="string">.</span><span class="comment">js</span>
+</code></pre><p>We just created a combined bundle inside the <code>dist</code> folder</p>
+<figure class="highlight js"><figcaption><span>dist/bundle.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> add = (a, b) =&gt; a + b                                        </span><br><span class="line"><span class="keyword">const</span> a = <span class="number">10</span></span><br><span class="line"><span class="keyword">const</span> b = <span class="number">2</span></span><br><span class="line"><span class="keyword">const</span> sum = add(a, b)</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">`<span class="subst">${a}</span> + <span class="subst">${b}</span> = <span class="subst">${sum}</span>`</span>)</span><br></pre></td></tr></table></figure>
+<p>Notice the &quot;tree-shaking&quot; benefit in Rollup and ES6 modules - the tool has determined that
+the exported <code>sum</code> function inside <code>calc.js</code> is never used, and is dropped from the bundle.</p>
+<h2 id="step-2-determine-es6-features-used">Step 2 - Determine ES6 features used</h2><p>We have eliminated the <code>import</code> and <code>export</code> calls because we just bundled all our code
+into a single file. What about the rest of the ES6 features?
+We know that we have used arrow functions, <code>const</code> keyword and template literals.
+Keeping manually the list of the features is hard, especially as parts of the code
+are &quot;shaken&quot; off the tree during the bundling. </p>
+<p>Fortunately, there is a tool that can inspect a source file and give us a list of
+the features: <a href="https://github.com/getify/es-feature-tests" target="_blank" rel="external">es-feature-tests</a>.
+We simple run the tool after rolling the bundle and save the list of features.</p>
+<pre><code><span class="comment">npm</span> <span class="comment">install</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">save</span><span class="literal">-</span><span class="comment">dev</span> <span class="comment">es</span><span class="literal">-</span><span class="comment">feature</span><span class="literal">-</span><span class="comment">tests</span>
+<span class="comment">testify</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">file=dist/bundle</span><span class="string">.</span><span class="comment">js</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">output=json</span> &gt; <span class="comment">dist/es6</span><span class="literal">-</span><span class="comment">features</span><span class="string">.</span><span class="comment">json</span>
+</code></pre><p>In our case this has generated the following JSON file</p>
+<figure class="highlight json"><figcaption><span>dist/es6-features.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="string">&quot;letConst&quot;</span>,<span class="string">&quot;templateString&quot;</span>,<span class="string">&quot;arrow&quot;</span>]</span><br></pre></td></tr></table></figure>
+<h2 id="step-3-compiling-bundle-on-install">Step 3 - Compiling bundle (on install)</h2><p>Steps 1 (bundling) and 2 (determining the ES6 features used) run on the build machine.
+Now we need to run a step <em>on the client&apos;s machine</em>. This step takes the ES6 bundle and will
+produce a compiled bundle the user will run. Our goal is to inspect the client&apos;s environment,
+determine the supported features (and the missing ones), and then transpile the bundle
+but only the missing features. Thus if a feature like function arrows is present, we will
+keep the original code. If a feature, like the template literals, is missing, we will use
+a specific Babel plugin to replace each instance with its ES5 equivalent.</p>
+<p>Here is the outline of the code, you can find the full source in 
+<a href="https://github.com/bahmutov/compiled/blob/master/transpile.js" target="_blank" rel="external">transpile.js</a></p>
+<figure class="highlight js"><figcaption><span>transpile.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ES6 features our bundle needs to run</span></span><br><span class="line"><span class="keyword">var</span> es6features = <span class="built_in">require</span>(<span class="string">&apos;./dist/es6-features&apos;</span>)</span><br><span class="line"><span class="keyword">var</span> es6support = <span class="built_in">require</span>(<span class="string">&apos;es-feature-tests&apos;</span>)</span><br><span class="line">es6support(<span class="string">&apos;all&apos;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">es6present</span>) </span>{</span><br><span class="line">    transpile(es6present, es6features, <span class="string">&apos;dist/bundle.js&apos;</span>, <span class="string">&apos;dist/compiled.js&apos;</span>)</span><br><span class="line">});</span><br><span class="line"><span class="comment">// the targeted transpile function</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">transpile</span> (<span class="params">supportedFeatures, neededFeatures, inputFilename, outputFilename</span>) </span>{</span><br><span class="line">  <span class="keyword">var</span> babelMapping = {</span><br><span class="line">    letConst: [<span class="string">&apos;transform-es2015-block-scoping&apos;</span>],</span><br><span class="line">    templateString: <span class="string">&apos;transform-es2015-template-literals&apos;</span>,</span><br><span class="line">    arrow: <span class="string">&apos;transform-es2015-arrow-functions&apos;</span>,</span><br><span class="line">    ...</span><br><span class="line">  }</span><br><span class="line">  <span class="keyword">var</span> plugins = []</span><br><span class="line">  neededFeatures.forEach(<span class="function"><span class="keyword">function</span> (<span class="params">feature</span>) </span>{</span><br><span class="line">    <span class="keyword">if</span> (!supportedFeatures[feature]) {</span><br><span class="line">      plugins = plugins.concat(babelMapping[feature]) </span><br><span class="line">    }</span><br><span class="line">  })</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&apos;need plugins&apos;</span>, plugins)</span><br><span class="line">  <span class="comment">// transpile missing features</span></span><br><span class="line">  <span class="keyword">var</span> babel = <span class="built_in">require</span>(<span class="string">&apos;babel-core&apos;</span>)</span><br><span class="line">  <span class="keyword">var</span> options = { plugins: plugins }</span><br><span class="line">  babel.transformFile(filename, options, <span class="function"><span class="keyword">function</span> (<span class="params">err, result</span>) </span>{</span><br><span class="line">    <span class="keyword">if</span> (err) { <span class="keyword">throw</span> err }</span><br><span class="line">    <span class="built_in">require</span>(<span class="string">&apos;fs&apos;</span>).writeFileSync(outFilename, result.code, <span class="string">&apos;utf-8&apos;</span>)</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&apos;saved file&apos;</span>, outFilename)</span><br><span class="line">  })</span><br><span class="line">}</span><br></pre></td></tr></table></figure>
+<p>We need to run this script when the client runs <code>npm install &lt;my module&gt;</code>.
+For demo purposes I am printing the node version before running the command.</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">    &quot;<span class="attribute">scripts</span>&quot;: <span class="value">{</span><br><span class="line">        &quot;<span class="attribute">postinstall</span>&quot;: <span class="value"><span class="string">&quot;echo \&quot;Running transpile for `node --version`\&quot; &amp;&amp; node transpile.js&quot;</span></span><br><span class="line">    </span>}</span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<p>Whenever we run <code>npm install</code>, the script kicks off and the Babel transpiler
+creates a bundle that is exactly supported by the user&apos;s NodeJS version.</p>
+<h2 id="step-4-the-main-file">Step 4 - the main file</h2><p>There is a lot of discussions around the JavaScript community how to specify <em>two</em> main files
+per bundle. One for ES5 loaders (<code>main</code>) and another one for ES6 loaders 
+(<code>main:es6</code> or <code>main:next</code>?), the discussion is still open.</p>
+<p>For our bundle, I set the <code>main</code> script to point at the compiled bundle, which is built on
+install</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">{</span><br><span class="line">    &quot;<span class="attribute">main</span>&quot;: <span class="value"><span class="string">&quot;dist/compiled.js&quot;</span></span><br><span class="line"></span>}</span><br></pre></td></tr></table></figure>
+<h2 id="demo">Demo</h2><p>I am using the default code inside <a href="https://github.com/bahmutov/compiled/releases/tag/v1.0.0" target="_blank" rel="external">bahmutov/compiled</a> at tag <code>1.1.0</code>.</p>
+<h3 id="node-012-and-below">Node 0.12 and below</h3><p>First, let us install a module using Node 0.12</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ nvm <span class="operator"><span class="keyword">use</span> <span class="number">0.12</span></span><br><span class="line"><span class="keyword">Now</span> <span class="keyword">using</span> node v0<span class="number">.12</span><span class="number">.9</span> (npm v2<span class="number">.14</span><span class="number">.9</span>)</span><br><span class="line">$ npm <span class="keyword">i</span></span><br><span class="line"></span><br><span class="line">&gt; <span class="keyword">compiled</span>@ postinstall /<span class="keyword">Users</span>/kensho/git/<span class="keyword">compiled</span></span><br><span class="line">&gt; echo <span class="string">&quot;Running transpile for `node --version`&quot;</span> &amp;&amp; node transpile.js</span><br><span class="line"></span><br><span class="line">Running transpile <span class="keyword">for</span> v0<span class="number">.12</span><span class="number">.9</span></span><br><span class="line">need es6 features [ <span class="string">&apos;letConst&apos;</span>, <span class="string">&apos;templateString&apos;</span>, <span class="string">&apos;arrow&apos;</span> ]</span><br><span class="line">need plugins [ <span class="string">&apos;transform-es2015-block-scoping&apos;</span>,</span><br><span class="line">  <span class="string">&apos;transform-es2015-template-literals&apos;</span>,</span><br><span class="line">  <span class="string">&apos;transform-es2015-arrow-functions&apos;</span> ]</span><br><span class="line">saved <span class="keyword">file</span> ./dist/<span class="keyword">compiled</span>.js</span></span><br></pre></td></tr></table></figure>
+<p>The compiled file has all ES6 features transpiled (because none of the needed ES6 features
+were found)</p>
+<figure class="highlight js"><figcaption><span>dist/compiled.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> add = <span class="function"><span class="keyword">function</span> (<span class="params">a, b</span>) </span>{</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">}; </span><br><span class="line"><span class="keyword">var</span> a = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">var</span> b = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">var</span> sum = add(a, b);</span><br><span class="line"><span class="built_in">console</span>.log(a + <span class="string">&quot; + &quot;</span> + b + <span class="string">&quot; = &quot;</span> + sum);</span><br></pre></td></tr></table></figure>
+<p>Because the <code>main</code> property in <code>package.json</code> points at this <code>dist/compiled.js</code> bundle,
+we can run it simply by executing <code>node .</code> command</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="keyword">node</span><span class="identifier"> </span><span class="title">.</span><br><span class="line">10</span> + <span class="number">2</span> = <span class="number">12</span></span><br></pre></td></tr></table></figure>
+<p>Our code, written in ES6 and distributed as an ES6 bundle works fine on Node 0.12.
+Even better: the same code can be installed and ran on Node 0.10 and even 0.8!</p>
+<h3 id="node-4-and-above">Node 4 and above</h3><p>Second, let us try a modern NodeJS engine, like v4.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ nvm <span class="operator"><span class="keyword">use</span> <span class="number">4</span></span><br><span class="line"><span class="keyword">Now</span> <span class="keyword">using</span> node v4<span class="number">.2</span><span class="number">.2</span> (npm v3<span class="number">.5</span><span class="number">.0</span>)</span><br><span class="line">$ npm <span class="keyword">i</span></span><br><span class="line">&gt; <span class="keyword">compiled</span>@ postinstall /<span class="keyword">Users</span>/kensho/git/<span class="keyword">compiled</span></span><br><span class="line">&gt; echo <span class="string">&quot;Running transpile for `node --version`&quot;</span> &amp;&amp; node transpile.js</span><br><span class="line"></span><br><span class="line">Running transpile <span class="keyword">for</span> v4<span class="number">.2</span><span class="number">.2</span></span><br><span class="line">need es6 features [ <span class="string">&apos;letConst&apos;</span>, <span class="string">&apos;templateString&apos;</span>, <span class="string">&apos;arrow&apos;</span> ]</span><br><span class="line">need plugins []</span><br><span class="line">saved <span class="keyword">file</span> ./dist/<span class="keyword">compiled</span>.js</span></span><br></pre></td></tr></table></figure>
+<p>Notice that the compilation step did NOT need to transpile anything - all the ES6 features
+we used in our code are supported by the environment. The code is the original ES6 bundle</p>
+<figure class="highlight js"><figcaption><span>dist/compiled.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> add = (a, b) =&gt; a + b;</span><br><span class="line"><span class="keyword">const</span> a = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">const</span> b = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">const</span> sum = add(a, b);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">`<span class="subst">${ a }</span> + <span class="subst">${ b }</span> = <span class="subst">${ sum }</span>`</span>);</span><br></pre></td></tr></table></figure>
+<p>Still runs as expected</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="keyword">node</span><span class="identifier"> </span><span class="title">.</span><br><span class="line">10</span> + <span class="number">2</span> = <span class="number">12</span></span><br></pre></td></tr></table></figure>
+<h2 id="conclusion">Conclusion</h2><p>I plan to build a (yet another) CLI build tool based on repo 
+<a href="https://github.com/bahmutov/compiled" target="_blank" rel="external">bahmutov/compiled</a>. It will have just two commands -
+build and compile. The <code>build</code> command will run on the author&apos;s machine (or better on CI server),
+and the <code>compile</code> command will run on the client&apos;s machine during <code>postinstall</code> step.</p>
+<p>This way I will finally be able to use ES6 when writing code, avoid unnecessary transpiling
+if I use Node 4/5, yet be able to support older Node versions.</p>
+<p>There are lots of open questions. I encourage everyone interested to 
+<a href="https://github.com/bahmutov/compiled/issues" target="_blank" rel="external">open an issue</a> and start the discussion.</p>
+<h2 id="related">Related</h2><p>I have implemented targeted transpiling for browsers supporting ServiceWorker in
+<a href="https://github.com/bahmutov/babel-service" target="_blank" rel="external">babel-service</a>.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="http://glebbahmutov.com">glebbahmutov.com</a>
+</footer>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="http://glebbahmutov.com/blog/javascript-needs-compile-step/" data-id="cijgodb4k00k8tturd2v7rptk" class="article-share-link">Share</a>
+      
+        <a href="http://glebbahmutov.com/blog/javascript-needs-compile-step/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/">javascript</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="../i-write-3-types-of-software/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">I write 3 types of software</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">14</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">72</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">192</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/">advice</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/">angular</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/">angularjs</a><span class="tag-list-count">54</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/">assertions</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/">boilerplate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/">browser</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/">ci</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/database/">database</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/">db</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/">es6</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/">functional</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/">git</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/">immutable</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/">javascript</a><span class="tag-list-count">147</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/">modular development</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/">nodejs</a><span class="tag-list-count">55</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/">performance</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/">promises</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/">reactive</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/">reactjs</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/">security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/">sentry</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/">testing</a><span class="tag-list-count">44</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/">tutorial</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/">ui</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/">web workers</a><span class="tag-list-count">5</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/QUnit/" style="font-size: 12.35px;">QUnit</a><a href="../tags/advice/" style="font-size: 19.41px;">advice</a><a href="../tags/angular/" style="font-size: 10px;">angular</a><a href="../tags/angularjs/" style="font-size: 18.24px;">angularjs</a><a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a><a href="../tags/assertions/" style="font-size: 13.53px;">assertions</a><a href="../tags/boilerplate/" style="font-size: 15.29px;">boilerplate</a><a href="../tags/browser/" style="font-size: 14.71px;">browser</a><a href="../tags/ci/" style="font-size: 11.18px;">ci</a><a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a><a href="../tags/d3/" style="font-size: 11.18px;">d3</a><a href="../tags/database/" style="font-size: 10px;">database</a><a href="../tags/db/" style="font-size: 12.35px;">db</a><a href="../tags/es6/" style="font-size: 14.12px;">es6</a><a href="../tags/es7/" style="font-size: 10px;">es7</a><a href="../tags/functional/" style="font-size: 17.06px;">functional</a><a href="../tags/generators/" style="font-size: 12.35px;">generators</a><a href="../tags/git/" style="font-size: 13.53px;">git</a><a href="../tags/grunt/" style="font-size: 13.53px;">grunt</a><a href="../tags/gulp/" style="font-size: 11.18px;">gulp</a><a href="../tags/immutable/" style="font-size: 10px;">immutable</a><a href="../tags/interview/" style="font-size: 11.18px;">interview</a><a href="../tags/jade/" style="font-size: 11.76px;">jade</a><a href="../tags/javascript/" style="font-size: 20px;">javascript</a><a href="../tags/jshint/" style="font-size: 11.18px;">jshint</a><a href="../tags/modular-development/" style="font-size: 15.29px;">modular development</a><a href="../tags/nodejs/" style="font-size: 18.82px;">nodejs</a><a href="../tags/performance/" style="font-size: 15.88px;">performance</a><a href="../tags/promises/" style="font-size: 16.47px;">promises</a><a href="../tags/proposal/" style="font-size: 10.59px;">proposal</a><a href="../tags/reactive/" style="font-size: 10.59px;">reactive</a><a href="../tags/reactjs/" style="font-size: 10.59px;">reactjs</a><a href="../tags/security/" style="font-size: 11.76px;">security</a><a href="../tags/sentry/" style="font-size: 13.53px;">sentry</a><a href="../tags/testing/" style="font-size: 17.65px;">testing</a><a href="../tags/tutorial/" style="font-size: 12.94px;">tutorial</a><a href="../tags/ui/" style="font-size: 10px;">ui</a><a href="../tags/web-workers/" style="font-size: 12.35px;">web workers</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="">JavaScript needs the compile step (on install)</a>
+          </li>
+        
+          <li>
+            <a href="../i-write-3-types-of-software/">I write 3 types of software</a>
+          </li>
+        
+          <li>
+            <a href="../run-express-server-in-your-browser/">Run Express server in your browser</a>
+          </li>
+        
+          <li>
+            <a href="../using-webpack/">Using webpack</a>
+          </li>
+        
+          <li>
+            <a href="../the-senior-engineer-role/">The senior engineer role</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="..//" class="mobile-nav-link">Home</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'http://glebbahmutov.com/blog/javascript-needs-compile-step/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="../fancybox/jquery.fancybox.css" type="text/css">
+  <script src="../fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+<script src="../js/script.js" type="text/javascript"></script>
+
+  </div>
+</body>
+</html>
