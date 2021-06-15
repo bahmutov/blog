@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>How to Publish Custom Cypress Command on NPM | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="In my previous blog post Writing a Custom Cypress Command I have shown a simple custom Cypress custom command for finding a form element by its label. In this blog post I will show how to correctly pu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to Publish Custom Cypress Command on NPM">
+<meta property="og:url" content="https://glebbahmutov.com/blog/publishing-cypress-command/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="In my previous blog post Writing a Custom Cypress Command I have shown a simple custom Cypress custom command for finding a form element by its label. In this blog post I will show how to correctly pu">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/spec.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/ci-passes.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/secret.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/names.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/v2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/badges.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/any.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/visible-types.gif">
+<meta property="article:published_time" content="2021-01-22T05:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.327Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/spec.gif">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-publishing-cypress-command" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2021-01-22T05:00:00.000Z" itemprop="datePublished">Jan 22 2021</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      How to Publish Custom Cypress Command on NPM
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to test, transpile, and publish an NPM module with a custom Cypress command.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>In my previous blog post <a href="/blog/writing-custom-cypress-command/" title="Writing a Custom Cypress Command">Writing a Custom Cypress Command</a> I have shown a simple custom Cypress custom command for finding a form element by its label. In this blog post I will show how to correctly publish this custom command to the NPM registry.</p>
+<!-- toc -->
+<ul>
+<li><a href="#the-command">The command</a></li>
+<li><a href="#continuous-integration">Continuous integration</a></li>
+<li><a href="#command-source-refactoring">Command source refactoring</a></li>
+<li><a href="#publishing-to-npm">Publishing to NPM</a></li>
+<li><a href="#better-registration">Better registration</a></li>
+<li><a href="#using-an-example">Using an example</a></li>
+<li><a href="#types">Types</a></li>
+<li><a href="#es6-import-and-export">ES6 import and export</a></li>
+</ul>
+<!-- tocstop -->
+<blockquote class="pullquote"><p>🔎 You can find the source code for this blog post in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-get-by-label">bahmutov/cypress-get-by-label</a> repo.</p>
+</blockquote>
+<h2><span id="the-command">The command</span></h2><p>I usually start by developing the code in-place and writing the custom command in the spec file. Given an HTML file:</p>
+<figure class="highlight html"><figcaption><span>cypress/index.html</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">&quot;fname&quot;</span>&gt;</span>First name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">id</span>=<span class="string">&quot;fname&quot;</span> <span class="attr">name</span>=<span class="string">&quot;fname&quot;</span> /&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">&quot;lname&quot;</span>&gt;</span>Last name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">id</span>=<span class="string">&quot;lname&quot;</span> <span class="attr">name</span>=<span class="string">&quot;lname&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>The following spec file tests the custom command</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// enables intelligent code completion for Cypress commands</span></span><br><span class="line"><span class="comment">// https://on.cypress.io/intelligent-code-completion</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line">Cypress.Commands.add(<span class="string">&#x27;getByLabel&#x27;</span>, <span class="function">(<span class="params">label</span>) =&gt;</span> &#123;</span><br><span class="line">  cy.log(<span class="string">&#x27;**getByLabel**&#x27;</span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;label&#x27;</span>, label)</span><br><span class="line">    .invoke(<span class="string">&#x27;attr&#x27;</span>, <span class="string">&#x27;for&#x27;</span>)</span><br><span class="line">    .then(<span class="function">(<span class="params">id</span>) =&gt;</span> &#123;</span><br><span class="line">      cy.get(<span class="string">&#x27;#&#x27;</span> + id)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;cypress-get-by-label&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;find the elements&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// path with respect to the root folder</span></span><br><span class="line">    cy.visit(<span class="string">&#x27;cypress/index.html&#x27;</span>)</span><br><span class="line">    cy.getByLabel(<span class="string">&#x27;First name:&#x27;</span>).should(<span class="string">&#x27;have.value&#x27;</span>, <span class="string">&#x27;&#x27;</span>).type(<span class="string">&#x27;Joe&#x27;</span>)</span><br><span class="line">    cy.getByLabel(<span class="string">&#x27;First name:&#x27;</span>).should(<span class="string">&#x27;have.value&#x27;</span>, <span class="string">&#x27;Joe&#x27;</span>)</span><br><span class="line">    cy.getByLabel(<span class="string">&#x27;Last name:&#x27;</span>).type(<span class="string">&#x27;Smith&#x27;</span>)</span><br><span class="line">    <span class="comment">// check the form inputs</span></span><br><span class="line">    cy.get(<span class="string">&#x27;form&#x27;</span>)</span><br><span class="line">      .invoke(<span class="string">&#x27;serializeArray&#x27;</span>)</span><br><span class="line">      .should(<span class="string">&#x27;deep.equal&#x27;</span>, [</span><br><span class="line">        &#123; <span class="attr">name</span>: <span class="string">&#x27;fname&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Joe&#x27;</span> &#125;,</span><br><span class="line">        &#123; <span class="attr">name</span>: <span class="string">&#x27;lname&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Smith&#x27;</span> &#125;,</span><br><span class="line">      ])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The spec passes.</p>
+<p><img src="/blog/images/publish-custom-command/spec.gif" alt="The test find the form elements by label"></p>
+<h2><span id="continuous-integration">Continuous integration</span></h2><p>As soon as we have the first test, I set up continuous integration pipeline. I can pick amongst various <a href="/blog/example-ci-configs/" title="CI providers">CI providers</a>, but perhaps <a href="/blog/trying-github-actions/" title="GitHub Actions">GitHub Actions</a> is the simplest to set up right now. We can run Cypress via <a target="_blank" rel="noopener" href="https://github.com/cypress-io/github-action">cypress-io/github-action</a> with ease:</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/ci.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">ci</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">cypress-run:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v2</span></span><br><span class="line">      <span class="comment"># Install NPM dependencies, cache them correctly</span></span><br><span class="line">      <span class="comment"># and run all Cypress tests</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">run</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v2</span></span><br></pre></td></tr></table></figure>
+<p>The test passes on CI.</p>
+<p><img src="/blog/images/publish-custom-command/ci-passes.gif" alt="The test passes on GitHub Actions"></p>
+<h2><span id="command-source-refactoring">Command source refactoring</span></h2><p>Now let&#39;s refactor our command to be usable from any spec. Our users should be able to register the custom command in a particular spec or in all specs by importing the command from their support file. Let&#39;s move the command source code into its own file <code>src/index.js</code></p>
+<figure class="highlight js"><figcaption><span>src/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Cypress.Commands.add(<span class="string">&#x27;getByLabel&#x27;</span>, <span class="function">(<span class="params">label</span>) =&gt;</span> &#123;</span><br><span class="line">  cy.log(<span class="string">&#x27;**getByLabel**&#x27;</span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;label&#x27;</span>, label)</span><br><span class="line">    .invoke(<span class="string">&#x27;attr&#x27;</span>, <span class="string">&#x27;for&#x27;</span>)</span><br><span class="line">    .then(<span class="function">(<span class="params">id</span>) =&gt;</span> &#123;</span><br><span class="line">      cy.get(<span class="string">&#x27;#&#x27;</span> + id)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The spec file requires the <code>src/index.js</code> file</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span>(<span class="string">&#x27;../../src&#x27;</span>)</span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;cypress-get-by-label&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;find the elements&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// path with respect to the root folder</span></span><br><span class="line">    cy.visit(<span class="string">&#x27;cypress/index.html&#x27;</span>)</span><br><span class="line">    cy.getByLabel(<span class="string">&#x27;First name:&#x27;</span>).should(<span class="string">&#x27;have.value&#x27;</span>, <span class="string">&#x27;&#x27;</span>).type(<span class="string">&#x27;Joe&#x27;</span>)</span><br><span class="line">    cy.getByLabel(<span class="string">&#x27;First name:&#x27;</span>).should(<span class="string">&#x27;have.value&#x27;</span>, <span class="string">&#x27;Joe&#x27;</span>)</span><br><span class="line">    cy.getByLabel(<span class="string">&#x27;Last name:&#x27;</span>).type(<span class="string">&#x27;Smith&#x27;</span>)</span><br><span class="line">    <span class="comment">// check the form inputs</span></span><br><span class="line">    cy.get(<span class="string">&#x27;form&#x27;</span>)</span><br><span class="line">      .invoke(<span class="string">&#x27;serializeArray&#x27;</span>)</span><br><span class="line">      .should(<span class="string">&#x27;deep.equal&#x27;</span>, [</span><br><span class="line">        &#123; <span class="attr">name</span>: <span class="string">&#x27;fname&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Joe&#x27;</span> &#125;,</span><br><span class="line">        &#123; <span class="attr">name</span>: <span class="string">&#x27;lname&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Smith&#x27;</span> &#125;,</span><br><span class="line">      ])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Great, but when we distribute this NPM package, our users will require it by name. Thus instead of <code>require(&#39;../../src/index&#39;)</code> let&#39;s require the top level package folder. We can set the <code>main</code> field to point at the <code>src/index</code> in our <code>package.json</code> file. While we are there, let&#39;s set the list of files to be published to NPM, our users only will need the <code>src</code> folder.</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;cypress-get-by-label&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;description&quot;</span>: <span class="string">&quot;Example custom Cypress command finding form element by its label&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;main&quot;</span>: <span class="string">&quot;src&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;files&quot;</span>: [</span><br><span class="line">    <span class="string">&quot;src&quot;</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span>(<span class="string">&#x27;../..&#x27;</span>)</span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;cypress-get-by-label&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Time to publish!</p>
+<h2><span id="publishing-to-npm">Publishing to NPM</span></h2><p>Let&#39;s verify the files we are about to publish to NPM</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$ npm pack --dry</span><br><span class="line">npm notice</span><br><span class="line">npm notice 📦  cypress-get-by-label@1.0.0</span><br><span class="line">npm notice === Tarball Contents ===</span><br><span class="line">npm notice 185B src/index.js</span><br><span class="line">npm notice 782B package.json</span><br><span class="line">npm notice 287B README.md</span><br><span class="line">npm notice === Tarball Details ===</span><br><span class="line">npm notice name:          cypress-get-by-label</span><br><span class="line">npm notice version:       1.0.0</span><br><span class="line">npm notice filename:      cypress-get-by-label-1.0.0.tgz</span><br><span class="line">npm notice package size:  705 B</span><br><span class="line">npm notice unpacked size: 1.3 kB</span><br><span class="line">npm notice shasum:        a2778f2e23a84580a4e5a49e70afcee6a9fdbda1</span><br><span class="line">npm notice integrity:     sha512-UzYZi4A7i0lv6[...]ePqI7ukEkzgUQ==</span><br><span class="line">npm notice total files:   3</span><br><span class="line">npm notice</span><br><span class="line">cypress-get-by-label-1.0.0.tgz</span><br></pre></td></tr></table></figure>
+<p>So we are going to include three files in the distributable archive: the README file, the <code>package.json</code>, and <code>src/index.js</code>. Seems right.</p>
+<p>As always I will use <a target="_blank" rel="noopener" href="https://github.com/semantic-release/semantic-release">semantic-release</a> following <a href="/blog/how-i-publish-to-npm/" title="How I publish to NPM">How I publish to NPM</a> approach. Since GitHub Actions will have GH token set, we can grab a new NPM token using the command:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ semantic-release-cli setup --gh-token foo</span><br><span class="line">? What is your npm registry? https:&#x2F;&#x2F;registry.npmjs.org&#x2F;</span><br><span class="line">? What is your npm username? bahmutov</span><br><span class="line">? What is your npm password? [hidden]</span><br><span class="line">? What is your NPM two-factor authentication code? 520164</span><br><span class="line">? What CI are you using? Other (prints tokens)</span><br><span class="line"></span><br><span class="line">----------------------------------------------</span><br><span class="line">GH_TOKEN&#x3D;foo</span><br><span class="line">NPM_TOKEN&#x3D;*******</span><br><span class="line">----------------------------------------------</span><br></pre></td></tr></table></figure>
+<p>Set the <code>NPM_TOKEN</code> as a secret when running the GitHub Action</p>
+<p><img src="/blog/images/publish-custom-command/secret.png" alt="Set the new NPM token as action secret"></p>
+<p>To do semantic release, I like using <a target="_blank" rel="noopener" href="https://github.com/cycjimmy/semantic-release-action">cycjimmy/semantic-release-action</a>. The <code>ci.yml</code> file is now:</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/ci.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">ci</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">cypress-run:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v2</span></span><br><span class="line">      <span class="comment"># Install NPM dependencies, cache them correctly</span></span><br><span class="line">      <span class="comment"># and run all Cypress tests</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">run</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v2</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Semantic</span> <span class="string">Release</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cycjimmy/semantic-release-action@v2</span></span><br><span class="line">        <span class="attr">id:</span> <span class="string">semantic</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">branch:</span> <span class="string">main</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="attr">GITHUB_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.GITHUB_TOKEN</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">NPM_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.NPM_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>In order to actually release, let&#39;s update our README file. We need to explain how to use this package and commit with a feature or fix release.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">$ git status</span><br><span class="line">On branch main</span><br><span class="line">Your branch is up to date with &#x27;origin/main&#x27;.</span><br><span class="line"></span><br><span class="line">Changes to be committed:</span><br><span class="line">  (use &quot;git restore --staged &lt;file&gt;...&quot; to unstage)</span><br><span class="line">	modified:   .github/workflows/ci.yml</span><br><span class="line">	modified:   README.md</span><br><span class="line">	modified:   package-lock.json</span><br><span class="line">	modified:   package.json</span><br><span class="line"></span><br><span class="line">$ git commit -m &quot;feat: publish command&quot;</span><br><span class="line">[main ec8ae51] feat: publish command</span><br><span class="line"> 4 files changed, 5921 insertions(+), 85 deletions(-)</span><br><span class="line"></span><br><span class="line">$ git push</span><br></pre></td></tr></table></figure>
+<p>The GitHub action runs and publishes &quot;cypress-get-by-label v1.0.0&quot;, which we can find at <a target="_blank" rel="noopener" href="https://www.npmjs.com/package/cypress-get-by-label">www.npmjs.com/package/cypress-get-by-label</a>.</p>
+<h2><span id="better-registration">Better registration</span></h2><p>Currently we have published our command that registers itself immediately whenever some runs <code>require(&#39;cypress-get-by-label&#39;)</code> code. What if we want to customize the custom command? What if we want to register it under a different name? It makes sense to export a registration function, instead of immediately modifying the global state by running <code>Cypress.Commands.add(&#39;getByLabel&#39;, ...)</code> function.</p>
+<p>Let&#39;s modify our package.</p>
+<figure class="highlight js"><figcaption><span>src/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> registerCommand = <span class="function">(<span class="params">name = <span class="string">&#x27;getByLabel&#x27;</span></span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> getByCommand = <span class="function">(<span class="params">label</span>) =&gt;</span> &#123;</span><br><span class="line">    cy.log(<span class="string">`**<span class="subst">$&#123;name&#125;</span>**`</span>)</span><br><span class="line">    cy.contains(<span class="string">&#x27;label&#x27;</span>, label)</span><br><span class="line">      .invoke(<span class="string">&#x27;attr&#x27;</span>, <span class="string">&#x27;for&#x27;</span>)</span><br><span class="line">      .then(<span class="function">(<span class="params">id</span>) =&gt;</span> &#123;</span><br><span class="line">        cy.get(<span class="string">&#x27;#&#x27;</span> + id)</span><br><span class="line">      &#125;)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Cypress.Commands.add(name, getByCommand)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  registerCommand,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Let&#39;s update our spec file to test this:</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; registerCommand &#125; = <span class="built_in">require</span>(<span class="string">&#x27;../..&#x27;</span>)</span><br><span class="line">registerCommand()</span><br><span class="line"><span class="comment">// or we could register under a different name</span></span><br><span class="line">registerCommand(<span class="string">&#x27;getFormField&#x27;</span>)</span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;cypress-get-by-label&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;find the elements&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// path with respect to the root folder</span></span><br><span class="line">    cy.visit(<span class="string">&#x27;cypress/index.html&#x27;</span>)</span><br><span class="line">    cy.getByLabel(<span class="string">&#x27;First name:&#x27;</span>).should(<span class="string">&#x27;have.value&#x27;</span>, <span class="string">&#x27;&#x27;</span>).type(<span class="string">&#x27;Joe&#x27;</span>)</span><br><span class="line">    cy.getByLabel(<span class="string">&#x27;First name:&#x27;</span>).should(<span class="string">&#x27;have.value&#x27;</span>, <span class="string">&#x27;Joe&#x27;</span>)</span><br><span class="line">    <span class="comment">// try alternative command name</span></span><br><span class="line">    cy.getFormField(<span class="string">&#x27;Last name:&#x27;</span>).type(<span class="string">&#x27;Smith&#x27;</span>)</span><br><span class="line">    <span class="comment">// check the form inputs</span></span><br><span class="line">    cy.get(<span class="string">&#x27;form&#x27;</span>)</span><br><span class="line">      .invoke(<span class="string">&#x27;serializeArray&#x27;</span>)</span><br><span class="line">      .should(<span class="string">&#x27;deep.equal&#x27;</span>, [</span><br><span class="line">        &#123; <span class="attr">name</span>: <span class="string">&#x27;fname&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Joe&#x27;</span> &#125;,</span><br><span class="line">        &#123; <span class="attr">name</span>: <span class="string">&#x27;lname&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Smith&#x27;</span> &#125;,</span><br><span class="line">      ])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The commands work, notice both &quot;getByLabel&quot; and &quot;getFormField&quot; log messages.</p>
+<p><img src="/blog/images/publish-custom-command/names.png" alt="Using the command under two different names"></p>
+<p>Because we have changed the public API of our package, we have to publish this change as a breaking change. Since we use the semantic versioning that analyzes the commit messages, we can simply do:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ git commit</span><br><span class="line">  &#x2F;&#x2F; type message</span><br><span class="line"></span><br><span class="line">$ git show</span><br><span class="line">commit a5064eea678afc698cd8cd4aad9a0edf58c035a8 (HEAD -&gt; main)</span><br><span class="line">Author: Gleb Bahmutov &lt;gleb.bahmutov@gmail.com&gt;</span><br><span class="line">Date:   Thu Jan 21 15:43:09 2021 -0500</span><br><span class="line"></span><br><span class="line">    feat: expose command registration function</span><br><span class="line"></span><br><span class="line">    BREAKING CHANGE: need to register the command under a name</span><br><span class="line"></span><br><span class="line">$ git push</span><br></pre></td></tr></table></figure>
+<p>Semantic release publishes <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-get-by-label/releases">v2</a></p>
+<p><img src="/blog/images/publish-custom-command/v2.png" alt="cypress-get-by-label v2 release"></p>
+<p>Oops, we forgot to update the README when we published the new release.</p>
+<pre><code>## use
+
+Include from your Cypress support file or individual spec
+
+    const &#123; registerCommand &#125; = require(&apos;cypress-get-by-label&apos;)
+    registerCommand()
+    // or we could register under a different name
+    registerCommand(&apos;getFormField&apos;)
+
+Then use the command `cy.getByLabel` (default) or the custom name
+
+    // if used registerCommand()
+    cy.getByLabel(&apos;First name:&apos;)
+    // if used registerCommand(&apos;getFormField&apos;)
+    cy.getFormField(&apos;First name:&apos;)
+</code></pre><p>We should commit this change with <code>fix: ...</code> prefix. For example</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git commit -m &quot;fix: update readme for v2&quot;</span><br></pre></td></tr></table></figure>
+<p>Which publishes v2.0.1 of the package.</p>
+<h2><span id="using-an-example">Using an example</span></h2><p>At this point I like creating a separate repo to show the custom command in action and to verify everything works when a user tries to install and use <code>cypress-use-by-label</code>. You can find my example in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-get-by-label-example">bahmutov/cypress-get-by-label-example</a>.</p>
+<p>When installing the new package, I recommend following the README file, just to &quot;test&quot; the installation instructions.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D cypress-get-by-label</span><br><span class="line">+ cypress-get-by-label@2.0.1</span><br></pre></td></tr></table></figure>
+<p>In the spec file (I have copied the spec and example from <code>cypress-get-by-label</code>) I will use the name of the package.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// cypress-get-by-label-example</span></span><br><span class="line"><span class="keyword">const</span> &#123; registerCommand &#125; = <span class="built_in">require</span>(<span class="string">&#x27;cypress-get-by-label&#x27;</span>)</span><br><span class="line">registerCommand()</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>The example works. We can set up the CI, <a href="/blog/keep-examples-up-to-date/" title="RenovateBot">RenovateBot</a>, and even self-updating <a target="_blank" rel="noopener" href="https://github.com/bahmutov/dependency-version-badge">README badges</a> to keep this example repo up-to-date.</p>
+<p><img src="/blog/images/publish-custom-command/badges.png" alt="cypress-get-by-label-example readme with badges"></p>
+<p>I then link the new repo from the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-get-by-label/blob/main/README.md">cypress-get-by-label README file</a></p>
+<h2><span id="types">Types</span></h2><p>When the user uses the <code>cy.getByLabel</code> command, there is no IntelliSense information, unlike <code>cy.visit</code> and other built-in Cypress commands.</p>
+<p><img src="/blog/images/publish-custom-command/any.gif" alt="cy.getByLabel method has no type information"></p>
+<p>In order to describe the types for the default <code>cy.getByLabel</code> command we need to include types file with our NPM package.</p>
+<p><strong>Note:</strong> we are only going to provide type for the default <code>cy.getByLabel</code> command, and we also assume command has been registered by the user&#39;s test code. If the user uses a different command name, they could write a similar typescript file locally.</p>
+<p>Let&#39;s follow <a target="_blank" rel="noopener" href="https://on.cypress.io/typescript">Cypress TypeScript guide</a> and add <code>src/index.d.ts</code> file</p>
+<figure class="highlight ts"><figcaption><span>src/index.d.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// load type definitions that come with Cypress module</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> Cypress &#123;</span><br><span class="line">  <span class="keyword">interface</span> Chainable &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Finds a form element using the label&#x27;s text</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param </span>label string</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@example</span></span></span><br><span class="line"><span class="comment">     *  cy.getByLabel(&#x27;First name:&#x27;).type(&#x27;Joe&#x27;)</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    getByLabel(label: <span class="built_in">string</span>): Chainable&lt;Element&gt;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In the <code>package.json</code> file add the &quot;types&quot; field pointing at the <code>src/index.d.ts</code> file</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;types&quot;</span>: <span class="string">&quot;src&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Publish the new version of the package - it is a new feature, so it becomes v2.1.0, and the example project should use the types by loading them like this:</p>
+<p><img src="/blog/images/publish-custom-command/visible-types.gif" alt="cy.getByLabel method has the right types"></p>
+<h2><span id="es6-import-and-export">ES6 import and export</span></h2><p>If we register the custom command, and try to avoid modifying the global state using <code>require</code>, we might as well declare our registration function using the ES6 <code>export</code> keyword.</p>
+<figure class="highlight js"><figcaption><span>src/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> registerCommand = <span class="function">(<span class="params">name = <span class="string">&#x27;getByLabel&#x27;</span></span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> getByCommand = <span class="function">(<span class="params">label</span>) =&gt;</span> &#123;</span><br><span class="line">    cy.log(<span class="string">`**<span class="subst">$&#123;name&#125;</span>**`</span>)</span><br><span class="line">    cy.contains(<span class="string">&#x27;label&#x27;</span>, label)</span><br><span class="line">      .invoke(<span class="string">&#x27;attr&#x27;</span>, <span class="string">&#x27;for&#x27;</span>)</span><br><span class="line">      .then(<span class="function">(<span class="params">id</span>) =&gt;</span> &#123;</span><br><span class="line">        cy.get(<span class="string">&#x27;#&#x27;</span> + id)</span><br><span class="line">      &#125;)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Cypress.Commands.add(name, getByCommand)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The <code>cypress-get-by-label</code> project still works like before. Let&#39;s publish our change, it becomes <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-get-by-label/releases/tag/v2.2.0">v2.2.0</a>.</p>
+<p>Let&#39;s upgrade <code>cypress-get-by-label-example</code> to use v2.2.0 - all working the same. The top-level <code>export</code> keyword did not affect the project. We can also replace the <code>require</code> with <code>import</code> keyword in the user project</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// const &#123; registerCommand &#125; = require(&#x27;cypress-get-by-label&#x27;)</span></span><br><span class="line"><span class="keyword">import</span> &#123; registerCommand &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-get-by-label&#x27;</span></span><br></pre></td></tr></table></figure>
+<p>Even if we refactor the internals of <code>cypress-get-by-label</code> to use <code>import</code> and <code>export</code> keywords, the user package should be able to bundle them correctly using Cypress v6+.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/publishing-cypress-command/" data-id="ckpyeu45o00tj6zvg3ao0g028" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/publishing-cypress-command/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../cypress-geolocation/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Debugging Cypress Geolocation Problem
+        
+      </div>
+    </a>
+  
+  
+    <a href="../circle-ram-disk/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Start CircleCI Machines Faster by Using RAM Disk</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/publishing-cypress-command/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

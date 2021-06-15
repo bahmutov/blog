@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Fast legoization | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="I saw legoizer application at ScotlandJs 2015 in Edinburgh. The presentation by Amy Wibowo @sailorhg and Matt Baker @reissbaker showed a hackathon project they implemented: drop any image into the web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fast legoization">
+<meta property="og:url" content="https://glebbahmutov.com/blog/fast-legoization/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="I saw legoizer application at ScotlandJs 2015 in Edinburgh. The presentation by Amy Wibowo @sailorhg and Matt Baker @reissbaker showed a hackathon project they implemented: drop any image into the web">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/StarryNight.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/StarryNightLego.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/legoizer/legoizer-shopping-cart.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/legoizer/legoizer-profile-0.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/legoizer/starry-night-4-regions.png">
+<meta property="article:published_time" content="2015-05-13T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.278Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="performance">
+<meta property="article:tag" content="browser">
+<meta property="article:tag" content="web workers">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/StarryNight.jpg">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-fast-legoization" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-05-13T04:00:00.000Z" itemprop="datePublished">May 13 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Fast legoization
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Optimizing &#34;legoizer&#34; web worker application to run 10 times faster.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>I saw <a target="_blank" rel="noopener" href="http://sailorhg.github.io/legoizer/">legoizer</a> application at <a target="_blank" rel="noopener" href="http://scotlandjs.com/">ScotlandJs 2015</a> in Edinburgh.
+The presentation by Amy Wibowo <a target="_blank" rel="noopener" href="https://twitter.com/@sailorhg">@sailorhg</a> and Matt Baker <a target="_blank" rel="noopener" href="https://twitter.com/@reissbaker">@reissbaker</a>
+showed a hackathon project they implemented: drop any image into the website to convert
+into a valid Lego combination of flat pieces.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/StarryNight.jpg" alt="Starry Night original"></p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/StarryNightLego.png" alt="Starry Night lego"></p>
+<p>You can try the conversion yourself at the original website <a target="_blank" rel="noopener" href="http://sailorhg.github.io/legoizer/">http://sailorhg.github.io/legoizer/</a>
+using <a target="_blank" rel="noopener" href="http://www.abikoyeolufemi.com/2014/10/31/art-science-van-goughs-starry-nightand-turbulence/">this image</a>.</p>
+<p>After the conversion is done, the app even gives you the list of Lego pieces to buy. Not surprisingly,
+the &quot;Starry Night&quot; will need a lot of blue pieces (this is just the start of the list)</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/legoizer/legoizer-shopping-cart.png" alt="Starry Night shopping list start"></p>
+<p>I thought the conversion was really cool but a little bit slow. Even for a small image (the
+above &quot;Starry Night&quot; image is only 600 by 500 pixels) the website pauses for a second or two.
+Why can&#39;t the conversion process spit the result quickly? I decided to investigate in what I call
+&quot;drive-by optimization&quot;.</p>
+<h2><span id="the-original-code">The original code</span></h2><p>The original code is not on github yet, but the unminified browserified code is available at the original
+website and can be used to investigate the performance issues. The code contains two main bundles:
+<a target="_blank" rel="noopener" href="http://sailorhg.github.io/legoizer/build/index.js">index.js</a> and <a target="_blank" rel="noopener" href="http://sailorhg.github.io/legoizer/build/worker.js">worker.js</a>. Both were built from the same source files, thus they
+have common source parts. For our purpose the algorithm only has several steps.</p>
+<ul>
+<li>Send the image to a web worker<ul>
+<li>The webworker will figure out for each pixel the closest Lego color (out of 24 widely available colors
+you can buy in bulk.)</li>
+</ul>
+</li>
+<li>The web worker sends the converted pixels back to the main thread.</li>
+<li>The main thread figures out how to position blocks to cover the specific colors.</li>
+</ul>
+<p>The standard 24 colors you can buy in bulk are simple:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> palette = &#123;</span><br><span class="line">    red: &#123;<span class="attr">R</span>: <span class="number">196</span>, <span class="attr">G</span>: <span class="number">40</span>, <span class="attr">B</span>: <span class="number">27</span> &#125;,</span><br><span class="line">    green: &#123;<span class="attr">R</span>: <span class="number">40</span>, <span class="attr">G</span>: <span class="number">127</span>, <span class="attr">B</span>: <span class="number">70</span> &#125;,</span><br><span class="line">    blue: &#123;<span class="attr">R</span>: <span class="number">13</span>, <span class="attr">G</span>: <span class="number">105</span>, <span class="attr">B</span>: <span class="number">171</span>&#125;,</span><br><span class="line">    black: &#123;<span class="attr">R</span>: <span class="number">27</span>, <span class="attr">G</span>: <span class="number">42</span>, <span class="attr">B</span>: <span class="number">52</span>&#125;,</span><br><span class="line">    ...</span><br><span class="line">    darkAzure: &#123;<span class="attr">R</span>: <span class="number">20</span>, <span class="attr">G</span>: <span class="number">152</span>, <span class="attr">B</span>: <span class="number">215</span>&#125;,</span><br><span class="line">    coolYellow: &#123;<span class="attr">R</span>: <span class="number">253</span>, <span class="attr">G</span>: <span class="number">234</span>, <span class="attr">B</span>: <span class="number">140</span>&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>In the first step of the algorithm, we need to find for each pixel from the given image
+the closest Lego color.
+The team used perceptual difference metric <a target="_blank" rel="noopener" href="http://www.researchgate.net/publication/227603423_The_CIEDE2000_colordifference_formula_Implementation_notes_supplementary_test_data_and_mathematical_observations">CIEDE2000</a>. This metric finds a Lego color
+that &quot;looks&quot; close to any given color. While accurate, the difference formula is very computationally
+expensive, involving multiple trigonometric functions and square roots. For example, the following code
+forms the last few lines of the implementation</p>
+<figure class="highlight js"><figcaption><span>last lines of the CIEDE2000 JavaScript implementation</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> T = <span class="number">1</span>-<span class="number">0.17</span>*cos(radians(a_hp-<span class="number">30</span>))+<span class="number">0.24</span>*cos(radians(<span class="number">2</span>*a_hp))+</span><br><span class="line">  <span class="number">0.32</span>*cos(radians(<span class="number">3</span>*a_hp+<span class="number">6</span>))-<span class="number">0.20</span>*cos(radians(<span class="number">4</span>*a_hp-<span class="number">63</span>));</span><br><span class="line"><span class="keyword">var</span> d_ro = <span class="number">30</span> * exp(-(pow((a_hp-<span class="number">275</span>)/<span class="number">25</span>,<span class="number">2</span>)));</span><br><span class="line"><span class="keyword">var</span> RC = sqrt((pow(a_Cp, <span class="number">7.0</span>)) / (pow(a_Cp, <span class="number">7.0</span>) + pow(<span class="number">25.0</span>, <span class="number">7.0</span>)));</span><br><span class="line"><span class="keyword">var</span> SL = <span class="number">1</span> + ((<span class="number">0.015</span> * pow(a_L - <span class="number">50</span>, <span class="number">2</span>)) /</span><br><span class="line">              sqrt(<span class="number">20</span> + pow(a_L - <span class="number">50</span>, <span class="number">2.0</span>)));</span><br><span class="line"><span class="keyword">var</span> SC = <span class="number">1</span> + <span class="number">0.045</span> * a_Cp;</span><br><span class="line"><span class="keyword">var</span> SH = <span class="number">1</span> + <span class="number">0.015</span> * a_Cp * T;</span><br><span class="line"><span class="keyword">var</span> RT = -<span class="number">2</span> * RC * sin(radians(<span class="number">2</span> * d_ro));</span><br><span class="line"><span class="keyword">var</span> dE = sqrt(pow(dLp /(SL * kL), <span class="number">2</span>) + pow(dCp /(SC * kC), <span class="number">2</span>) +</span><br><span class="line">              pow(dHp /(SH * kH), <span class="number">2</span>) + RT * (dCp /(SC * kC)) *</span><br><span class="line">              (dHp / (SH * kH)));</span><br></pre></td></tr></table></figure>
+<p>I believe the team took the color difference code from <a target="_blank" rel="noopener" href="https://github.com/markusn/color-diff">markusn/color-diff</a> repo.</p>
+<p>To me, this part looked most expensive, but I needed to prove it by profiling the code first.</p>
+<h2><span id="profiling-code">Profiling code</span></h2><p>I saved the entire <a target="_blank" rel="noopener" href="http://sailorhg.github.io/legoizer/">legoizer</a> to a local drive and started hacking.
+First I added timestamps and profile collection to the <code>index.js</code> file and measured
+end to end color conversion.</p>
+<figure class="highlight js"><figcaption><span>index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">processImage</span>(<span class="params">err, image</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span>(err) <span class="keyword">return</span>;</span><br><span class="line">  <span class="built_in">console</span>.time(<span class="string">&#x27;total&#x27;</span>); <span class="comment">// start timer</span></span><br><span class="line">  <span class="keyword">var</span> canvas = canvasFromImage(&#123;</span><br><span class="line">        image: image,</span><br><span class="line">        maxSize: MAX_SIZE</span><br><span class="line">      &#125;),</span><br><span class="line">      context = canvas.getContext(<span class="string">&#x27;2d&#x27;</span>);</span><br><span class="line">  <span class="keyword">var</span> bmp = bitmapFromContext(context, canvas.width, canvas.height);</span><br><span class="line">  ...</span><br><span class="line">  WORKER_EMITTER.once(<span class="string">&#x27;end&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">    progressView.end(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      instructionsView.render(&#123; <span class="comment">// see render function below</span></span><br><span class="line">        canvas: canvas,</span><br><span class="line">        context: context,</span><br><span class="line">        inBmp: bmp,</span><br><span class="line">        outBmp: Bitmap.fromJson(data)</span><br><span class="line">      &#125;);</span><br><span class="line">      done();</span><br><span class="line">    &#125;);</span><br><span class="line">    WORKER_EMITTER.removeListener(<span class="string">&#x27;progress&#x27;</span>, progressView.update);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">exports</span>.render = <span class="function"><span class="keyword">function</span>(<span class="params">opts</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.timeEnd(<span class="string">&#x27;total&#x27;</span>);</span><br><span class="line">  ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>I placed the <code>console.time</code> and <code>console.timeEnd</code> around all image processing steps, including
+converting from / to the JSON format.
+I used Chrome Canary 44.0.2399.0 to measure how long the the code runs in a clean environment without any additional
+extensions running. The initial code took 2361ms to execute end to end. I also added timestamps to the
+<code>worker.js</code> to measure how long the image conversion takes without the image transfer costs between the
+main thread and the web worker (and back)</p>
+<figure class="highlight js"><figcaption><span>worker.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">convert</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> input = Bitmap.fromJson(e.data);</span><br><span class="line">  <span class="built_in">console</span>.time(<span class="string">&#x27;pixelMap&#x27;</span>);</span><br><span class="line">  <span class="keyword">var</span> output = pixelMap(input, convertToPalette, <span class="number">5</span>, <span class="number">6</span>);</span><br><span class="line">  <span class="built_in">console</span>.timeEnd(<span class="string">&#x27;pixelMap&#x27;</span>);</span><br><span class="line">  postMessage(&#123;</span><br><span class="line">    type: <span class="string">&#x27;end&#x27;</span>,</span><br><span class="line">    data: output.toJson()</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The timestamp showed that the function <code>pixelMap</code> ran for 1342ms - 50% of the total!
+This seemed like a good candidate for further profiling. I added <code>console.profile</code> and <code>console.profileEnd</code>
+next to <code>console.time</code> calls. The same run generated a detailed CPU profile chart. The longest running
+functions are on the top of the list</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/legoizer/legoizer-profile-0.png" alt="initial pixelMap"></p>
+<p>The function that calls most of the longest running utilities is the following</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">bitmap, mapper, xUnit, yUnit</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> r, c,</span><br><span class="line">      aspect = yUnit / xUnit,</span><br><span class="line">      outFragment = <span class="keyword">new</span> Fragment,</span><br><span class="line">      rows = (bitmap.height / (yUnit / xUnit)) | <span class="number">0</span>,</span><br><span class="line">      cols = bitmap.width,</span><br><span class="line">      out = <span class="keyword">new</span> Bitmap(cols, rows, bitmap.channels);</span><br><span class="line">  <span class="keyword">for</span>(r = <span class="number">0</span>; r &lt; rows; r++) &#123;</span><br><span class="line">    <span class="keyword">for</span>(c = <span class="number">0</span>; c &lt; cols; c++) &#123;</span><br><span class="line">      mapper(bitmap, c, r, aspect, outFragment);</span><br><span class="line">      out.setFragment(c, r, outFragment);</span><br><span class="line">    &#125;</span><br><span class="line">    postMessage(&#123;</span><br><span class="line">      type: <span class="string">&#x27;progress&#x27;</span>,</span><br><span class="line">      data: r / (rows - <span class="number">1</span>)</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> out;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>This literally goes through each pixel, calling <code>mapper</code> function and saving the result.
+The top 3 bottlenecks were <code>ciede2000</code>, <code>xyz_to_lab</code> and <code>rgb_to_xyz</code> functions, taking roughly the same amount
+of time. Usually I advise to concentrate on the top bottleneck only, but in this case any one would do.</p>
+<h2><span id="eliminate-some-conversions">Eliminate some conversions</span></h2><p>At some point the algorithm needed to compare two colors. Turns out the code to find the difference
+was really weird</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">color.closest = <span class="function"><span class="keyword">function</span>(<span class="params">target, relative</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> key = color.palette_map_key(target);</span><br><span class="line">    <span class="keyword">var</span> result = color.map_palette([target], relative, <span class="string">&#x27;closest&#x27;</span>);</span><br><span class="line">    <span class="keyword">return</span> result[key];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>The <code>target</code> was a single RGB pixel, while <code>relative</code> is an array of 24 <em>RGB</em> Lego colors.
+The weird part was making an array with single color <code>[target]</code> and then iterating
+over two arrays to find closest pairings inside <code>color.map_palette</code> function</p>
+<figure class="highlight js"><figcaption><span>color.map_palette</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">map_palette</span>(<span class="params">a, b, type</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">var</span> c = &#123;&#125;;</span><br><span class="line">  type = type || <span class="string">&#x27;closest&#x27;</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">var</span> idx1 = <span class="number">0</span>; idx1 &lt; a.length; idx1 += <span class="number">1</span>)&#123;</span><br><span class="line">    <span class="keyword">var</span> color1 = a[idx1];</span><br><span class="line">    <span class="keyword">var</span> best_color      = <span class="literal">undefined</span>;</span><br><span class="line">    <span class="keyword">var</span> best_color_diff = <span class="literal">undefined</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> idx2 = <span class="number">0</span>; idx2 &lt; b.length; idx2 += <span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">var</span> color2 = b[idx2];</span><br><span class="line">      <span class="keyword">var</span> current_color_diff = diff(color1,color2);</span><br><span class="line">      <span class="keyword">if</span>((best_color == <span class="literal">undefined</span>) || ((type === <span class="string">&#x27;closest&#x27;</span>) &amp;&amp; (current_color_diff &lt; best_color_diff)))</span><br><span class="line">      &#123;</span><br><span class="line">        best_color      = color2;</span><br><span class="line">        best_color_diff = current_color_diff;</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (type === <span class="string">&#x27;farthest&#x27;</span>) &#123;</span><br><span class="line">        ...</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    c[palette_map_key(color1)] = best_color;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Since we always find closest color for a single RGB value, we can eliminate one iteration easily.
+Also, we are interested in the <em>closest</em> color, thus we can remove the <code>if (type === &#39;farthest&#39;)</code> branch.
+I made the code changes and ran the end to end timing again. The numbers changed to the following,
+showing slight improvement</p>
+<pre><code>step                |  pixel map function (ms) |  total (ms)
+--------------------------------------------------------
+initial             |          1342            |    2361
+removed inner loop  |          1236            |    2280
+</code></pre><p>Ok, we are only getting started!</p>
+<h2><span id="precompute-24-lego-lab-colors">Precompute 24 Lego Lab colors</span></h2><p>We are using CIEDE2000 difference algorithm that operates on <a target="_blank" rel="noopener" href="http://en.wikipedia.org/wiki/Lab_color_space">Lab</a> colors.
+Thus every RGB triple must be converted to Lab color triple. This is an expensive
+operation, as you saw in the first profile. It involves first converting from RGB
+to a special XYZ color space and then to Lab color space.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">rgb_to_lab</span>(<span class="params">c</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> xyz_to_lab(rgb_to_xyz(c))</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">rgb_to_xyz</span>(<span class="params">c</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">// Based on http://www.easyrgb.com/index.php?X=MATH&amp;H=02</span></span><br><span class="line">  <span class="keyword">var</span> R = ( c.R / <span class="number">255</span> );</span><br><span class="line">  <span class="keyword">var</span> G = ( c.G / <span class="number">255</span> );</span><br><span class="line">  <span class="keyword">var</span> B = ( c.B / <span class="number">255</span> );</span><br><span class="line">  <span class="keyword">if</span> ( R &gt; <span class="number">0.04045</span> ) R = pow(( ( R + <span class="number">0.055</span> ) / <span class="number">1.055</span> ),<span class="number">2.4</span>);</span><br><span class="line">  <span class="keyword">else</span>               R = R / <span class="number">12.92</span>;</span><br><span class="line">  <span class="keyword">if</span> ( G &gt; <span class="number">0.04045</span> ) G = pow(( ( G + <span class="number">0.055</span> ) / <span class="number">1.055</span> ),<span class="number">2.4</span>);</span><br><span class="line">  <span class="keyword">else</span>               G = G / <span class="number">12.92</span>;</span><br><span class="line">  <span class="keyword">if</span> ( B &gt; <span class="number">0.04045</span> ) B = pow(( ( B + <span class="number">0.055</span> ) / <span class="number">1.055</span> ), <span class="number">2.4</span>);</span><br><span class="line">  <span class="keyword">else</span>               B = B / <span class="number">12.92</span>;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">xyz_to_lab</span>(<span class="params">c</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">// Based on http://www.easyrgb.com/index.php?X=MATH&amp;H=07</span></span><br><span class="line">  <span class="keyword">var</span> ref_Y = <span class="number">100.000</span>;</span><br><span class="line">  <span class="keyword">var</span> ref_Z = <span class="number">108.883</span>;</span><br><span class="line">  <span class="keyword">var</span> ref_X = <span class="number">95.047</span>; <span class="comment">// Observer= 2°, Illuminant= D65</span></span><br><span class="line">  <span class="keyword">var</span> Y = c.Y / ref_Y;</span><br><span class="line">  <span class="keyword">var</span> Z = c.Z / ref_Z;</span><br><span class="line">  <span class="keyword">var</span> X = c.X / ref_X;</span><br><span class="line">  <span class="keyword">if</span> ( X &gt; <span class="number">0.008856</span> ) X = pow(X, <span class="number">1</span>/<span class="number">3</span>);</span><br><span class="line">  <span class="keyword">else</span>                X = ( <span class="number">7.787</span> * X ) + ( <span class="number">16</span> / <span class="number">116</span> );</span><br><span class="line">  <span class="keyword">if</span> ( Y &gt; <span class="number">0.008856</span> ) Y = pow(Y, <span class="number">1</span>/<span class="number">3</span>);</span><br><span class="line">  <span class="keyword">else</span>                Y = ( <span class="number">7.787</span> * Y ) + ( <span class="number">16</span> / <span class="number">116</span> );</span><br><span class="line">  <span class="keyword">if</span> ( Z &gt; <span class="number">0.008856</span> ) Z = pow(Z, <span class="number">1</span>/<span class="number">3</span>);</span><br><span class="line">  <span class="keyword">else</span>                Z = ( <span class="number">7.787</span> * Z ) + ( <span class="number">16</span> / <span class="number">116</span> );</span><br><span class="line">  <span class="keyword">var</span> L = ( <span class="number">116</span> * Y ) - <span class="number">16</span>;</span><br><span class="line">  <span class="keyword">var</span> a = <span class="number">500</span> * ( X - Y );</span><br><span class="line">  <span class="keyword">var</span> b = <span class="number">200</span> * ( Y - Z );</span><br><span class="line">  <span class="keyword">return</span> &#123;<span class="string">&#x27;L&#x27;</span> : L , <span class="string">&#x27;a&#x27;</span> : a, <span class="string">&#x27;b&#x27;</span> : b&#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Any time you do powers or in this case cubic roots, there is a huge performance cost.
+Can we convert from RGB to Lab fewer colors? Turns out yes, and quite easily.
+I have noticed that we convert the 24 Lego RGB colors in <em>every pixel comparison</em>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">findClosest</span>(<span class="params">rgb, legoColors</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> color = rgb_to_lab(rgb);</span><br><span class="line">    <span class="keyword">var</span> legoLab = legoColors.map(rgb_to_lab);</span><br><span class="line">    <span class="comment">// find closest color&#x27;s index betwee color and legoLab array</span></span><br><span class="line">    <span class="keyword">return</span> legoColors[closestIndex];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Thus I precomputed the 24 Lego Lab colors right away and just passed them around. Only an
+individual RGB pixel under the investigation was converted. The performance has indeed
+improved</p>
+<pre><code>step                        |  pixel map function (ms) |  total (ms)
+--------------------------------------------------------------------
+initial                     |          1342            |    2361
+removed inner loop          |          1236            |    2280
+precompute Lego Lab colors  |           950            |    1938
+</code></pre><h2><span id="caching-computed-colors">Caching computed colors</span></h2><p>We convert a lot of colors when comparing RGB pixels to Lab colors. For my
+next optimization I have added caching such conversions. This cache is similar
+to a cache that already existed in the program (storing closest picked Lego color).</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">rgb_to_lab</span>(<span class="params">c</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">var</span> cached = rgbToLabCache[c.R][c.G];</span><br><span class="line">  <span class="keyword">if</span>(cached[c.B]) <span class="keyword">return</span> cached[c.B];</span><br><span class="line">  <span class="keyword">var</span> result = xyz_to_lab(rgb_to_xyz(c));</span><br><span class="line">  cached[c.B] = result;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The impact was very noticeable (but a little suspicious). Unfortunately I did not have time
+to investigate - it seems the two caches should be pretty aligned, and only one would actually
+give cache hit. In any case, the color conversion cache has improved the algorithm&#39;s speed</p>
+<pre><code>step                        |  pixel map function (ms) |  total (ms)
+--------------------------------------------------------------------
+initial                     |          1342            |    2361
+removed inner loop          |          1236            |    2280
+precompute Lego Lab colors  |           950            |    1938
+cache RGB -&gt; Lab            |           674            |    1679
+</code></pre><h2><span id="passing-data-to-the-web-worker">Passing data to the web worker</span></h2><p>Converting an image raster to a JSON string to pass from the main script to a web worker
+is an expensive operation. We also convert the result when passing the lego colors back
+from the web worker. One can get a sense how expensive this is by noticing that
+the total times are around 2x the time it takes to convert the image.</p>
+<p>Luckily, modern browsers support <a target="_blank" rel="noopener" href="http://updates.html5rocks.com/2011/12/Transferable-Objects-Lightning-Fast">Transferable objects</a>. One thread
+can pass a reference to an ArrayBuffer (or its subclass) directly. The key observation
+is that this buffer is not a shared memory buffer. The caller releases the buffer
+and does not have access to it anymore. This might not work for other cases, but
+works very well for ours. We can get an instance of <code>UInt8ClampedArray</code> directly
+from the canvas object holding the input image.</p>
+<figure class="highlight js"><figcaption><span>sending pixel array buffer to web worker</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> canvas = canvasFromImage(&#123;</span><br><span class="line">      image: image,</span><br><span class="line">      maxSize: MAX_SIZE</span><br><span class="line">    &#125;),</span><br><span class="line">    context = canvas.getContext(<span class="string">&#x27;2d&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> pixelData = context.getImageData(<span class="number">0</span>, <span class="number">0</span>, canvas.width, canvas.height);</span><br><span class="line">worker.postMessage(&#123;</span><br><span class="line">    pixels: pixelData.data.buffer,</span><br><span class="line">    width: canvas.width,</span><br><span class="line">    height: canvas.height,</span><br><span class="line">    channels: <span class="number">4</span></span><br><span class="line">&#125;, [pixelData.data.buffer]);</span><br></pre></td></tr></table></figure>
+<p>Note that we list the transferable objects, but they could be properties in the data object
+to be sent</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// single transferable object pixelData.data.buffer</span></span><br><span class="line">worker.postMessage(&#123;</span><br><span class="line">    pixels: pixelData.data.buffer,</span><br><span class="line">    ... <span class="comment">// other properties</span></span><br><span class="line">&#125;, [pixelData.data.buffer]);</span><br></pre></td></tr></table></figure>
+<p>Similarly, the web worker can send a transferable object back to avoid the expensive marshalling</p>
+<figure class="highlight js"><figcaption><span>from the web worker</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> bytes = <span class="keyword">new</span> <span class="built_in">Uint8ClampedArray</span>(output.pixels);</span><br><span class="line">self.postMessage(&#123;</span><br><span class="line">  type: <span class="string">&#x27;end&#x27;</span>,</span><br><span class="line">  data: bytes</span><br><span class="line">&#125;, [bytes.buffer]);</span><br></pre></td></tr></table></figure>
+<p>The above approach eliminated huge object transfer overhead, aligning the total end to end
+time with the image color conversion time.</p>
+<pre><code>step                        |  pixel map function (ms) |  total (ms)
+--------------------------------------------------------------------
+initial                     |          1342            |    2361
+remove inner loop           |          1236            |    2280
+precompute Lego Lab colors  |           950            |    1938
+cache RGB -&gt; Lab            |           674            |    1679
+transferable objects        |           647            |     699
+</code></pre><h2><span id="splitting-work-across-multiple-web-workers">Splitting work across multiple web workers</span></h2><p>The pixels from the input image are processed independently of each other. This points to the last
+performance optimization: split the entire image conversion to multiple web workers executing in
+parallel. I chose to split the image horizontally into N regions. For example, here are
+color coded regions if N = 4.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/legoizer/starry-night-4-regions.png" alt="4 image regions computed by 4 web workers"></p>
+<p>The code send just a region of the original image to the web worker is very straight forward</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> N = <span class="number">4</span>;</span><br><span class="line"><span class="keyword">var</span> h = <span class="built_in">Math</span>.ceil(canvas.height / N);</span><br><span class="line"><span class="comment">// while there are rows remaining</span></span><br><span class="line"><span class="keyword">for</span> (row = <span class="number">0</span>; row &lt; canvas.height; row += h) &#123;</span><br><span class="line">  <span class="keyword">var</span> pieceHeight = <span class="built_in">Math</span>.min(h, canvas.height - row);</span><br><span class="line">  <span class="keyword">var</span> pixelData = context.getImageData(<span class="number">0</span>, row, canvas.width, pieceHeight);</span><br><span class="line">  <span class="keyword">var</span> bytes = pixelData.data.buffer;</span><br><span class="line">  <span class="comment">// send bytes to the web worker</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Each web worker sends the mapped pixels back and we can draw them back into the original canvas</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// keeps track of finished workers</span></span><br><span class="line"><span class="keyword">var</span> pieces = [];</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isDone</span>(<span class="params">x</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// when every worker finishes it sends its chunk back</span></span><br><span class="line">WORKER_EMITTER.on(<span class="string">&#x27;end&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">data, workerIndex</span>) </span>&#123;</span><br><span class="line">  pieces[workerIndex] = <span class="literal">true</span>;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;worker&#x27;</span>, workerIndex, <span class="string">&#x27;has finished&#x27;</span>);</span><br><span class="line">  <span class="comment">// handle last irregular number of rows</span></span><br><span class="line">  pieceHeight = data.length / canvas.width / <span class="number">4</span>;</span><br><span class="line">  <span class="comment">// put converted pixels back into the large image</span></span><br><span class="line">  <span class="keyword">var</span> finishedPart = <span class="keyword">new</span> ImageData(data, canvas.width, pieceHeight);</span><br><span class="line">  context.putImageData(finishedPart, <span class="number">0</span>, workerIndex * h,</span><br><span class="line">    <span class="number">0</span>, <span class="number">0</span>, canvas.width, pieceHeight);</span><br><span class="line">  <span class="keyword">if</span> (pieces.every(isDone)) &#123;</span><br><span class="line">    <span class="comment">// render converted image as Lego pieces</span></span><br><span class="line">    <span class="keyword">var</span> finishedData = context.getImageData(<span class="number">0</span>, <span class="number">0</span>, canvas.width, canvas.height);</span><br><span class="line">    <span class="keyword">var</span> results = bitmapFromContext(context, canvas.width, canvas.height);</span><br><span class="line">    instructionsView.render(&#123;</span><br><span class="line">      canvas: canvas,</span><br><span class="line">      context: context,</span><br><span class="line">      outBmp: results</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>The performance gains when splitting into 4 regions were 3x (there is always some overhead
+when running multiple tasks in parallel)</p>
+<pre><code>step                        |  pixel map function (ms) |  total (ms)
+--------------------------------------------------------------------
+initial                     |          1342            |    2361
+remove inner loop           |          1236            |    2280
+precompute Lego Lab colors  |           950            |    1938
+cache RGB -&gt; Lab            |           674            |    1679
+transferable objects        |           647            |     699
+4 web workers               |           225            |     250
+</code></pre><p>I tried varying the number of web workers N, but the impact was minimal. Seems there is no
+point in splitting the work to more than the number of CPU cores (MacBook Pro with 4 cores).</p>
+<h2><span id="conclusion">Conclusion</span></h2><p>The optimizations I used in this example are very common techniques and are not domain specific</p>
+<ul>
+<li>do not compute same information multiple times (cache results)</li>
+<li>use modern data passing techniques to avoid expensive data marshalling (transferable objects)</li>
+<li>perform independent chunks of work in separate threads (multiple web workers)</li>
+</ul>
+<p>The legoizer speed up, while slower than real time 60 frames per second, is almost 10x compared
+to the original code. Further optimization could be achieved by scaling down the image even more
+(the original code scales any dropped image to the maximum 200px dimension).</p>
+<p>In my opinion even the current speed up almost allows two interesting applications built upon the original idea</p>
+<ul>
+<li>convert a gif / movie into Lego-style movie</li>
+<li>real time video Lego filter for WebRTC communication</li>
+</ul>
+<p>For me personally, the drive by optimizations are an excellent training ground. The lessons learned here
+will be applied to my day to day work.</p>
+<p>I will make my git repo public as soon as the original code is made public (aside from the finished web app).</p>
+<h2><span id="related">Related</span></h2><ul>
+<li><a href="https://glebbahmutov.com/blog/optimizing-nth/">Optimizing Nth</a> is another example
+of a drive by optimization of 3rd party library</li>
+<li><a href="../tags/performance/">my other performance blog posts</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/fast-legoization/" data-id="ckpyeu4bs01pw6zvga2x09t2d" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/fast-legoization/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/browser/" rel="tag">browser</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/performance/" rel="tag">performance</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../deep-picking/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Deep picking
+        
+      </div>
+    </a>
+  
+  
+    <a href="../heavy-lifting/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Heavy lifting</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/fast-legoization/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

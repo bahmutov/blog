@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Writing a Custom Cypress Command | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Let&#39;s take a page with a form. There are a couple of input fields. Every input field has a label. 123456&lt;form&gt;  &lt;label for&#x3D;&quot;fname&quot;&gt;First name:&lt;&#x2F;label&gt;&lt;br &#x2F;&gt;  &lt;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Writing a Custom Cypress Command">
+<meta property="og:url" content="https://glebbahmutov.com/blog/writing-custom-cypress-command/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Let&#39;s take a page with a form. There are a couple of input fields. Every input field has a label. 123456&lt;form&gt;  &lt;label for&#x3D;&quot;fname&quot;&gt;First name:&lt;&#x2F;label&gt;&lt;br &#x2F;&gt;  &lt;">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/custom-command/simple-command.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/custom-command/times-out.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/custom-command/get-by-label2.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/custom-command/yielded.png">
+<meta property="article:published_time" content="2020-12-27T05:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.393Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/custom-command/simple-command.gif">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-writing-custom-cypress-command" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2020-12-27T05:00:00.000Z" itemprop="datePublished">Dec 27 2020</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Writing a Custom Cypress Command
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      A tutorial explaining how to write a custom Cypress command with retry-ability.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Let&#39;s take a page with a form. There are a couple of input fields. Every input field has a label.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">&quot;fname&quot;</span>&gt;</span>First name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">id</span>=<span class="string">&quot;fname&quot;</span> <span class="attr">name</span>=<span class="string">&quot;fname&quot;</span> /&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">&quot;lname&quot;</span>&gt;</span>Last name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">id</span>=<span class="string">&quot;lname&quot;</span> <span class="attr">name</span>=<span class="string">&quot;lname&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<blockquote class="pullquote"><p>🔎 You can find the source code for this blog post in the &quot;Recipes&quot; section of <a href="https://glebbahmutov.com/cypress-examples">glebbahmutov.com/cypress-examples</a>.</p>
+</blockquote>
+<p>It is simple to select and element by its attribute, like id or name using <a target="_blank" rel="noopener" href="https://on.cypress.io/get">cy.get</a> command.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// we can find the input field by id and name using the standard cy.get</span></span><br><span class="line">cy.get(<span class="string">&#x27;#fname&#x27;</span>).should(<span class="string">&#x27;have.attr&#x27;</span>, <span class="string">&#x27;type&#x27;</span>, <span class="string">&#x27;text&#x27;</span>)</span><br><span class="line">cy.get(<span class="string">&#x27;input[name=fname]&#x27;</span>).should(<span class="string">&#x27;have.attr&#x27;</span>, <span class="string">&#x27;id&#x27;</span>, <span class="string">&#x27;fname&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>What if we want to find the input element by the label&#39;s text? We could first find the label using the <a target="_blank" rel="noopener" href="https://on.cypress.io/contains">cy.contains</a> command, then grab the <code>for</code> attribute, and then pass it to the <code>cy.get</code> command.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">cy.contains(<span class="string">&#x27;label&#x27;</span>, <span class="string">&#x27;First name:&#x27;</span>)</span><br><span class="line">  .invoke(<span class="string">&#x27;attr&#x27;</span>, <span class="string">&#x27;for&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;equal&#x27;</span>, <span class="string">&#x27;fname&#x27;</span>)</span><br><span class="line">  .then(<span class="function">(<span class="params">id</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// note that the last Cypress command inside the `cy.then`</span></span><br><span class="line">    <span class="comment">// changes the yielded subject to its result</span></span><br><span class="line">    cy.get(<span class="string">&#x27;#&#x27;</span> + id)</span><br><span class="line">  &#125;)</span><br><span class="line">  .should(<span class="string">&#x27;have.attr&#x27;</span>, <span class="string">&#x27;name&#x27;</span>, <span class="string">&#x27;fname&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>If you have to find multiple input elements by the label, you can make the above code fragment reusable by making it into a function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// we return the Cypress chain so the test can attach more commands</span></span><br><span class="line"><span class="keyword">const</span> getInputByLabel = <span class="function">(<span class="params">label</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> cy</span><br><span class="line">    .contains(<span class="string">&#x27;label&#x27;</span>, label)</span><br><span class="line">    .invoke(<span class="string">&#x27;attr&#x27;</span>, <span class="string">&#x27;for&#x27;</span>)</span><br><span class="line">    .then(<span class="function">(<span class="params">id</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="comment">// no need to even return the `cy.get`</span></span><br><span class="line">      <span class="comment">// Cypress automatically yields it</span></span><br><span class="line">      cy.get(<span class="string">&#x27;#&#x27;</span> + id)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// let&#x27;s type the last name</span></span><br><span class="line">getInputByLabel(<span class="string">&#x27;Last name:&#x27;</span>).type(<span class="string">&#x27;Smith&#x27;</span>)</span><br><span class="line"><span class="comment">// we can also check the value</span></span><br><span class="line">getInputByLabel(<span class="string">&#x27;Last name:&#x27;</span>).should(<span class="string">&#x27;have.value&#x27;</span>, <span class="string">&#x27;Smith&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>Note the <code>getInputByLabel</code> returns the entire Cypress command chain, thus we can add more commands or assertions. A reusable function is simple to write and use, and is my &quot;go to&quot; method for factoring out the common Cypress code.</p>
+<h2><span id="simple-custom-command">Simple custom command</span></h2><p>You can also place common testing code into a <a target="_blank" rel="noopener" href="https://on.cypress.io/custom-commands">custom command</a>. In the simplest case, the command might simple contain the exactly the same code as the reusable function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Cypress.Commands.add(<span class="string">&#x27;getByLabel&#x27;</span>, <span class="function">(<span class="params">label</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// you can disable individual command logging</span></span><br><span class="line">  <span class="comment">// by passing &#123;log: false&#125; option to every</span></span><br><span class="line">  <span class="comment">// command inside &quot;getByLabel&quot;</span></span><br><span class="line">  cy.log(<span class="string">&#x27;**getByLabel**&#x27;</span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;label&#x27;</span>, label)</span><br><span class="line">    .invoke(<span class="string">&#x27;attr&#x27;</span>, <span class="string">&#x27;for&#x27;</span>)</span><br><span class="line">    .then(<span class="function">(<span class="params">id</span>) =&gt;</span> &#123;</span><br><span class="line">      cy.get(<span class="string">&#x27;#&#x27;</span> + id)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// let&#x27;s use the custom command to act on the first name</span></span><br><span class="line">cy.getByLabel(<span class="string">&#x27;First name:&#x27;</span>).should(<span class="string">&#x27;have.value&#x27;</span>, <span class="string">&#x27;&#x27;</span>).type(<span class="string">&#x27;Joe&#x27;</span>)</span><br><span class="line">cy.getByLabel(<span class="string">&#x27;First name:&#x27;</span>).should(<span class="string">&#x27;have.value&#x27;</span>, <span class="string">&#x27;Joe&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>Notice that we did not have to return the command chain from the custom command, this is done automatically for every command.</p>
+<h2><span id="simple-command-limitation">Simple command limitation</span></h2><p>The limitation of this simple command is its lack of <a target="_blank" rel="noopener" href="https://on.cypress.io/retry-ability">retry-ability</a>. The final input element yielded by the <code>cy.get(&#39;#&#39; + id)</code> command should pass the assertion <code>.should(&#39;have.value&#39;, &#39;&#39;)</code>. What happens if the input element has some other value? Let&#39;s see:</p>
+<p><img src="/blog/images/custom-command/simple-command.gif" alt="Custom command automatically retries the last command in it"></p>
+<p>Notice that because we have HTML markup <code>&lt;input type=&quot;text&quot; id=&quot;fname&quot; name=&quot;fname&quot; value=&quot;Gleb&quot; /&gt;</code> the last command <code>cy.get ...</code> was retried automatically, since the assertion was failing. So the custom command automatically retries the last command inside of it. What if we want to retry <em>the entire</em> command starting with <code>cy.contains</code>?</p>
+<p>Here is an example when it is necessary. Imagine the application starts with some static HTML that later hydrates. The initial element IDs might be invalidated - because the entire or part of the page is re-rendered. Let&#39;s say the initial HTML is simple:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">&quot;fname&quot;</span>&gt;</span>First name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">id</span>=<span class="string">&quot;fname&quot;</span> <span class="attr">name</span>=<span class="string">&quot;fname&quot;</span> <span class="attr">value</span>=<span class="string">&quot;initial&quot;</span> /&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">&quot;lname&quot;</span>&gt;</span>Last name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">id</span>=<span class="string">&quot;lname&quot;</span> <span class="attr">name</span>=<span class="string">&quot;lname&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>A second after the page loads, the app re-renders the form. Notice how the IDs are now realistic.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hydrate</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> form = <span class="built_in">document</span>.querySelector(<span class="string">&#x27;form&#x27;</span>)</span><br><span class="line">  form.innerHTML = <span class="string">`</span></span><br><span class="line"><span class="string">    &lt;div&gt;Hydrated!&lt;/div&gt;</span></span><br><span class="line"><span class="string">    &lt;label for=&quot;fname111&quot;&gt;First name:&lt;/label&gt;&lt;br /&gt;</span></span><br><span class="line"><span class="string">    &lt;input type=&quot;text&quot; id=&quot;fname111&quot; name=&quot;fname111&quot; /&gt;&lt;br /&gt;</span></span><br><span class="line"><span class="string">    &lt;label for=&quot;lname222&quot;&gt;Last name:&lt;/label&gt;&lt;br /&gt;</span></span><br><span class="line"><span class="string">    &lt;input type=&quot;text&quot; id=&quot;lname222&quot; name=&quot;lname222&quot; /&gt;</span></span><br><span class="line"><span class="string">  `</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">setTimeout</span>(hydrate, <span class="number">1000</span>)</span><br></pre></td></tr></table></figure>
+<p>What happens to our custom command? Well, it is still tries to find an element with ID &#39;fname&#39; using <code>cy.get(&#39;#&#39; + id)</code> code.</p>
+<p><img src="/blog/images/custom-command/times-out.gif" alt="The test fails to find the input element"></p>
+<p>So what can we do it retry the <code>cy.contains</code> and other commands inside the custom command?</p>
+<h2><span id="custom-command-with-retry-ability">Custom command with retry-ability</span></h2><p>We need to write a custom command that has logic to find the input element, then checks all upcoming assertions. If the assertions fail, then it <em>retries</em> the entire logic from the start again. Let&#39;s write this command in parts.</p>
+<p>First, we need to write a command placeholder. We will log the text passed to the command:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Cypress.Commands.add(<span class="string">&#x27;getByLabel2&#x27;</span>, <span class="function">(<span class="params">label, options = &#123;&#125;</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> log = &#123;</span><br><span class="line">    name: <span class="string">&#x27;getByLabel2&#x27;</span>,</span><br><span class="line">    message: label,</span><br><span class="line">  &#125;</span><br><span class="line">  Cypress.log(log)</span><br><span class="line">  <span class="comment">// to be continued</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Let&#39;s write the logic to find an element by its text. We need to search the application&#39;s <code>document</code> object. To access it we can use the undocumented <code>cy.state</code> command, and then we can use jQuery commands to find the element.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">Cypress.Commands.add(<span class="string">&#x27;getByLabel2&#x27;</span>, <span class="function">(<span class="params">label, options = &#123;&#125;</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> log = &#123;</span><br><span class="line">    name: <span class="string">&#x27;getByLabel2&#x27;</span>,</span><br><span class="line">    message: label,</span><br><span class="line">  &#125;</span><br><span class="line">  Cypress.log(log)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// returns the document object of the application under test</span></span><br><span class="line">  <span class="keyword">const</span> <span class="built_in">document</span> = cy.state(<span class="string">&#x27;document&#x27;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// this function just tries to find the element</span></span><br><span class="line">  <span class="comment">// we cannot use Cypress commands - aside from static ones,</span></span><br><span class="line">  <span class="comment">// but we can use normal DOM JavaScript and jQuery methods</span></span><br><span class="line">  <span class="keyword">const</span> getValue = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> $label = Cypress.$(<span class="built_in">document</span>).find(</span><br><span class="line">      <span class="string">&#x27;label:contains(&quot;&#x27;</span> + label + <span class="string">&#x27;&quot;)&#x27;</span>,</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">if</span> (!$label.length) &#123;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> forId = $label.attr(<span class="string">&#x27;for&#x27;</span>)</span><br><span class="line">    <span class="keyword">if</span> (!forId) &#123;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> input = <span class="built_in">document</span>.getElementById(forId)</span><br><span class="line">    <span class="keyword">return</span> input</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// to be continued</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The function <code>getValue</code> is ready to be tried again and again. Let&#39;s finish our custom command. We need to call <code>getValue</code>, get the element and then verify the upcoming assertions. Here is the end of the custom command</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> Cypress.Promise.try(getValue).then(<span class="function">(<span class="params">$el</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// important: pass a jQuery object to cy.verifyUpcomingAssertions</span></span><br><span class="line">  <span class="keyword">if</span> (!Cypress.dom.isJquery($el)) &#123;</span><br><span class="line">    $el = Cypress.$($el)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> cy.verifyUpcomingAssertions($el, options, &#123;</span><br><span class="line">    onRetry: resolveValue,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The above fragment inside the custom command does the trick. One last tip: the finished command can place the found element into the log object.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="keyword">const</span> resolveValue = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> Cypress.Promise.try(getValue).then(<span class="function">(<span class="params">$el</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// important: pass a jQuery object to cy.verifyUpcomingAssertions</span></span><br><span class="line">    <span class="keyword">if</span> (!Cypress.dom.isJquery($el)) &#123;</span><br><span class="line">      $el = Cypress.$($el)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> cy.verifyUpcomingAssertions($el, options, &#123;</span><br><span class="line">      onRetry: resolveValue,</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> resolveValue().then(<span class="function">(<span class="params">el</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// add console props method, which is invoked</span></span><br><span class="line">  <span class="comment">// when the user clicks on the command</span></span><br><span class="line">  log.consoleProps = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">      result: el,</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> el</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Let&#39;s verify our custom command finds the input by the label&#39;s text in the hydration example.</p>
+<p><img src="/blog/images/custom-command/get-by-label2.gif" alt="The test correctly retries the entire logic chain"></p>
+<p>If you click on the command <code>getByLabel2</code> in the Command Log, you will find the details and the element itself printed to the console.</p>
+<p><img src="/blog/images/custom-command/yielded.png" alt="The found element"></p>
+<p><strong>Note:</strong> if you try to use Cypress commands like <code>cy.contains</code> inside <code>getValue</code> function, Cypress detects it and throws an error.</p>
+<h2><span id="final-thoughts">Final thoughts</span></h2><ul>
+<li>only the last Cypress command is retried when the assertions that follow it fail</li>
+<li>you can write the logic to find the element using <code>cy.state(&#39;document&#39;)</code> and jQuery / DOM commands</li>
+<li>to verify the upcoming assertions and retry your logic to find the element, use <code>cy.verifyUpcomingAssertions</code></li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> resolveValue = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> Cypress.Promise.try(getValue).then(<span class="function">(<span class="params">$el</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// important: pass a jQuery object to cy.verifyUpcomingAssertions</span></span><br><span class="line">    <span class="keyword">if</span> (!Cypress.dom.isJquery($el)) &#123;</span><br><span class="line">      $el = Cypress.$($el)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> cy.verifyUpcomingAssertions($el, options, &#123;</span><br><span class="line">      onRetry: resolveValue,</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Happy testing!</p>
+<h2><span id="update-1">Update 1</span></h2><p>Read <a href="/blog/publishing-cypress-command/" title="How to Publish Custom Cypress Command on NPM">How to Publish Custom Cypress Command on NPM</a> where I describe how to correctly publish the custom command via NPM registry, including loading with custom command type.</p>
+<h2><span id="update-2-local-types">Update 2: local types</span></h2><p>To provide intelligent code completion for our new custom command, I wrote <code>src/index.d.ts</code> file</p>
+<figure class="highlight ts"><figcaption><span>src/index.d.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// load type definitions that come with Cypress module</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> Cypress &#123;</span><br><span class="line">  <span class="keyword">interface</span> Chainable &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Finds a form element using the label&#x27;s text</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param </span>label string</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@example</span></span></span><br><span class="line"><span class="comment">     *  cy.getByLabel(&#x27;First name:&#x27;).type(&#x27;Joe&#x27;)</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    getByLabel(label: <span class="built_in">string</span>): Chainable&lt;Element&gt;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Typically in a JavaScript project, every spec file includes the following line to load global Cypress definitions</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot;&gt;</span></span><br></pre></td></tr></table></figure>
+<p>In our case, the specs exercise the new <code>cy.getByLabel</code> command. Thus they need to &quot;know&quot; about it. In the <code>cypress/integration/spec.js</code> I replaced the <code>reference types=cypress</code> comment with <code>reference path=...</code> pointing at the <code>src/index.d.ts</code> file:</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference path=&quot;../../src/index.d.ts&quot; /&gt;</span></span><br></pre></td></tr></table></figure>
+<p>Note that we no longer need the <code>reference types=&quot;cypress&quot;</code> line - because it is loaded by <code>src/index.d.ts</code> file.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/writing-custom-cypress-command/" data-id="ckpyeu4ad019o6zvg2oa8eqgq" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/writing-custom-cypress-command/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../backend-coverage/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Backend Code Coverage from Cypress API tests
+        
+      </div>
+    </a>
+  
+  
+    <a href="../split-spec/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Make Cypress Run Faster by Splitting Specs</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/writing-custom-cypress-command/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

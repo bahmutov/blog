@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Writing Tests Progress | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Imagine you have a web application, and you need to write the end-to-end tests. The project never had them, so you are starting from scratch. How would you approach it? Here is what I would do to test">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Writing Tests Progress">
+<meta property="og:url" content="https://glebbahmutov.com/blog/writing-tests-progress/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Imagine you have a web application, and you need to write the end-to-end tests. The project never had them, so you are starting from scratch. How would you approach it? Here is what I would do to test">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/first-test.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/ci.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-status/copy-list.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/placeholder-tests.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/pending-tests.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/pending-run.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/record.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/record.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/enable-gh-integration.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/first-tests.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/pr-comment.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/runs-numbers.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/reach-zero.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/split-specs.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/per-spec.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/latest-runs.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/tests-progress/test-counts-bar-chart.png">
+<meta property="article:published_time" content="2021-04-19T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.393Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/tests-progress/first-test.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-writing-tests-progress" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2021-04-19T04:00:00.000Z" itemprop="datePublished">Apr 19 2021</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Writing Tests Progress
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to track the written tests using the Cypress test statuses
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Imagine you have a web application, and you need to write the end-to-end tests. The project never had them, so you are starting from scratch. How would you approach it? Here is what I would do to test a <a target="_blank" rel="noopener" href="https://todomvc.com/">TodoMVC web application</a> using Cypress.</p>
+<p><strong>Note:</strong> I strongly recommend reading the blog post <a href="/blog/cypress-test-statuses/" title="Cypress Test Statuses">Cypress Test Statuses</a> first, as it explains the difference between <em>pending</em> and <em>skipped</em> test statuses.</p>
+<!-- toc -->
+<ul>
+<li><a href="#start">Start</a></li>
+<li><a href="#the-first-test">The first test</a></li>
+<li><a href="#the-feature-tests">The feature tests</a></li>
+<li><a href="#the-smoke-test">The smoke test</a></li>
+<li><a href="#placeholder-tests">Placeholder tests</a></li>
+<li><a href="#start-recording">Start recording</a></li>
+<li><a href="#write-tests">Write tests</a></li>
+<li><a href="#bonus-1-split-into-the-separate-specs">Bonus 1: split into the separate specs</a></li>
+<li><a href="#wish-show-the-test-breakdown-over-time">Wish: show the test breakdown over time</a></li>
+</ul>
+<!-- tocstop -->
+<p>This post was motivated by the &quot;Cypress &amp; Ansible&quot; webinar with John Hill. You can watch the webinar <a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=fwdXOynDD0Q">here</a> and flip through the <a target="_blank" rel="noopener" href="https://cypress.slides.com/cypress-io/cypress-and-ansible">slides</a>. John has pointed out how they write the test plan before writing tests, and how tracking the implemented / pending tests is hard when you assume the tests themselves are the truth. This blog post tries to show one solution to this problem.</p>
+<h2><span id="start">Start</span></h2><blockquote class="pullquote"><p>📦 You can find the application and the tests from this blog post at <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-example-test-status">bahmutov/cypress-example-test-status</a> repository.</p>
+</blockquote>
+<p>First, I would install <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress">Cypress</a> and <a target="_blank" rel="noopener" href="https://github.com/bahmutov/start-server-and-test">start-server-and-test</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> npm i -D cypress start-server-and-test</span></span><br><span class="line">+ cypress@7.1.0</span><br><span class="line">+ start-server-and-test@1.12.1</span><br></pre></td></tr></table></figure>
+<p>Then I would define NPM scripts to start the server and open Cypress as I work on the tests locally.</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;start&quot;</span>: <span class="string">&quot;http-server -p 8888 -c-1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;start:ci&quot;</span>: <span class="string">&quot;http-server -p 8888 -c-1 --silent&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;test&quot;</span>: <span class="string">&quot;cypress open&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;dev&quot;</span>: <span class="string">&quot;start-test start:ci 8888&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>Tip:</strong> see my blog post <a href="/blog/organize-npm-scripts/" title="How I Organize my NPM Scripts">How I Organize my NPM Scripts</a> to learn how I typically organize the NPM scripts in my projects.</p>
+<p>When working with the tests I just fire up <code>npm run dev</code> to start the server (without its verbose logging), and once the server is ready, open Cypress test runner.</p>
+<h2><span id="the-first-test">The first test</span></h2><p>At first, I want to have a sanity test that makes sure the main feature of the application works. This test ensures right away the application is usable to most users.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;TodoMVC&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;adds 2 todos&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    cy.visit(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">    cy.get(<span class="string">&#x27;.new-todo&#x27;</span>).type(<span class="string">&#x27;learn testing&#123;enter&#125;&#x27;</span>).type(<span class="string">&#x27;be cool&#123;enter&#125;&#x27;</span>)</span><br><span class="line">    cy.get(<span class="string">&#x27;.todo-list li&#x27;</span>).should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">2</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Great, the test passes locally.</p>
+<p><img src="/blog/images/tests-progress/first-test.png" alt="The first test adds new todos"></p>
+<p>When we have a single E2E test running locally, we want to immediately start running the tests on CI. I will use <a href="/blog/trying-github-actions/" title="GitHub Actions">GitHub Actions</a> to run these tests. The workflow file uses the <a target="_blank" rel="noopener" href="https://github.com/cypress-io/github-action">Cypress GitHub Action</a> to install dependencies, start the server, and run the tests.</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/ci.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">ci</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">cypress-run:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span> <span class="string">🛎</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v1</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Run</span> <span class="string">E2E</span> <span class="string">tests</span> <span class="string">🧪</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v2</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">start:</span> <span class="string">&quot;npm run start:ci&quot;</span></span><br><span class="line">          <span class="attr">wait-on:</span> <span class="string">&quot;http://localhost:8888&quot;</span></span><br></pre></td></tr></table></figure>
+<p>The tests now pass on every commit.</p>
+<p><img src="/blog/images/tests-progress/ci.png" alt="The tests passing on GitHub Actions CI"></p>
+<h2><span id="the-feature-tests">The feature tests</span></h2><p>Now let&#39;s think about all the features our application has. The user should be able to:</p>
+<ul>
+<li>add new todos</li>
+<li>edit the existing todos</li>
+<li>complete a todo</li>
+<li>remove the completed todo status</li>
+<li>filter todos by the status</li>
+<li>delete all completes todos</li>
+</ul>
+<p>We can extend the above list, filling the list, grouping every related little detail by the main feature. After a while we derive about 20-30 feature &quot;lists&quot; or user stories that capture everything our application can do - and this list naturally maps to an end-to-end test. Let&#39;s write the final list describing the application and its features:</p>
+<ul>
+<li>TodoMVC app<ul>
+<li>on start<ul>
+<li>sets the focus on the todo input field</li>
+</ul>
+</li>
+<li>without todos<ul>
+<li>hides any filters and actions</li>
+</ul>
+</li>
+<li>new todo<ul>
+<li>allows to add new todos</li>
+<li>clears the input field when adding</li>
+<li>adds new items to the bottom of the list</li>
+<li>trims text input</li>
+<li>shows the filters and actions after adding a todo</li>
+</ul>
+</li>
+<li>completing all todos<ul>
+<li>can mark all todos as completed</li>
+<li>can remove completed status for all todos</li>
+<li>updates the state when changing one todo</li>
+</ul>
+</li>
+<li>one todo<ul>
+<li>can be completed</li>
+<li>can remove completed status</li>
+<li>can be edited</li>
+</ul>
+</li>
+<li>editing todos<ul>
+<li>hides other controls</li>
+<li>saves edit on blur</li>
+<li>trims entered text</li>
+<li>removes todo if text is empty</li>
+<li>cancels edit on escape</li>
+</ul>
+</li>
+<li>counter<ul>
+<li>shows the current number of todos</li>
+</ul>
+</li>
+<li>clear completed todos<ul>
+<li>shows the right text</li>
+<li>should remove completed todos</li>
+<li>is hidden if there are no completed todos</li>
+</ul>
+</li>
+<li>persistence<ul>
+<li>saves the todos data and state</li>
+</ul>
+</li>
+<li>routing<ul>
+<li>goes to the active items view</li>
+<li>respects the browser back button</li>
+<li>goes to the completed items view</li>
+<li>goes to the display all items view</li>
+<li>highlights the current view</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Wow, it is a long list. We don&#39;t have to discover all the features of the application to test, we can iterate and add more features as we think of them. But how do keep track of the currently tested features vs tests still to write? How do our tests stay in sync with the application features? How do we see the test coverage over time to make sure we are filling the gaps?</p>
+<h2><span id="the-smoke-test">The smoke test</span></h2><p>Here is what I advise to do first: move the very first sanity test we already have into its own smoke spec file.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/smoke-spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;TodoMVC&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;adds 2 todos&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    cy.visit(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">    cy.get(<span class="string">&#x27;.new-todo&#x27;</span>).type(<span class="string">&#x27;learn testing&#123;enter&#125;&#x27;</span>).type(<span class="string">&#x27;be cool&#123;enter&#125;&#x27;</span>)</span><br><span class="line">    cy.get(<span class="string">&#x27;.todo-list li&#x27;</span>).should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">2</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The above smoke spec can be run any time we want to quickly confirm the app is correct. We can even run it by itself whenever we need to:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> npx cypress run --spec cypress/integration/smoke-spec.js</span></span><br></pre></td></tr></table></figure>
+<p><strong>Tip:</strong> read the blog post <a target="_blank" rel="noopener" href="https://www.cypress.io/blog/2019/12/06/use-meaningful-smoke-tests/">Use meaningful smoke tests</a> for more details; you can even run the same smoke test in multiple resolutions to ensure the site works on mobile screens and on desktops.</p>
+<h2><span id="placeholder-tests">Placeholder tests</span></h2><p>Currently we have a smoke spec and an empty &quot;main&quot; spec file. Take the above text list of feature stories, copy it and paste it into the Cypress integration spec file. Of course, the text is not JavaScript, so our code editor will start showing all red.</p>
+<p><img src="/blog/images/test-status/copy-list.png" alt="The initial pasted list of features to test"></p>
+<p>Make the top levels of the list into <code>describe</code> and <code>context</code> callbacks. Make the &quot;leaves&quot; items into the tests <em>without</em> test bodies. Just the test with a title argument like this <code>it(&#39;title...&#39;)</code>. This is a valid spec file!</p>
+<p><img src="/blog/images/tests-progress/placeholder-tests.png" alt="Created placeholder tests from the feature list"></p>
+<p>If you open this spec in Cypress, all 28 tests are shown as pending.</p>
+<p><img src="/blog/images/tests-progress/pending-tests.png" alt="All tests have status &quot;Pending&quot;"></p>
+<p>If you execute this spec in the headless mode using <code>cypress run</code> it shows the breakdown of tests by status:</p>
+<p><img src="/blog/images/tests-progress/pending-run.png" alt="Test status breakdown after the run"></p>
+<p>Nice - we plan to write a lot of tests to thoroughly test the application.</p>
+<h2><span id="start-recording">Start recording</span></h2><p>We start with 28 placeholder tests, and now let&#39;s fill in the test bodies. We can incrementally test the most important features, and every pull request would drive down the number of pending tests and drive up the number of passing tests. You can use the &quot;depth first&quot; strategy where you write all the related tests for each context, or the &quot;breadth first&quot; strategy to write a few simple tests for each context first, before testing the edge cases.</p>
+<p>Let&#39;s knock off a few simple tests in some contexts.</p>
+<p>Before I start doing this, I will start recording the tests on <a target="_blank" rel="noopener" href="https://on.cypress.io/dashboard-introduction">Cypress Dashboard</a>. You do NOT have to do this, of course. You can simply look at the number of pending tests at any time to see the test writing progress, or store the test artifacts yourself. Cypress Dashboard just makes it so much easier, and so much more visible when you work as a team.</p>
+<p><img src="/blog/images/tests-progress/record.png" alt="Setting up the project to record on Cypress Dashboard"></p>
+<p>We can pass the created <a target="_blank" rel="noopener" href="https://on.cypress.io/projects#Record-key">Cypress record key</a> as GH secret when running the Cypress GitHub Action</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">  - name: Run E2E tests 🧪</span><br><span class="line">    uses: cypress-io/github-action@v2</span><br><span class="line">    with:</span><br><span class="line">      start: &#x27;npm run start:ci&#x27;</span><br><span class="line">      wait-on: &#x27;http://localhost:8888&#x27;</span><br><span class="line"><span class="addition">+     record: true</span></span><br><span class="line"><span class="addition">+   env:</span></span><br><span class="line"><span class="addition">+     CYPRESS_RECORD_KEY: $&#123;&#123; secrets.CYPRESS_RECORD_KEY &#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>You can find the Cypress Dashboard for the example project <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-example-test-status">bahmutov/cypress-example-test-status</a> at <a target="_blank" rel="noopener" href="https://dashboard.cypress.io/projects/9g2jiu">dashboard.cypress.io/projects/9g2jiu</a>.</p>
+<p>After the first GH Actions execution the Dashboard shows the passing and pending tests. That&#39;s our start baseline.</p>
+<p><img src="/blog/images/tests-progress/record.png" alt="Setting up the project to record on Cypress Dashboard"></p>
+<p>I think it is important to make these numbers as prominent and easily tracked as possible, as the team&#39;s goal is to implement all the pending tests.</p>
+<p>I will always enable the <a target="_blank" rel="noopener" href="https://on.cypress.io/github-integration">Cypress GitHub Integration</a> for this repository. The integration will post the latest test counts for each pull request.</p>
+<p><img src="/blog/images/tests-progress/enable-gh-integration.png" alt="Enable Cypress GitHub Integration for the repository"></p>
+<h2><span id="write-tests">Write tests</span></h2><p>Let&#39;s open a pull request with a few end-to-end tests implementations. We implement a few tests and watch them pass locally.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;TodoMVC app&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  context(<span class="string">&#x27;on start&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    it(<span class="string">&#x27;sets the focus on the todo input field&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">      cy.visit(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">      cy.focused().should(<span class="string">&#x27;have.class&#x27;</span>, <span class="string">&#x27;new-todo&#x27;</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">  context(<span class="string">&#x27;without todos&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    it(<span class="string">&#x27;hides any filters and actions&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">      cy.visit(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">      cy.get(<span class="string">&#x27;.todo-list li&#x27;</span>).should(<span class="string">&#x27;not.exist&#x27;</span>)</span><br><span class="line">      cy.get(<span class="string">&#x27;.main&#x27;</span>).should(<span class="string">&#x27;not.exist&#x27;</span>)</span><br><span class="line">      cy.get(<span class="string">&#x27;.footer&#x27;</span>).should(<span class="string">&#x27;not.exist&#x27;</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">  context(<span class="string">&#x27;new todo&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    it(<span class="string">&#x27;allows to add new todos&#x27;</span>)</span><br><span class="line">    ...</span><br><span class="line">  &#125;)</span><br><span class="line">  ...</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/tests-progress/first-tests.png" alt="First two tests implemented"></p>
+<p>We can probably move <code>cy.visit(&#39;/&#39;)</code> into <code>beforeEach</code> hook, since every test probably needs to visit the site first.</p>
+<p>When we open the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-example-test-status/pull/1">first pull request</a> the Cypress GH Integration application posts a comment with the test numbers. Good start - 3 tests are passing (1 smoke test plus two regular tests) and 26 pending tests to be implemented. I wish the PR comment had the &quot;delta&quot; numbers - how many tests were added / passing / pending compared to the main branch.</p>
+<p><img src="/blog/images/tests-progress/pr-comment.png" alt="Pull request comment by the Cypress GH app"></p>
+<p>The tests pass, so let&#39;s merge the pull request.</p>
+<p>As we <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-example-test-status/pull/2">write more tests</a>, we can refactor the existing test code, creating utility functions.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/utils.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> TODO_ITEM_ONE = <span class="string">&#x27;buy some cheese&#x27;</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> TODO_ITEM_TWO = <span class="string">&#x27;feed the cat&#x27;</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> TODO_ITEM_THREE = <span class="string">&#x27;book a doctors appointment&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> createDefaultTodos = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// do not log any commands inside this utility function</span></span><br><span class="line">  <span class="keyword">const</span> options = &#123; <span class="attr">log</span>: <span class="literal">false</span> &#125;</span><br><span class="line">  cy.get(<span class="string">&#x27;.new-todo&#x27;</span>, options)</span><br><span class="line">    .type(<span class="string">`<span class="subst">$&#123;TODO_ITEM_ONE&#125;</span>&#123;enter&#125;`</span>, options)</span><br><span class="line">    .type(<span class="string">`<span class="subst">$&#123;TODO_ITEM_TWO&#125;</span>&#123;enter&#125;`</span>, options)</span><br><span class="line">    .type(<span class="string">`<span class="subst">$&#123;TODO_ITEM_THREE&#125;</span>&#123;enter&#125;`</span>, options)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> cy.get(<span class="string">&#x27;.todo-list li&#x27;</span>, options)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>We can use the <code>createDefaultTodos</code> function to quickly get a few Todo items to test the app features other than adding the new todos.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;adds new items to the bottom of the list&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// this is an example of a custom command</span></span><br><span class="line">  <span class="comment">// defined in cypress/support/commands.js</span></span><br><span class="line">  createDefaultTodos().as(<span class="string">&#x27;todos&#x27;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// even though the text content is split across</span></span><br><span class="line">  <span class="comment">// multiple &lt;span&gt; and &lt;strong&gt; elements</span></span><br><span class="line">  <span class="comment">// `cy.contains` can verify this correctly</span></span><br><span class="line">  cy.get(<span class="string">&#x27;.todo-count&#x27;</span>).contains(<span class="string">&#x27;3 items left&#x27;</span>)</span><br><span class="line"></span><br><span class="line">  cy.get(<span class="string">&#x27;@todos&#x27;</span>).eq(<span class="number">0</span>).find(<span class="string">&#x27;label&#x27;</span>).should(<span class="string">&#x27;contain&#x27;</span>, TODO_ITEM_ONE)</span><br><span class="line"></span><br><span class="line">  cy.get(<span class="string">&#x27;@todos&#x27;</span>).eq(<span class="number">1</span>).find(<span class="string">&#x27;label&#x27;</span>).should(<span class="string">&#x27;contain&#x27;</span>, TODO_ITEM_TWO)</span><br><span class="line"></span><br><span class="line">  cy.get(<span class="string">&#x27;@todos&#x27;</span>)</span><br><span class="line">    .eq(<span class="number">2</span>)</span><br><span class="line">    .find(<span class="string">&#x27;label&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;contain&#x27;</span>, TODO_ITEM_THREE)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Then we can implement the &quot;complete all&quot; suite of tests, providing the test bodies for these pending tests:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">context(<span class="string">&#x27;completing all todos&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;can mark all todos as completed&#x27;</span>)</span><br><span class="line">  it(<span class="string">&#x27;can remove completed status for all todos&#x27;</span>)</span><br><span class="line">  it(<span class="string">&#x27;updates the state when changing one todo&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>You can see the pull request <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-example-test-status/pull/3">#3</a> that drives the number pf pending tests down to 20.</p>
+<p>The next pull request <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-example-test-status/pull/4">#4</a> implements completing the single todo tests</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">context(<span class="string">&#x27;one todo&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;can be completed&#x27;</span>)</span><br><span class="line">  it(<span class="string">&#x27;can remove completed status&#x27;</span>)</span><br><span class="line">  it(<span class="string">&#x27;can be edited&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>What we expect to see in the long term is the number of pending tests going down, and the number of passing tests going up.</p>
+<p><img src="/blog/images/tests-progress/runs-numbers.gif" alt="Pending vs passing test numbers in the Dashboard list"></p>
+<p>When the number of pending tests hits zero we know we have implemented all the tests planned.</p>
+<p><img src="/blog/images/tests-progress/reach-zero.png" alt="All tests are passing, there are no pending tests to write"></p>
+<h2><span id="bonus-1-split-into-the-separate-specs">Bonus 1: split into the separate specs</span></h2><p>Once we have a lot of tests in a single spec file, it becomes unwieldy. We can move the test suites into separate spec files; potentially this will speed the test run if we want to run the specs in parallel. Read the blog post <a href="/blog/parallel-cypress-tests-gh-action/" title="Split Long GitHub Action Workflow Into Parallel Cypress Jobs">Split Long GitHub Action Workflow Into Parallel Cypress Jobs</a> for details.</p>
+<p>Our current integration specs folder can look like this:</p>
+<p><img src="/blog/images/tests-progress/split-specs.png" alt="Split all tests into separate spec files"></p>
+<p>I have left only a few smaller tests in the <code>spec.js</code> file.</p>
+<p>Because the <code>utils.js</code> file contains the utility functions like <code>createDefaultTodos</code> and no tests of its own, we can hide it from the Cypress test runner using the <code>ignoreTestFiles</code> list in the config file</p>
+<figure class="highlight json"><figcaption><span>cypress.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;baseUrl&quot;</span>: <span class="string">&quot;http://localhost:8888&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;fixturesFolder&quot;</span>: <span class="literal">false</span>,</span><br><span class="line">  <span class="attr">&quot;pluginsFile&quot;</span>: <span class="literal">false</span>,</span><br><span class="line">  <span class="attr">&quot;ignoreTestFiles&quot;</span>: [<span class="string">&quot;utils.js&quot;</span>],</span><br><span class="line">  <span class="attr">&quot;projectId&quot;</span>: <span class="string">&quot;9g2jiu&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>When splitting a single spec into multiple, I recommend setting the <a target="_blank" rel="noopener" href="https://on.cypress.io/github-integration">Cypress GitHub Integration</a> to display a single status check per spec file. Then every PR has detailed information for every spec file.</p>
+<p><img src="/blog/images/tests-progress/per-spec.png" alt="Cypress reports test stats per spec file"></p>
+<h2><span id="wish-show-the-test-breakdown-over-time">Wish: show the test breakdown over time</span></h2><p>I really would like to see the number of pending tests vs passing tests over time, probably per branch. Today I can look at the column of test numbers for the <code>main</code> branch to kind of see it.</p>
+<p><img src="/blog/images/tests-progress/latest-runs.png" alt="Number of pending tests goes to zero over time"></p>
+<p>But I would love to see it explicitly over time / over commits.</p>
+<p><img src="/blog/images/tests-progress/test-counts-bar-chart.png" alt="Test counts going over time with each run"></p>
+<p>Hope the above analytics helps the project execute its testing strategy better.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/writing-tests-progress/" data-id="ckpyeu4ae019r6zvgcj28ax0z" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/writing-tests-progress/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../testing-mongo-with-cypress/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Testing Mongo with Cypress
+        
+      </div>
+    </a>
+  
+  
+    <a href="../cypress-test-statuses/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Cypress Test Statuses</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/writing-tests-progress/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Node server with Rx and Cycle.js | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Disclaimer this blog post is NOT about server-side rendering using Cycle.js, see this example instead. This is an explanation how one can apply (and why this is beneficial to do so)  reactive programm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Node server with Rx and Cycle.js">
+<meta property="og:url" content="https://glebbahmutov.com/blog/node-server-with-rx-and-cycle/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Disclaimer this blog post is NOT about server-side rendering using Cycle.js, see this example instead. This is an explanation how one can apply (and why this is beneficial to do so)  reactive programm">
+<meta property="og:locale">
+<meta property="article:published_time" content="2016-01-29T05:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.314Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cyclejs">
+<meta property="article:tag" content="reactive">
+<meta property="article:tag" content="nodejs">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-node-server-with-rx-and-cycle" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-01-29T05:00:00.000Z" itemprop="datePublished">Jan 29 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Node server with Rx and Cycle.js
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Manage side effects when coding NodeJS servers with Rx and Cycle.js (NOT about server-side rendering).
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>Disclaimer</strong> this blog post is NOT about server-side rendering using <a target="_blank" rel="noopener" href="http://cycle.js.org/">Cycle.js</a>, see
+this <a target="_blank" rel="noopener" href="https://github.com/cyclejs/cycle-examples/tree/master/isomorphic">example instead</a>.</p>
+<p>This is an explanation how one can apply (and why this is beneficial to do so) 
+reactive programming to a simple NodeJS server, that is responding to requests. Then I will
+show how to take the main idea behind Cycle.js and apply it to the server code.</p>
+<p>You can find the companion source code in 
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/node-rx-cycle">bahmutov/node-rx-cycle</a>.</p>
+<h2><span id="the-nodejs-server">The NodeJS server</span></h2><p>We will take simplest example: the <a target="_blank" rel="noopener" href="https://nodejs.org/en/about/">Hello World</a> NodeJS
+server, used as the first example on the official website. I have copied the code
+to <a target="_blank" rel="noopener" href="https://github.com/bahmutov/node-rx-cycle/blob/master/src/00-node-server.js">node-rx-cycle/src/00-node-server.js</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> http = <span class="built_in">require</span>(<span class="string">&#x27;http&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> hostname = <span class="string">&#x27;127.0.0.1&#x27;</span>;</span><br><span class="line"><span class="keyword">const</span> port = <span class="number">1337</span>;</span><br><span class="line">http.createServer(<span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">  res.writeHead(<span class="number">200</span>, &#123; <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;text/plain&#x27;</span> &#125;);</span><br><span class="line">  res.end(<span class="string">&#x27;Hello World\n&#x27;</span>);</span><br><span class="line">&#125;).listen(port, hostname, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">`Server running at http://<span class="subst">$&#123;hostname&#125;</span>:<span class="subst">$&#123;port&#125;</span>/`</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>Running this code using Node v5 is simple, and we can try it from another terminal</p>
+<pre><code>$ node src/00-node-server.js 
+Server running at http://127.0.0.1:1337/
+$ curl 127.0.0.1:1337
+Hello World
+</code></pre><p>The server listens to HTTP events, and every time there is a request, our callback is executed.
+The callback already has two arguments: the input request <code>req</code>, an instance of 
+<a target="_blank" rel="noopener" href="https://nodejs.org/dist/latest-v5.x/docs/api/http.html#http_class_http_clientrequest">http.ClientRequest</a>, and the response object <code>res</code>, an instance of 
+<a target="_blank" rel="noopener" href="https://nodejs.org/dist/latest-v5.x/docs/api/http.html#http_class_http_serverresponse">http.ServerResponse</a>.</p>
+<p>The complexity of the server code in the real application quickly grows. There are two
+problems as I see it</p>
+<ol>
+<li>Code that uses callbacks, even when enforcing good architecture pattern
+like <a target="_blank" rel="noopener" href="http://expressjs.com/">Express</a> does,
+quickly becomes hard to read and even harder to test. 
+The asynchronous nature of arriving requests, database
+lookups, etc. requires better programming patterns (like Promises).</li>
+<li>The input and output operations (called read and write effects) 
+are usually sprinkled all around our code. 
+It is very common to see some callbacks modifying the input request object.
+The writing to the response object is often even more tangled. 
+Again, a good design pattern, like
+middleware callback stacks helps, but does not solve the problem completely.</li>
+</ol>
+<p>Let us apply the reactive programming approach to the first problem, and then
+the Cycle.js principle (if not the library itself) to attack the second problem.</p>
+<h2><span id="reactive-server">Reactive server</span></h2><p>First, let us get rid of callbacks and replace them with one (and later multiple) reactive stream.
+Each request will be an event, passed along the stream, until the last step will write the 
+response to the client. I will use <a target="_blank" rel="noopener" href="http://reactivex.io/">RxJS</a> library that provides a lot of ways to deal with
+streams. There are others, but in our case, there is no difference.</p>
+<pre><code>npm install --save rx
+</code></pre><p>The server is equivalent to the above example, but the server callback just emits
+an event on each HTTP request, instead of handling it right away. You can find
+the server code in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/node-rx-cycle/blob/master/src/01-rx.js">01-rx.js</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> requests_ = <span class="keyword">new</span> Rx.Subject();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">sendHello</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;sending hello&#x27;</span>);</span><br><span class="line">  e.res.writeHead(<span class="number">200</span>, &#123; <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;text/plain&#x27;</span> &#125;);</span><br><span class="line">  e.res.end(<span class="string">&#x27;Hello World\n&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">requests_</span><br><span class="line">  .subscribe(sendHello)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> http = <span class="built_in">require</span>(<span class="string">&#x27;http&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> hostname = <span class="string">&#x27;127.0.0.1&#x27;</span>;</span><br><span class="line"><span class="keyword">const</span> port = <span class="number">1337</span>;</span><br><span class="line">http.createServer(<span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">  requests_.onNext(&#123; <span class="attr">req</span>: req, <span class="attr">res</span>: res &#125;);</span><br><span class="line">&#125;).listen(port, hostname, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">`Server running at http://<span class="subst">$&#123;hostname&#125;</span>:<span class="subst">$&#123;port&#125;</span>/`</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>While other people prefer to give stream variables names ending with <code>$</code> characters,
+I prefer the underscores. First, I am fed up with the dollar sign in the variables after
+Angular (just kidding). Second, I think the trailing line is closer to stream of events
+than a dollar sign.</p>
+<p>The server callback just adds an event to the beginning of the stream <code>requests_</code>
+which we constructed.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> requests_ = <span class="keyword">new</span> Rx.Subject();</span><br><span class="line">http.createServer(<span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">  requests_.onNext(&#123; <span class="attr">req</span>: req, <span class="attr">res</span>: res &#125;);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Because the server is very simple, we just subscribe to the <code>requests_</code> stream. Every
+event will trigger the callback function <code>sendHello</code>, where we write the response.</p>
+<h2><span id="reactive-benefits">Reactive benefits</span></h2><p>We have not increased the line count by much, yet the stream gives us a list of benefits,
+compared to callbacks (or even middleware stacks of callbacks, like Express does).
+For example, we can add logging using standard library <a target="_blank" rel="noopener" href="https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/operators/do.md"><code>.tap</code></a> method.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">requests_</span><br><span class="line">  .tap(<span class="function"><span class="params">e</span> =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;request to&#x27;</span>, e.req.url))</span><br><span class="line">  .subscribe(sendHello)</span><br></pre></td></tr></table></figure>
+<pre><code>$ node src/01-rx.js 
+Server running at http://127.0.0.1:1337/
+$ curl 127.0.0.1:1337
+$ curl 127.0.0.1:1337/hi
+request to /
+sending hello
+request to /hi
+sending hello
+</code></pre><p>We can also buffer, filter, merge and many more operations on events, thanks to the 
+<a target="_blank" rel="noopener" href="https://github.com/Reactive-Extensions/RxJS/blob/master/doc/libraries/main/rx.complete.md">large number</a> of well tested and performant operations in RxJS library.</p>
+<p>More importantly, we can handle errors and memory deallocation easily. Each stream
+subscription can take 3 callbacks, for example: the success (with the new event),
+the error, and the stream complete callbacks. Using these callbacks you can make
+sure the errors are handled, and the stream is disposed of properly.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// handle any errors in the stream</span></span><br><span class="line"><span class="keyword">const</span> subscription = requests_</span><br><span class="line">  .tap(<span class="function"><span class="params">e</span> =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;request to&#x27;</span>, e.req.url))</span><br><span class="line">  .subscribe(</span><br><span class="line">    sendHello,</span><br><span class="line">    <span class="built_in">console</span>.error,</span><br><span class="line">    () =&gt; &#123;</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&#x27;stream is done&#x27;</span>)</span><br><span class="line">        <span class="comment">// nicely frees the stream</span></span><br><span class="line">        subscription.dispose()</span><br><span class="line">    &#125;</span><br><span class="line">  )</span><br><span class="line">process.on(<span class="string">&#x27;exit&#x27;</span>, <span class="function">() =&gt;</span> subscription.dispose())</span><br></pre></td></tr></table></figure>
+<p>Notice an interesting fact about the variables in the examples above: all variables (streams, etc)
+were declared using <code>const</code>. This is very common in reactive programming - we setup our
+streams only once - it is the events that move inside the streams, invisible to us; 
+we don&#39;t have to declare any variables for the events themselves, except inside 
+the little callback functions!</p>
+<h2><span id="rate-limiting">Rate limiting</span></h2><p>Reactive streams help us manage <em>time-related complexity</em> very well. For example, here is
+an example where we want to print an array of numbers, but only print 1 number per second.
+We create two streams - one where each event is a number, and another one where each
+event is a timer interval, one interval per second. To output <em>one number per second</em>,
+we just zip the two streams, and then subscribe and print the event. </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> timeEvents = Rx.Observable</span><br><span class="line">  .interval(<span class="number">1000</span>)</span><br><span class="line"><span class="keyword">const</span> numberEvents = Rx.Observable</span><br><span class="line">  .fromArray([<span class="number">3</span>, <span class="number">1</span>, <span class="number">7</span>]);</span><br><span class="line">Rx.Observable.zip(timeEvents, numberEvents, <span class="function"><span class="keyword">function</span> <span class="title">pickValue</span>(<span class="params">t, n</span>) </span>&#123; <span class="keyword">return</span> n; &#125;)</span><br><span class="line">  .subscribe(<span class="built_in">console</span>.log);</span><br><span class="line"><span class="comment">// prints 3 1 7 with 1 second intervals</span></span><br></pre></td></tr></table></figure>
+<p>Let us see how to apply a similar time operation on our stream. I want to rate limit
+the server to receive all the requests, but respond only once per second, keeping
+other requests in the queue. If 10 requests arrive at the same time, the first response
+will be after 1 second, second response at second 2, etc. Here is how we could describe
+the <code>rate limit</code> stream operation using <a target="_blank" rel="noopener" href="https://jajeffries.wordpress.com/2015/01/24/using-marble-diagrams-to-understand-reactive-streams/">marble diagrams</a> commonly used in reactive
+programming.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">---r1-r2-r3-----r4--------r5----&gt;    &#x2F;&#x2F; requests_</span><br><span class="line">     rateLimit</span><br><span class="line">---r1---r2---r3---r4------r5----&gt;    &#x2F;&#x2F; rateLimited_ &#x3D; rateLimit(requests_)</span><br><span class="line">   |    |    |    |    |             &#x2F;&#x2F; 1 second intervals    </span><br></pre></td></tr></table></figure>
+<p>The above stream of requests has several requests arriving in close proximity.
+We create a new stream <code>rateLimited_</code> using <code>rateLimit(requests_)</code> call.
+The new stream <code>rateLimited_</code> will output every request event, but will make sure
+no events are closer than 1 second. I added 1 second interval marks to the bottom of
+the diagram for clarity.</p>
+<p>It is probably possible to write <code>rateLimit</code> operation using the standard RxJS methods,
+but I did not know how, so I wrote one myself. You can find it in the file
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/node-rx-cycle/blob/master/src/rate-limit.js">rate-limit.js</a>. For example, let us rate limit a stream with interval
+events 200ms apart.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> in_ = Rx.Observable</span><br><span class="line">    .interval(<span class="number">200</span>)</span><br><span class="line">    .take(<span class="number">5</span>)</span><br><span class="line"><span class="keyword">const</span> rateLimit = <span class="built_in">require</span>(<span class="string">&#x27;./rate-limit&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> limited_ = rateLimit(in_, <span class="number">1000</span>)</span><br><span class="line">limited_</span><br><span class="line">    .timeInterval()</span><br><span class="line">    .subscribe(</span><br><span class="line">        <span class="built_in">console</span>.log,</span><br><span class="line">        <span class="built_in">console</span>.error,</span><br><span class="line">        <span class="built_in">console</span>.log.bind(<span class="built_in">console</span>, <span class="string">&#x27;limited completed&#x27;</span>)</span><br><span class="line">    )</span><br><span class="line"><span class="comment">// output</span></span><br><span class="line"><span class="comment">// &#123; value: 0, interval: 203 &#125;</span></span><br><span class="line"><span class="comment">// &#123; value: 1, interval: 1005 &#125;</span></span><br><span class="line"><span class="comment">// &#123; value: 2, interval: 1001 &#125;</span></span><br><span class="line"><span class="comment">// &#123; value: 3, interval: 996 &#125;</span></span><br><span class="line"><span class="comment">// &#123; value: 4, interval: 999 &#125;</span></span><br><span class="line"><span class="comment">// limited completed</span></span><br></pre></td></tr></table></figure>
+<p>Let us apply rate limit to the requests received. For clarity, the console log includes
+the timestamp relative to the program start time.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> interval = <span class="number">1000</span></span><br><span class="line"><span class="keyword">const</span> rateLimit = <span class="built_in">require</span>(<span class="string">&#x27;./rate-limit&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> limited_ = rateLimit(</span><br><span class="line">  requests_.tap(<span class="function"><span class="params">e</span> =&gt;</span> <span class="built_in">console</span>.log(<span class="string">`request to <span class="subst">$&#123;e.req.url&#125;</span> at`</span>, +(<span class="keyword">new</span> <span class="built_in">Date</span>) - started))</span><br><span class="line">  , interval)</span><br><span class="line">limited_.subscribe(sendHello)</span><br></pre></td></tr></table></figure>
+<p>Notice that we have rate limited <code>requests_.tap(...)</code> expression. Every method
+call on the reactive stream creates <em>a new stream</em>. Thus we could write 
+(and fork and subscribe, etc) every intermediate step in the fluent chain.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> requests_ = ...</span><br><span class="line"><span class="keyword">const</span> logged_ = requests_.tap(<span class="function"><span class="params">e</span> =&gt;</span> <span class="built_in">console</span>.log(e.req.url))</span><br><span class="line"><span class="keyword">const</span> limited_ = rateLimit(logged_, <span class="number">1000</span>)</span><br><span class="line">limited_.subscribe(sendHello)</span><br></pre></td></tr></table></figure>
+<p>Back to the program (you can find it in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/node-rx-cycle/blob/master/src/02-1fps.js">src/02-1fps.js</a>). We can test it by
+sending multiple requests at once.</p>
+<pre><code>$ node src/02-1fps.js 
+Server running at http://127.0.0.1:1337/
+request to / at 10505
+sending hello at 10506
+request to /hi at 10527
+request to / at 10528
+sending hello at 11510
+sending hello at 12506
+</code></pre><p>Notice that the requests arrived at timestamps 10505, 10527 and 10528 (inside the 25 ms period), 
+but the responses where sent at 10506, 11510 and 12506 (1 second apart).</p>
+<p>Reactive programming makes reasoning about asynchronous events, controlling their timing,
+and combining them simpler. It is much much simpler than using callbacks, and even simpler
+than using Promises. Since the server logic naturally deals with multiple identical
+request events, a stream where the events can flow and be processed is a better mental
+model compared to single-execution Promise abstraction.</p>
+<p>Now let us deal with side effects by applying Cycle.js principle.</p>
+<h2><span id="what-if-the-network-was-a-function">What if the network was a function?</span></h2><p>The gist of Cycle.js in my understanding is moving of everything that is outside
+of our control to inputs or outputs, leaving our main logic inside a 
+<a href="../test-if-a-function-is-pure/">pure function</a>.
+User actions like mouse clicks and text inputs, Ajax requests and responses, 
+updating DOM markup - these are abstracted away from our code; leaving only
+easy to reason and test pure logic.</p>
+<p>A good idea before reading the rest of this blog is to watch
+these <a target="_blank" rel="noopener" href="https://egghead.io/series/cycle-js-fundamentals">videos</a></p>
+<p>Let us look at the reactive implementation again, and for simplicity I will use
+the non rate-limited implementation.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> requests_ = <span class="keyword">new</span> Rx.Subject();</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">sendHello</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">  e.res.writeHead(<span class="number">200</span>, &#123; <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;text/plain&#x27;</span> &#125;);</span><br><span class="line">  e.res.end(<span class="string">&#x27;Hello World\n&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line">requests_</span><br><span class="line">  .tap(<span class="function"><span class="params">e</span> =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;request to&#x27;</span>, e.req.url))</span><br><span class="line">  .subscribe(sendHello)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> http = <span class="built_in">require</span>(<span class="string">&#x27;http&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> hostname = <span class="string">&#x27;127.0.0.1&#x27;</span>;</span><br><span class="line"><span class="keyword">const</span> port = <span class="number">1337</span>;</span><br><span class="line">http.createServer(<span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">  requests_.onNext(&#123; <span class="attr">req</span>: req, <span class="attr">res</span>: res &#125;);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Notice how the middle of our program is pretty simple (from <code>requests_...</code> to 
+<code>.subscribe()</code> lines). Once the request event enters the stream, the result is 
+<em>only</em> dependent on the input - the very definition of &quot;pure function&quot;.</p>
+<p>Outside this little block however, the things are much less clear. For example,
+the <code>sendHello()</code> function interacts with the network by using 
+<a target="_blank" rel="noopener" href="https://nodejs.org/dist/latest-v5.x/docs/api/http.html#http_response_end_data_encoding_callback">res.end</a> method - and that is prone to lots of problems and side effects.</p>
+<p>Similarly, the <code>http.createServer</code> code is the very definition of code with 
+side-effects - like binding to a socket and listening to the incoming requests.</p>
+<p>Can we isolate the pure part of the code from the network code? Even better, can we
+treat the output operation (setting the response header and writing to <code>res.end</code>)
+as a <em>stream operation</em>? We already have converted the <em>input</em> operation to a stream in
+the code below, so we are half-way there!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(req, res) =&gt; &#123;</span><br><span class="line">  requests_.onNext(&#123; <span class="attr">req</span>: req, <span class="attr">res</span>: res &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Let us do this!</p>
+<h3><span id="separate-quotmainquot">Separate &quot;main&quot;</span></h3><p>Our first refactoring will be similar to <a target="_blank" rel="noopener" href="https://egghead.io/lessons/rxjs-main-function-and-effects-functions">lesson 2</a>, and it will separate logic from
+the <code>http effect</code>. The logic returns a stream, and the <code>http efect</code> takes that stream as
+input. The relevant code is below.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> requests_ = <span class="keyword">new</span> Rx.Subject();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">main</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> requests_</span><br><span class="line">    .tap(<span class="function"><span class="params">e</span> =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;request to&#x27;</span>, e.req.url))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">httpEffect</span>(<span class="params">model_</span>) </span>&#123;</span><br><span class="line">  model_.subscribe(<span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;sending hello&#x27;</span>)</span><br><span class="line">    e.res.writeHead(<span class="number">200</span>, &#123; <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;text/plain&#x27;</span> &#125;)</span><br><span class="line">    e.res.end(<span class="string">&#x27;Hello World\n&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">httpEffect(main())</span><br></pre></td></tr></table></figure>
+<p>Using more of a Cycle.js notation, the output of <code>main</code> is a &quot;sink&quot;, and this sink is the
+input to one or more &quot;effects&quot; functions.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> sink = main()</span><br><span class="line">httpEffect(sink)</span><br></pre></td></tr></table></figure>
+<p>For now, we have only a single type of &quot;sink&quot; - the sink that should go to HTTP response.
+In practical application we might return multiple sinks from the <code>main()</code> call. For example,
+we could also sink a log operation, and a database operation - all are side effects, thus need
+a &quot;sink&quot; in the Cycle.js world.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">main</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    HTTP: requests_,</span><br><span class="line">    LOG: requests_.map(<span class="function"><span class="params">e</span> =&gt;</span> e.req.url),</span><br><span class="line">    DB: requests_.map( .... <span class="comment">/* something to go into DB */</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> sink = main()</span><br><span class="line">httpEffect(sink.HTTP)</span><br><span class="line">logEffect(sink.LOG)</span><br><span class="line">dbEffect(sink.DB)</span><br></pre></td></tr></table></figure>
+<h3><span id="introduce-quotrunquot">Introduce &quot;run&quot;</span></h3><p>Manually mapping sinks to effects is tiresome. Let us connect things automatically.
+Just loop through the effects and find a sink with the same name. We just need a function
+to do this, let us call it &quot;run&quot;</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">main</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    HTTP: requests_.tap(<span class="function"><span class="params">e</span> =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;request to&#x27;</span>, e.req.url))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">run</span>(<span class="params">main, effects</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> sinks = main()</span><br><span class="line">  <span class="built_in">Object</span>.keys(effects).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">    effects[key](sinks[key])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br><span class="line">run(main, &#123;</span><br><span class="line">  HTTP: httpEffect</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Same result, but the code in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/node-rx-cycle/blob/master/src/04-run.js">src/04-run.js</a> is a little more generic. 
+The object with all effects is called a &quot;driver&quot; in Cycle - because it connects pure logic
+with the outside interfaces, just like drivers connect software and the operating system
+to the hardware.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> drivers = &#123;</span><br><span class="line">  HTTP: httpEffect</span><br><span class="line">&#125;</span><br><span class="line">run(main, drivers)</span><br></pre></td></tr></table></figure>
+<p>Note: printing to the console is also a write effect, so we should NOT include this
+in the <code>main()</code> function. But for the sake of simplicity in the demo, I am leaving it there.</p>
+<h3><span id="abstract-the-input-request-better">Abstract the input request better</span></h3><p>Finally, let us take another look at the &quot;read&quot; effects - the http requests that
+arrive over the network. We need to package them up - they should be the inputs to our <code>main</code>
+function. Right now, the <code>requests_</code> object the <code>main</code> uses is outside its lexical scope,
+a big &quot;no-no&quot; in pure functions. </p>
+<p>We need to connect the &quot;read&quot; effects to the <code>main</code> function, let us just give it an object,
+and just like drivers above, let us have an object, with HTTP being a source of effects.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">main</span>(<span class="params">sources</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    HTTP: sources.HTTP.tap(<span class="function"><span class="params">e</span> =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;request to&#x27;</span>, e.req.url))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Where is the <code>sources</code> object coming from? It has to come from the <code>run</code> function
+of course - the <code>run</code> function grabs all the sources (the &quot;read&quot; effects) and calls
+&quot;drivers&quot; on the result of <code>main</code>. Here it is</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> httpEffect = makeHttpEffect()</span><br><span class="line"><span class="keyword">const</span> drivers = &#123;</span><br><span class="line">  HTTP: httpEffect</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">run</span>(<span class="params">main, drivers</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> sources = &#123;</span><br><span class="line">    HTTP: drivers.HTTP.readEffect</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> sinks = main(sources)</span><br><span class="line">  <span class="built_in">Object</span>.keys(drivers).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">    drivers[key].writeEffect(sinks[key])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Remember an important point when looking at this code - the &quot;read&quot; effect, and the
+output from the <code>main</code> are reactive streams! The &quot;write&quot; effect functions expect
+streams as inputs too. The <code>run</code> function is only executed once - that is why the
+inputs and outputs are a constant references - this is the setup method, not the runtime
+data flow. The flow will happen inside the connected streams.</p>
+<p>Finally, we need to see how to create the <code>httpEffect</code> object. It is the glue that
+connects the input events from the HTTP socket all the way through the main
+to the response written back into the socket. It will even have a callback
+for the <code>http.createServer</code> to use!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">makeHttpEffect</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> requests_ = <span class="keyword">new</span> Rx.Subject();</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    writeEffect: <span class="function"><span class="keyword">function</span> (<span class="params">model_</span>) </span>&#123;</span><br><span class="line">      model_.subscribe(<span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&#x27;sending hello&#x27;</span>)</span><br><span class="line">        e.res.writeHead(<span class="number">200</span>, &#123; <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;text/plain&#x27;</span> &#125;)</span><br><span class="line">        e.res.end(<span class="string">&#x27;Hello World\n&#x27;</span>)</span><br><span class="line">      &#125;)</span><br><span class="line">      <span class="keyword">return</span> requests_</span><br><span class="line">    &#125;,</span><br><span class="line">    serverCallback: <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">      requests_.onNext(&#123; <span class="attr">req</span>: req, <span class="attr">res</span>: res &#125;)</span><br><span class="line">    &#125;,</span><br><span class="line">    readEffect: requests_</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The 3 properties are:</p>
+<ul>
+<li><code>readEffect</code> - the input request stream, notice how it is private to the function 
+<code>makeHttpEffect</code>.</li>
+<li><code>writeEffect</code> - that subscribes to the model stream and can write responses back</li>
+<li><code>serverCallback</code> - the input to the stream, used by the HTTP server function</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> httpEffect = makeHttpEffect()</span><br><span class="line">http.createServer(httpEffect.serverCallback)</span><br><span class="line">    .listen(...)</span><br></pre></td></tr></table></figure>
+<p>You can find the full code in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/node-rx-cycle/blob/master/src/05-sources.js">05-sources.js</a></p>
+<h2><span id="all-together">All together</span></h2><p>Let me mark pure functions vs non-pure in the code above. </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>);</span><br><span class="line"><span class="comment">// pure</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">main</span>(<span class="params">sources</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    HTTP: sources.HTTP.tap(<span class="function"><span class="params">e</span> =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;request to&#x27;</span>, e.req.url))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// pure</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">makeHttpEffect</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> requests_ = <span class="keyword">new</span> Rx.Subject();</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    <span class="comment">// effects</span></span><br><span class="line">    writeEffect: <span class="function"><span class="keyword">function</span> (<span class="params">model_</span>) </span>&#123;</span><br><span class="line">      model_.subscribe(<span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&#x27;sending hello&#x27;</span>)</span><br><span class="line">        e.res.writeHead(<span class="number">200</span>, &#123; <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;text/plain&#x27;</span> &#125;)</span><br><span class="line">        e.res.end(<span class="string">&#x27;Hello World\n&#x27;</span>)</span><br><span class="line">      &#125;)</span><br><span class="line">      <span class="keyword">return</span> requests_</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// effects</span></span><br><span class="line">    serverCallback: <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">      requests_.onNext(&#123; <span class="attr">req</span>: req, <span class="attr">res</span>: res &#125;)</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// effects</span></span><br><span class="line">    readEffect: requests_</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// pure</span></span><br><span class="line"><span class="keyword">const</span> httpEffect = makeHttpEffect()</span><br><span class="line"><span class="keyword">const</span> drivers = &#123;</span><br><span class="line">  HTTP: httpEffect</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// pure</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">run</span>(<span class="params">main, drivers</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> sources = &#123;</span><br><span class="line">    HTTP: drivers.HTTP.readEffect</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> sinks = main(sources)</span><br><span class="line">  <span class="built_in">Object</span>.keys(drivers).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">    drivers[key].writeEffect(sinks[key])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br><span class="line">run(main, drivers)</span><br><span class="line"><span class="comment">// side effects</span></span><br><span class="line"><span class="keyword">const</span> http = <span class="built_in">require</span>(<span class="string">&#x27;http&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> hostname = <span class="string">&#x27;127.0.0.1&#x27;</span></span><br><span class="line"><span class="keyword">const</span> port = <span class="number">1337</span></span><br><span class="line">http.createServer(httpEffect.serverCallback)</span><br><span class="line">  .listen(port, hostname, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">`Server running at http://<span class="subst">$&#123;hostname&#125;</span>:<span class="subst">$&#123;port&#125;</span>/`</span>)</span><br><span class="line">  &#125;);</span><br></pre></td></tr></table></figure>
+<p>We have been able to separate the logic (our <code>main</code> function, <code>run</code>, etc.) from functions
+that can have side effects (<code>readEffect</code> and <code>writeEffect</code>, <code>createServer</code> functions).
+This separation helps when designing software, writing code and testing it.</p>
+<p>If you compare this code with the canonical Cycle.js code, like the example shown in
+<a target="_blank" rel="noopener" href="https://egghead.io/lessons/rxjs-read-effects-from-the-dom-click-events">lesson 5</a>, you will notice a major difference. We do not have to wrap
+the global &quot;document&quot; object in read and write effects. Instead, the write effect has
+all the information available right away (the response object), and it does not feed back
+into the &quot;read&quot; effect object - only the HTTP server feeds new events into it.</p>
+<p>This means the above example does not close the &quot;network -&gt; computer -&gt; network&quot; loop
+(or does not form the cycle, if you want a pun), like the DOM examples show. 
+Different use cases lead to different code!</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/node-server-with-rx-and-cycle/" data-id="ckpyeu4c501qq6zvg23xv1kdl" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/node-server-with-rx-and-cycle/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/reactive/" rel="tag">reactive</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../microservices-with-fuge/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Microservices with fuge
+        
+      </div>
+    </a>
+  
+  
+    <a href="../better-hacker/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">How to become a better hacker</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/node-server-with-rx-and-cycle/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

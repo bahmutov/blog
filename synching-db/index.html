@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Synching PouchdDB with remote DB | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="If we want to control our own data, we must know how to run our own database. To make this more attractive, let us pick a database that knows how to sync with our mobile or web application. Then we ca">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Synching PouchdDB with remote DB">
+<meta property="og:url" content="https://glebbahmutov.com/blog/synching-db/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="If we want to control our own data, we must know how to run our own database. To make this more attractive, let us pick a database that knows how to sync with our mobile or web application. Then we ca">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/pouch-couch-architecture.png">
+<meta property="article:published_time" content="2016-09-16T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.360Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="db">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/bahmutov/talks/master/images/pouch-couch-architecture.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-synching-db" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-09-16T04:00:00.000Z" itemprop="datePublished">Sep 16 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Synching PouchdDB with remote DB
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to run a database locally that syncs with central one.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>If we want to control our own data, we must know how to run our own database.
+To make this more attractive, let us pick a database that knows how to sync
+with our mobile or web application. Then we can get an advanced feature -
+offline data support almost without any extra work.</p>
+<p>I will show how to run a Couch database locally and in a server (using Dokku),
+and then how to write a simple web application using VueJS that works with
+a local in-browser Pouch database. The Pouch database keeps the local browser
+in sync with the remote Couch database.</p>
+<p>A basic knowledge of Docker is required to follow this blog post.</p>
+<h2><span id="running-local-couchdb">Running local CouchDB</span></h2><p>Let us try out CouchDB locally inside a Docker container using the
+<a target="_blank" rel="noopener" href="https://hub.docker.com/r/frodenas/couchdb/">frodenas/couchdb</a> image.
+To be able to easily replicate work, I saved the shell command into a file</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># start the db inside a container</span></span><br><span class="line"><span class="comment"># with given username, password and DB name</span></span><br><span class="line">docker run -d \</span><br><span class="line">  --name couchdb \</span><br><span class="line">  -p 5984:5984 \</span><br><span class="line">  -e COUCHDB_USERNAME=iamuser \</span><br><span class="line">  -e COUCHDB_PASSWORD=mypass \</span><br><span class="line">  -e COUCHDB_DBNAME=c1 \</span><br><span class="line">  frodenas/couchdb</span><br></pre></td></tr></table></figure>
+<p>This gave me a running DB named &quot;c1&quot; in about 15 seconds. Most of this time
+was spent by the docker downloading the base image binaries.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ ./setup-db.sh</span><br><span class="line">Unable to find image <span class="string">&#x27;frodenas/couchdb:latest&#x27;</span> locally</span><br><span class="line">latest: Pulling from frodenas/couchdb</span><br><span class="line">012a7829fd3f: Pull complete</span><br><span class="line">41158247dd50: Pull complete</span><br><span class="line">916b974d99af: Pull complete</span><br><span class="line">a3ed95caeb02: Pull complete</span><br><span class="line">5dc5d08f5c98: Pull complete</span><br><span class="line">1bee2d0b12c7: Pull complete</span><br><span class="line">745c9cfc6b90: Pull complete</span><br><span class="line">e7538cbaf2c8: Pull complete</span><br><span class="line">0e8f353191c0: Pull complete</span><br><span class="line">Digest: sha256:8b777ca1d60b7b5beab4178a8ebc412622ec43f2fec969dcf836bb11ac7ddad8</span><br><span class="line">Status: Downloaded newer image <span class="keyword">for</span> frodenas/couchdb:latest</span><br><span class="line">7dd6baed4d70c50929490bf24d83110b186f49ed5261b17f726d67466d30e642</span><br><span class="line">$ docker ps</span><br><span class="line">7dd6baed4d70  frodenas/couchdb 0.0.0.0:5984-&gt;5984/tcp   couchdb</span><br></pre></td></tr></table></figure>
+<p>Right away you should be able to see empty database</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ curl http://localhost:5984/c1</span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;db_name&quot;</span>:<span class="string">&quot;c1&quot;</span>,</span><br><span class="line">  <span class="string">&quot;doc_count&quot;</span>:0,</span><br><span class="line">  <span class="string">&quot;doc_del_count&quot;</span>:0,</span><br><span class="line">  <span class="string">&quot;update_seq&quot;</span>:0,</span><br><span class="line">  <span class="string">&quot;purge_seq&quot;</span>:0,</span><br><span class="line">  <span class="string">&quot;compact_running&quot;</span>:<span class="literal">false</span>,</span><br><span class="line">  <span class="string">&quot;disk_size&quot;</span>:79,</span><br><span class="line">  <span class="string">&quot;data_size&quot;</span>:0,</span><br><span class="line">  <span class="string">&quot;instance_start_time&quot;</span>:<span class="string">&quot;1472301143096818&quot;</span>,</span><br><span class="line">  <span class="string">&quot;disk_format_version&quot;</span>:6,</span><br><span class="line">  <span class="string">&quot;committed_update_seq&quot;</span>:0</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Let us connect to this database using the JavaScript
+<a target="_blank" rel="noopener" href="https://pouchdb.com/guides/databases.html">PouchDB</a> library.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> PouchDB = <span class="built_in">require</span>(<span class="string">&#x27;pouchdb&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> db = <span class="keyword">new</span> PouchDB(<span class="string">&#x27;http://localhost:5984/c1&#x27;</span>)</span><br><span class="line">db.info().then(<span class="built_in">console</span>.log).catch(<span class="built_in">console</span>.error)</span><br></pre></td></tr></table></figure>
+<p>This gives us the same information as did the <code>curl</code> command.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ node index.js</span><br><span class="line">&#123; db_name: <span class="string">&#x27;c1&#x27;</span>,</span><br><span class="line">  doc_count: 0,</span><br><span class="line">  doc_del_count: 0,</span><br><span class="line">  update_seq: 0,</span><br><span class="line">  purge_seq: 0,</span><br><span class="line">  compact_running: <span class="literal">false</span>,</span><br><span class="line">  disk_size: 79,</span><br><span class="line">  data_size: 0,</span><br><span class="line">  instance_start_time: <span class="string">&#x27;1472301143096818&#x27;</span>,</span><br><span class="line">  disk_format_version: 6,</span><br><span class="line">  committed_update_seq: 0,</span><br><span class="line">  host: <span class="string">&#x27;http://localhost:5984/c1/&#x27;</span>,</span><br><span class="line">  auto_compaction: <span class="literal">false</span>,</span><br><span class="line">  adapter: <span class="string">&#x27;http&#x27;</span> &#125;</span><br></pre></td></tr></table></figure>
+<p>Note: if the Docker is restarted, the new container with the CouchDB will
+be stopped. You can simple run <code>docker restart 7dd6baed4d70</code> to get it
+running again.</p>
+<h2><span id="populating-data-from-command-line">Populating data from command line</span></h2><p>Since the database is empty, let us insert a couple of
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/fake-todos">fake todos</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">insertFakeTodos</span>(<span class="params">n</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> generate = <span class="built_in">require</span>(<span class="string">&#x27;fake-todos&#x27;</span>)</span><br><span class="line">  <span class="keyword">const</span> items = generate(n)</span><br><span class="line">  <span class="keyword">return</span> db.bulkDocs(items)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">dbStats</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> db.info().then(<span class="built_in">console</span>.log)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">insertFakeTodos(<span class="number">3</span>)</span><br><span class="line">  .then(dbStats)</span><br><span class="line">  .catch(<span class="built_in">console</span>.error)</span><br></pre></td></tr></table></figure>
+<p>We should get 3 documents in the database after running this code.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ node index.js</span><br><span class="line">&#123; db_name: <span class="string">&#x27;c1&#x27;</span>,</span><br><span class="line">  doc_count: 3,</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>We can see them by running <code>db.allDocs()</code> method and printing the returned
+<code>rows</code> list</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">db.allDocs(&#123;<span class="attr">include_docs</span>: <span class="literal">true</span>&#125;)</span><br><span class="line">  .then(<span class="function"><span class="params">r</span> =&gt;</span> r.rows)</span><br><span class="line">  .then(<span class="built_in">console</span>.log)</span><br><span class="line">  .catch(<span class="built_in">console</span>.error)</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">$ node index.js</span><br><span class="line">[ &#123; id: &#39;1161b310fc0d36dfe90091f25a000b9b&#39;,</span><br><span class="line">    key: &#39;1161b310fc0d36dfe90091f25a000b9b&#39;,</span><br><span class="line">    value: &#123; rev: &#39;1-545cf4fb862701be2211ac1d53133eba&#39; &#125;,</span><br><span class="line">    doc:</span><br><span class="line">     &#123; _id: &#39;1161b310fc0d36dfe90091f25a000b9b&#39;,</span><br><span class="line">       _rev: &#39;1-545cf4fb862701be2211ac1d53133eba&#39;,</span><br><span class="line">       what: &#39;fix chess&#39;,</span><br><span class="line">       due: &#39;tomorrow&#39;,</span><br><span class="line">       done: false,</span><br><span class="line">       id: &#39;24214f90-e4e6-4636-834d-d1a8dbaeb3a4&#39; &#125; &#125;,</span><br><span class="line">  &#123; id: &#39;1161b310fc0d36dfe90091f25a000fa8&#39;,</span><br><span class="line">    key: &#39;1161b310fc0d36dfe90091f25a000fa8&#39;,</span><br><span class="line">    value: &#123; rev: &#39;1-a5944cd8118a184598cc8f27736a82c1&#39; &#125;,</span><br><span class="line">    doc:</span><br><span class="line">     &#123; _id: &#39;1161b310fc0d36dfe90091f25a000fa8&#39;,</span><br><span class="line">       _rev: &#39;1-a5944cd8118a184598cc8f27736a82c1&#39;,</span><br><span class="line">       what: &#39;clean fishing rod&#39;,</span><br><span class="line">       due: &#39;tomorrow&#39;,</span><br><span class="line">       done: false,</span><br><span class="line">       id: &#39;8ad8a85a-69db-4984-8cbd-bf290776caa1&#39; &#125; &#125;,</span><br><span class="line">  &#123; id: &#39;1161b310fc0d36dfe90091f25a000ff8&#39;,</span><br><span class="line">    key: &#39;1161b310fc0d36dfe90091f25a000ff8&#39;,</span><br><span class="line">    value: &#123; rev: &#39;1-b9007b3ca9a79a2a938fe11162a7103d&#39; &#125;,</span><br><span class="line">    doc:</span><br><span class="line">     &#123; _id: &#39;1161b310fc0d36dfe90091f25a000ff8&#39;,</span><br><span class="line">       _rev: &#39;1-b9007b3ca9a79a2a938fe11162a7103d&#39;,</span><br><span class="line">       what: &#39;avoid learning distant relatives&#39;,</span><br><span class="line">       due: &#39;tomorrow&#39;,</span><br><span class="line">       done: false,</span><br><span class="line">       id: &#39;6b46a90d-852a-420d-a311-4f81f7da981e&#39; &#125; &#125; ]</span><br></pre></td></tr></table></figure>
+<p>You can also see this data by fetching it from the CouchDB directly
+using url <code>curl http://localhost:5984/c1/_all_docs?include_docs=true</code> or by
+opening the url <code>http://localhost:5984/_utils/database.html?c1</code> in the browser.</p>
+<p>PouchDB just uses the CouchDB as its data store.</p>
+<h2><span id="running-pouchdb-in-the-browser">Running PouchDB in the browser</span></h2><h3><span id="cors-controlling-who-can-call-the-database">CORS: controlling who can call the database</span></h3><p>Note: this step is optional, as we are going to &quot;hide&quot; the database
+behind a dedicated server later on.</p>
+<p>Before we can access our CouchDB from the browser, we need to enable
+<a target="_blank" rel="noopener" href="https://pouchdb.com/errors.html#no_access_control_allow_origin_header">cross domain requests</a>.
+There is a tiny Node utility package to do this, which needs the user name
+and the password we have used when we created the CouchDB.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D add-cors-to-couchdb</span><br><span class="line">$ $(npm bin)/add-cors-to-couchdb http://localhost:5984 \</span><br><span class="line">  -u iamuser -p mypass</span><br><span class="line">success</span><br></pre></td></tr></table></figure>
+<p>You can check the status of the CORS by going to the database web interface
+at <code>http://localhost:5984/_utils/config.html</code>, the selecting &quot;login&quot;
+and using the username and password from the database setup step. You should
+see the following settings enabled</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">cors</span><br><span class="line">credentials: true</span><br><span class="line">headers: accept, ...</span><br><span class="line">methods: GET, PUT, ...</span><br><span class="line">origins: *</span><br></pre></td></tr></table></figure>
+<p>You can limit the domains by editing the &quot;origins&quot; value and specifying
+a list of domains that can access the database directly.</p>
+<h3><span id="using-the-couchdb-from-the-page">Using the CouchDB from the page</span></h3><p>Now let us create a page and fetch the documents just like we have done before.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">title</span>&gt;</span>PouchDB Todos<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;https://cdn.jsdelivr.net/pouchdb/5.4.5/pouchdb.min.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;app&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript">    <span class="keyword">const</span> db = <span class="keyword">new</span> PouchDB(<span class="string">&#x27;http://localhost:5984/c1&#x27;</span>)</span></span><br><span class="line"><span class="javascript">    db.allDocs(&#123;<span class="attr">include_docs</span>: <span class="literal">true</span>&#125;)</span></span><br><span class="line"><span class="javascript">      .then(<span class="function"><span class="params">r</span> =&gt;</span> r.rows)</span></span><br><span class="line"><span class="javascript">      .then(<span class="built_in">console</span>.log)</span></span><br><span class="line"><span class="javascript">      .catch(<span class="built_in">console</span>.error)</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>If you open this <code>index.html</code> in the browser you should see the 3 items
+printed in the console. PouchDB works fine in the local Node environment, as
+well as in the browser.</p>
+<h2><span id="small-todo-web-application">Small Todo web application</span></h2><p>Let us make a tiny web application to show the fetched Todos and be able to
+add new ones. I will use <a target="_blank" rel="noopener" href="http://vuejs.org/">Vue.js</a> for this, but I will
+not implement the full example. If you want a full example, see
+<a target="_blank" rel="noopener" href="http://vuejs.org/examples/todomvc.html">Vue examples page</a>.</p>
+<p>All we will do is fetch the items from the PouchDB and then put them into
+a table.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">title</span>&gt;</span>PouchDB Todos<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;https://cdn.jsdelivr.net/pouchdb/5.4.5/pouchdb.min.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;https://cdn.jsdelivr.net/vue/1.0.26/vue.min.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;app&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">table</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">thead</span>&gt;</span><span class="tag">&lt;<span class="name">tr</span>&gt;</span><span class="tag">&lt;<span class="name">th</span>&gt;</span>Task<span class="tag">&lt;/<span class="name">th</span>&gt;</span><span class="tag">&lt;<span class="name">th</span>&gt;</span>Done?<span class="tag">&lt;/<span class="name">th</span>&gt;</span><span class="tag">&lt;/<span class="name">tr</span>&gt;</span><span class="tag">&lt;/<span class="name">thead</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">tbody</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">tr</span> <span class="attr">v-for</span>=<span class="string">&quot;todo in todos&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">td</span> <span class="attr">v-text</span>=<span class="string">&quot;todo.doc.what&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">td</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">td</span> <span class="attr">v-text</span>=<span class="string">&quot;todo.doc.done&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">td</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">tr</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">tbody</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript">  <span class="keyword">var</span> vue = <span class="keyword">new</span> Vue(&#123;</span></span><br><span class="line"><span class="javascript">    el: <span class="string">&#x27;#app&#x27;</span>,</span></span><br><span class="line"><span class="javascript">    db: <span class="literal">null</span>,</span></span><br><span class="line">    data: &#123;</span><br><span class="line">      todos: []</span><br><span class="line">    &#125;,</span><br><span class="line"><span class="javascript">    <span class="function"><span class="title">created</span>(<span class="params"></span>)</span> &#123;</span></span><br><span class="line"><span class="javascript">      <span class="built_in">this</span>.db = <span class="keyword">new</span> PouchDB(<span class="string">&#x27;http://localhost:5984/c1&#x27;</span>)</span></span><br><span class="line"><span class="javascript">      <span class="built_in">this</span>.db.allDocs(&#123;<span class="attr">include_docs</span>: <span class="literal">true</span>&#125;)</span></span><br><span class="line"><span class="javascript">        .then(<span class="function"><span class="params">r</span> =&gt;</span> r.rows)</span></span><br><span class="line"><span class="javascript">        .then(<span class="function"><span class="params">list</span> =&gt;</span> &#123;</span></span><br><span class="line"><span class="javascript">          <span class="built_in">this</span>.todos = list</span></span><br><span class="line">        &#125;)</span><br><span class="line"><span class="javascript">        .catch(<span class="built_in">console</span>.error)</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>This gives us the list in the browser, but it is static - if there is
+an update to the data in the database, then new items do not appear in the
+web application; the user must reload the page to fetch the data again.</p>
+<h2><span id="data-replication">Data replication</span></h2><p>Let us setup two way data replication - if the CouchDB gets new data,
+we want to the data to propagate to the PouchDB in the browser, and vice versa.
+The PouchDB has a good
+<a target="_blank" rel="noopener" href="https://pouchdb.com/guides/replication.html">replication</a>
+documentation page. In our case we want to keep the browser application in
+sync with the CouchDB, and even handle the case when the browser loses
+network connection (offline mode).</p>
+<p>Instead of working directly with the remove CouchDB we will work against
+a local replica</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">this</span>.db = <span class="keyword">new</span> PouchDB(<span class="string">&#x27;tododb&#x27;</span>)</span><br><span class="line"><span class="keyword">var</span> remoteDB = <span class="keyword">new</span> PouchDB(<span class="string">&#x27;http://localhost:5984/c1&#x27;</span>)</span><br><span class="line"><span class="built_in">this</span>.db.sync(remoteDB, &#123;</span><br><span class="line">  live: <span class="literal">true</span>,</span><br><span class="line">  retry: <span class="literal">true</span></span><br><span class="line">&#125;).on(<span class="string">&#x27;change&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">change</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;data change&#x27;</span>, change)</span><br><span class="line">&#125;).on(<span class="string">&#x27;error&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;sync error&#x27;</span>, err)</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>The web application works as before, but now we can stop the CouchDB
+Docker container but continue working like before in the browser.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker stop 7dd6baed4d70</span><br><span class="line">7dd6baed4d70</span><br></pre></td></tr></table></figure>
+<p>The data still loads in the page, but shows the failed network sync requests
+if we have XHR logging enabled in the DevTools</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pouchdb.min.js:9 GET http:&#x2F;&#x2F;localhost:5984&#x2F;c1&#x2F; net::ERR_CONNECTION_REFUSED</span><br></pre></td></tr></table></figure>
+<p>If we start the container, the errors stop.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ docker restart 7dd6baed4d70</span><br></pre></td></tr></table></figure>
+<p>What happens if we create new data items in the CouchDB database?
+Let us use our Node program to add 3 more Todo items and observe the
+PouchDB event callbacks in the browser. The browser console shows
+3 new events</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">data change <span class="built_in">Object</span> &#123;<span class="attr">direction</span>: <span class="string">&quot;pull&quot;</span>, <span class="attr">change</span>: <span class="built_in">Object</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>The <code>change</code> property includes the actual new data object. While we could
+use the <code>change</code> directly to update the <code>vue.data.todos</code> list, we might
+as well just refetch the data, since this is now a <em>local</em> browser data
+fetch! Here is the relevant web application code</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> vue = <span class="keyword">new</span> Vue(&#123;</span><br><span class="line">  ...</span><br><span class="line">  methods: &#123;</span><br><span class="line">    <span class="function"><span class="title">fetch</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.db.allDocs(&#123;<span class="attr">include_docs</span>: <span class="literal">true</span>&#125;)</span><br><span class="line">        .then(<span class="function"><span class="params">r</span> =&gt;</span> r.rows)</span><br><span class="line">        .then(<span class="function"><span class="params">list</span> =&gt;</span> &#123;</span><br><span class="line">          <span class="built_in">this</span>.todos = list</span><br><span class="line">          <span class="built_in">console</span>.log(<span class="string">&#x27;fetched %d todos&#x27;</span>, list.length)</span><br><span class="line">        &#125;)</span><br><span class="line">        .catch(<span class="built_in">console</span>.error)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="function"><span class="title">created</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.db = <span class="keyword">new</span> PouchDB(<span class="string">&#x27;tododb&#x27;</span>)</span><br><span class="line">    <span class="keyword">var</span> remoteDB = <span class="keyword">new</span> PouchDB(<span class="string">&#x27;http://localhost:5984/c1&#x27;</span>)</span><br><span class="line">    <span class="built_in">this</span>.db.sync(remoteDB, &#123;</span><br><span class="line">      live: <span class="literal">true</span>,</span><br><span class="line">      retry: <span class="literal">true</span></span><br><span class="line">    &#125;).on(<span class="string">&#x27;change&#x27;</span>, <span class="function"><span class="params">change</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">&#x27;data change&#x27;</span>, change)</span><br><span class="line">      <span class="built_in">this</span>.fetch()</span><br><span class="line">    &#125;).on(<span class="string">&#x27;error&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">&#x27;sync error&#x27;</span>, err)</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="built_in">this</span>.fetch() <span class="comment">// fetch initial</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Here is the fetch in action; as the new items are inserted into the
+CouchDB, the browser PouchDB gets the updates and refreshes the list.</p>
+<video src="https://raw.githubusercontent.com/bahmutov/bahmutov.github.io/master/images/pouchdb-sync.webm" controls loop autoplay></video>
+
+<h2><span id="run-couchdb-in-the-cloud">Run CouchDB in the cloud</span></h2><p>I am a big fan of <a target="_blank" rel="noopener" href="http://dokku.viewdocs.io/dokku/">Dokku</a> and will use it
+to run CouchDB on a personal <a target="_blank" rel="noopener" href="https://www.digitalocean.com/">DigitalOcean</a>
+droplet. I have already described how to
+<a href="../running-multiple-applications-in-dokku/">setup a Dokku instance</a>,
+so I will skip the general introduction.</p>
+<p>I will install the <a target="_blank" rel="noopener" href="https://github.com/dokku/dokku-couchdb">CouchDB plugin</a>
+from the list of Dokku <a target="_blank" rel="noopener" href="http://dokku.viewdocs.io/dokku/community/plugins/">Community plugins</a>.
+Since I do not have an application (CouchDB has built-in web server),
+I will just create the service and will expose it to the web.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo dokku plugin:install https://github.com/dokku/dokku-couchdb.git couchdb</span><br><span class="line">dokku couchdb:create c1</span><br><span class="line">dokku couchdb:expose c1 6690</span><br></pre></td></tr></table></figure>
+<p>The CouchDB is now running available at the direct IP address <code>&lt;ip4.com&gt;:6690</code>
+which is not the best practice of course, but would work for now. Let us
+insert 3 todo records - just change the database url in the <code>index.js</code>.
+We can even use the domain name instead of IP4 address.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> db = <span class="keyword">new</span> PouchDB(<span class="string">&#x27;http://&lt;domain.com&gt;:6690/c1&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>We can see the items using the CouchDB built-in web browser, just open
+in the browser url <code>http://&lt;domain.com&gt;:6690/_utils/database.html?c1</code></p>
+<h3><span id="limit-direct-access-via-cors">Limit direct access via CORS</span></h3><p>Note: again, you can safely skip this step as we are going to proxy calls
+to the database through a server.</p>
+<p>We need to enable our browser client to call the CouchDB interface across
+the domain boundary. Login into the Dokku host and lookup the CouchDB password.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">dokku couchdb:info c1</span><br><span class="line">DSN: http://c1:&lt;password&gt;@dokku-couchdb-c1:5984/c1</span><br><span class="line">Config dir: /var/lib/dokku/services/couchdb/c1/config</span><br><span class="line">Data dir: /var/lib/dokku/services/couchdb/c1/data</span><br></pre></td></tr></table></figure>
+<p>The <code>DSN</code> field has the long random password generated for us when we created
+a CouchDB service instance. The username is the database name &quot;c1&quot;.</p>
+<p>Now go back to the CouchDB web configuration interface and change
+the &quot;cors|credentials&quot; value to &quot;true&quot;. The at the bottom click &quot;Add a new
+section&quot; and add the following sections one by one (copy from local config
+created by <code>add-cors-to-couchdb</code> utility).</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">section | option    | value</span><br><span class="line">-------------------------------</span><br><span class="line">cors    | headers   | accept, authorization, content-type, origin, referer, x-csrf-token</span><br><span class="line">cors    | methods   | GET, PUT, POST, HEAD, DELETE</span><br><span class="line">cors    | origins   | *</span><br></pre></td></tr></table></figure>
+<p>If you are running the PouchDB only from a certain domain, you should enter
+a specific value instead of a wild card. Finally, change &#39;httpd&#39; section
+value &#39;enable_cors&#39; to &quot;true&quot;.</p>
+<p>The PouchDB running locally now should sync with the CouchDB running in the
+cloud!</p>
+<h2><span id="restricting-database-access">Restricting database access</span></h2><p>Exposing the database to the whole world is less than optimal. Plus we need
+to serve the web page somehow. We can solve both problems by writing a tiny
+static HTML page server + proxy to redirect the database requests.
+Here is a server code that is using Express framework.
+The server redirects any request to <code>/db/</code> to a local CouchDB running at the
+standard port 5984.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> request = <span class="built_in">require</span>(<span class="string">&#x27;request&#x27;</span>)</span><br><span class="line"><span class="comment">// assuming CouchDB is running locally</span></span><br><span class="line"><span class="keyword">const</span> dbUrl = <span class="string">&#x27;http://127.0.0.1:5984&#x27;</span></span><br><span class="line"><span class="keyword">const</span> app = express()</span><br><span class="line">app.use(express.static(<span class="string">&#x27;public&#x27;</span>))</span><br><span class="line">app.all(<span class="string">&#x27;/db/*&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> fullUrl = dbUrl + req.url.replace(<span class="regexp">/^\/db/</span>, <span class="string">&#x27;&#x27;</span>) <span class="comment">// strip leading &quot;/db&quot;</span></span><br><span class="line">  req.pipe(request(fullUrl)).pipe(res)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="keyword">const</span> port = process.env.PORT || <span class="number">4600</span></span><br><span class="line">app.listen(port)</span><br></pre></td></tr></table></figure>
+<p>The <code>index.html</code> page can be moved into folder <code>/public</code> and just go back
+to the server to get the data</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;app started&#x27;</span>)</span><br><span class="line"><span class="built_in">this</span>.db = <span class="keyword">new</span> PouchDB(<span class="string">&#x27;tododb&#x27;</span>)</span><br><span class="line"><span class="keyword">var</span> remoteDB = <span class="keyword">new</span> PouchDB(<span class="built_in">window</span>.location.origin + <span class="string">&#x27;/db/c1&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>The application is working locally, let us deploy it.</p>
+<h2><span id="deploying-server-with-hidden-database">Deploying server with hidden database</span></h2><p>Log into your Dokku box and create new application</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ dokku apps create pouch-couch</span><br><span class="line">Creating pouch-couch... <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+<p>Stop exposing Couch database directly to the outside world. Instead link
+it to the new <code>pouch-couch</code> app.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ dokku couchdb:unexpose c1</span><br><span class="line">-----&gt; Service c1 unexposed</span><br><span class="line">$ dokku couchdb:link c1 pouch-couch</span><br><span class="line">COUCHDB_URL: http://c1:&lt;long sha&gt;@dokku-couchdb-c1:5984/c1</span><br></pre></td></tr></table></figure>
+<p>The command shows long unique URL string we should be using to access the
+Couch database from our proxy application. We should use this variable
+name in the <code>server.js</code> if available.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> dbUrl = process.env.COUCHDB_URL || <span class="string">&#x27;http://127.0.0.1:5984/c1&#x27;</span></span><br></pre></td></tr></table></figure>
+<p>Add simple &quot;Procfile&quot; to the repo to let the hosting environment know we
+need a web process</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cat <span class="string">&quot;web: npm start&quot;</span> &gt; Procfile</span><br><span class="line">git add Procfile</span><br><span class="line">git commit -m <span class="string">&quot;add proc file&quot;</span></span><br></pre></td></tr></table></figure>
+<p>Deploy the application to the Dokku server by pushing it as a Git remote</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ git remote add dokku dokku@&lt;domain name&gt;.com:pouch-couch</span><br><span class="line">$ git push dokku master</span><br><span class="line">...</span><br><span class="line">=====&gt; Application deployed:</span><br><span class="line">       http://pouch-couch.&lt;domain name&gt;.com</span><br><span class="line">To dokku@&lt;domain name&gt;.com:pouch-couch</span><br><span class="line">   011273a..f1673ad  master -&gt; master</span><br></pre></td></tr></table></figure>
+<p>If we browse to <code>http://pouch-couch.&lt;domain name&gt;.com</code> we will see an empty
+HTML page (there are no tasks yet), and if we browser to
+<code>http://pouch-couch.&lt;domain name&gt;.com/db/</code> we can see the CouchDB database
+system information.</p>
+<p>We should quickly protect the application from any interception
+by <a href="running-multiple-applications-in-dokku/#setting-up-ssl-for-an-application">installing SSL</a>.
+We can also protect the requests to the database in the server code if we
+wanted to.</p>
+<h2><span id="result">Result</span></h2><p>We got an isolated database only accessed via the Node server. The database
+and the server are running in two connected Docker containers on a single
+DigitalOcean &quot;droplet&quot; server.
+The web client (or multiple ones) works with local database in the browser,
+and the PouchDB syncs the data automatically.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/talks/master/images/pouch-couch-architecture.png" alt="pouch-couch architecture"></p>
+<p>Multiple clients can connect to the same url at the same time and have
+the data stay in sync, even when going offline and reconnecting. The PouchDB
+synchronization does the heavy lifting, while the web app only works with the
+local data source.</p>
+<iframe width="853" height="480" src="https://www.youtube.com/embed/u3lXMJzEpyo?rel=0" frameborder="0" allowfullscreen>
+</iframe>
+
+<h2><span id="additional-information">Additional information</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://gist.github.com/bahmutov/1003fa86980dda147ff6">Docker basics</a>
+and why I am <a href="../think-inside-the-box/">so excited about Docker</a></li>
+<li><a target="_blank" rel="noopener" href="http://dokku.viewdocs.io/dokku/">Dokku docs</a></li>
+<li><a target="_blank" rel="noopener" href="https://couchdb.apache.org/">CouchDB</a></li>
+<li><a target="_blank" rel="noopener" href="https://pouchdb.com/">PouchDB</a></li>
+<li>To avoid losing data on the remote server when the database Docker container
+is restarted / updated, you should keep the data on a mounted volume
+connected to the docker container, not inside the container itself.</li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/synching-db/" data-id="ckpyeu4cr01rw6zvgbo841k73" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/synching-db/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/db/" rel="tag">db</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../subresource-integrity/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Subresource integrity (SRI)
+        
+      </div>
+    </a>
+  
+  
+    <a href="../think-inside-the-box/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Think inside the box</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/synching-db/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

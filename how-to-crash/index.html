@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>How to crash | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="When you have a long running Node.js server, it is bound to crash. Invalid input, lost connections, logic errors - there will be exceptions sooner or later.  You want to know about every possible erro">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to crash">
+<meta property="og:url" content="https://glebbahmutov.com/blog/how-to-crash/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="When you have a long running Node.js server, it is bound to crash. Invalid input, lost connections, logic errors - there will be exceptions sooner or later.  You want to know about every possible erro">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/crasher/master/images/sentry-crashes.png">
+<meta property="article:published_time" content="2016-03-02T05:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.290Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="promises">
+<meta property="article:tag" content="assertions">
+<meta property="article:tag" content="sentry">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/bahmutov/crasher/master/images/sentry-crashes.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-how-to-crash" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-03-02T05:00:00.000Z" itemprop="datePublished">Mar 2 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      How to crash
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to make sure your Express or Koa server correctly sends crashes to exception monitoring service.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>When you have a long running Node.js server, it is bound to crash. Invalid input,
+lost connections, logic errors - there will be exceptions sooner or later. 
+You want to know about every possible error your server encounters. I always try to use
+a crash reporting services, like <a target="_blank" rel="noopener" href="https://raygun.io/">Raygun</a> or 
+<a target="_blank" rel="noopener" href="https://getsentry.com/welcome/">Sentry</a>, and have written bunch of blog posts
+on how useful <a href="../tags/sentry/">these services are</a>.</p>
+<p>In this blog post I will show how to properly test crash reporting. Just like
+testing cars requires crashing a few vehicles into a concrete barriers, testing the
+exception reporting code requires generating crashes on demand. Just like
+testing cars requires different collision types (head on, side, etc), testing
+exception reporting requires checking that errors of different types are
+reported.</p>
+<p>My application is a typical Node.js server, like <a target="_blank" rel="noopener" href="http://expressjs.com/">Express</a>.
+We will add a GET api end point that will generate exceptions, and then we will check
+if our crash reporting dashboard displays them. </p>
+<p>Let us start with a tiny server with a single end point. 
+When we hit this end point we the server should crash.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> app = express()</span><br><span class="line">app.get(<span class="string">&#x27;/crash&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  res.send(<span class="string">&#x27;We will crash\n&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line">app.listen(<span class="number">3000</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;Example app listening on port 3000!&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ node server.js</span><br><span class="line">Example app listening on port 3000!</span><br><span class="line">$ curl localhost:3000/crash</span><br><span class="line">We will crash</span><br></pre></td></tr></table></figure>
+<h2><span id="sync-exception">Sync exception</span></h2><p>The first crash we want to simulate is throwing synchronously a simple Error.
+This will stop any further code in the same handler, but this will NOT kill the server!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">app.get(<span class="string">&#x27;/crash&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;sync crashing&#x27;</span>)</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;Sync error&#x27;</span>)</span><br><span class="line">  <span class="comment">// this code is unreachable</span></span><br><span class="line">  res.send(<span class="string">&#x27;We will crash\n&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:3000/crash</span><br><span class="line">Error: Sync error&lt;br&gt; &amp;nbsp; &amp;nbsp;at /Users/gleb/git/crasher/demo/server.js:5:9&lt;br&gt; </span><br><span class="line">... huge blob of text</span><br></pre></td></tr></table></figure>
+<p>Quick security note: by default Express returns the detailed HTML of the crash stack to the
+caller. This is a security risk for production servers - we don&#39;t want to list all the modules used
+when the crash happens. To quickly prevent the stack trace from leaking out, 
+start the server with <code>NODE_ENV=production</code> environment setting.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ NODE_ENV=production node server.js</span><br><span class="line">Example app listening on port 3000!</span><br><span class="line">$ curl localhost:3000/crash</span><br><span class="line">Internal Server Error</span><br></pre></td></tr></table></figure>
+<p>Much better!</p>
+<p>In both cases, the server&#39;s terminal displays the full error stack</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ node server.js </span><br><span class="line">Example app listening on port 3000!</span><br><span class="line">sync crashing</span><br><span class="line">Error: Sync error</span><br><span class="line">    at /Users/gleb/git/crasher/demo/server.js:5:9</span><br><span class="line">    at Layer.handle [as handle_request] (/Users/gleb/git/crasher/node_modules/express/lib/router/layer.js:95:5)</span><br><span class="line">    at next (/Users/gleb/git/crasher/node_modules/express/lib/router/route.js:131:13)</span><br><span class="line">    at Route.dispatch (/Users/gleb/git/crasher/node_modules/express/lib/router/route.js:112:3)</span><br><span class="line">    at Layer.handle [as handle_request] (/Users/gleb/git/crasher/node_modules/express/lib/router/layer.js:95:5)</span><br><span class="line">    at /Users/gleb/git/crasher/node_modules/express/lib/router/index.js:277:22</span><br><span class="line">    at Function.process_params (/Users/gleb/git/crasher/node_modules/express/lib/router/index.js:330:12)</span><br><span class="line">    at next (/Users/gleb/git/crasher/node_modules/express/lib/router/index.js:271:10)</span><br><span class="line">    at expressInit (/Users/gleb/git/crasher/node_modules/express/lib/middleware/init.js:33:5)</span><br><span class="line">    at Layer.handle [as handle_request] (/Users/gleb/git/crasher/node_modules/express/lib/router/layer.js:95:5)</span><br></pre></td></tr></table></figure>
+<p>Note that the server keeps on running, and we can execute more requests. A single crash
+inside the response middleware does not bring us down.</p>
+<h2><span id="async-exception">Async exception</span></h2><p>In JavaScript we might get an error that is executed <em>out of band</em> with the current call stack.
+For example, the following error does NOT crash the execution stack, since it executes in its own
+little stack, scheduled via event loop</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">app.get(<span class="string">&#x27;/crash-async&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;async crashing&#x27;</span>)</span><br><span class="line">  <span class="built_in">setTimeout</span>(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;Async error&#x27;</span>)</span><br><span class="line">  &#125;, <span class="number">100</span>)</span><br><span class="line">  <span class="comment">// this code runs fine</span></span><br><span class="line">  res.send(<span class="string">&#x27;after async crash\n&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>When we run this code we get into a weird situation. The client gets the right response</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ curl -i localhost:3000/crash-async</span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line"></span><br><span class="line">after async crash</span><br></pre></td></tr></table></figure>
+<p>But the entire server crashes AFTER finishing the response.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ node demo/server.js </span><br><span class="line">Example app listening on port 3000!</span><br><span class="line">async crashing</span><br><span class="line">/Users/gleb/git/crasher/demo/server.js:12</span><br><span class="line">    throw new Error(<span class="string">&#x27;Async error&#x27;</span>)</span><br><span class="line">    ^</span><br><span class="line">Error: Async error</span><br><span class="line">    at null._onTimeout (/Users/gleb/git/crasher/demo/server.js:12:11)</span><br><span class="line">    at Timer.listOnTimeout (timers.js:92:15)</span><br></pre></td></tr></table></figure>
+<p>Because the error is thrown from another execution stack, scheduled AFTER the callback function
+finishes, we cannot just catch this error using the <code>try/catch</code> block.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// does not work</span></span><br><span class="line">app.get(<span class="string">&#x27;/crash-async&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;async crashing&#x27;</span>)</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="built_in">setTimeout</span>(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;Async error&#x27;</span>)</span><br><span class="line">    &#125;, <span class="number">100</span>)</span><br><span class="line">  &#125; <span class="keyword">catch</span> (err) &#123;</span><br><span class="line">    <span class="comment">// handle error gracefully</span></span><br><span class="line">    <span class="comment">// prevent entire server from crashing</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// this code runs fine</span></span><br><span class="line">  res.send(<span class="string">&#x27;after async crash\n&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>We will see how to handle these types of crashes properly in a little bit.</p>
+<h2><span id="rejected-promises">Rejected promises</span></h2><p>Using promises is a great way to avoid callback hell. Yet they can be silent and deadly if we are
+not diligent in attaching a <code>.catch</code> handler at the very end. For example, the following code
+will throw an error that goes nowhere!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">app.get(<span class="string">&#x27;/crash-promise&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;rejecting promise&#x27;</span>)</span><br><span class="line">  <span class="built_in">Promise</span>.reject(<span class="number">42</span>)</span><br><span class="line">    .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">&#x27;will not get here&#x27;</span>)</span><br><span class="line">    &#125;, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      res.send(<span class="string">&#x27;rejected promise &#x27;</span> + value + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>If we run this code, the server simply times out. What is going on?
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ node demo/server.js </span><br><span class="line">Example app listening on port 3000!</span><br><span class="line">rejecting promise</span><br></pre></td></tr></table></figure></p>
+<p>The original promise is rejected in <code>Promise.reject(42)</code> and we get into the second
+callback where we are supposed to send the error response to the user.
+But this error callback has a syntax error of its own - we don&#39;t have variable <code>value</code> declared anywhere.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  res.send(<span class="string">&#x27;rejected promise &#x27;</span> + value + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The ReferenceError that is generated inside the above function is swallowed silently.
+Even worse, if we move the code around and have a similar error <em>inside the success</em> callback,
+it will also be silently swallowed.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Promise</span>.resolve(<span class="number">42</span>)</span><br><span class="line">  .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    res.send(<span class="string">&#x27;got value &#x27;</span> + value + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">  &#125;, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">    res.send(<span class="string">&#x27;a problem &#x27;</span> + err.message + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>The error callback in this case only handles the rejection from the <em>previous step</em>, not from the
+<em>parallel success callback</em>.</p>
+<p>In general, I advise to put the error callback by itself at the last position, instead of in parallel.
+Then it will handle any error from any of the previous steps.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">app.get(<span class="string">&#x27;/crash-promise&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;rejecting promise&#x27;</span>)</span><br><span class="line">  <span class="built_in">Promise</span>.resolve(<span class="number">42</span>)</span><br><span class="line">    .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      res.send(<span class="string">&#x27;got value &#x27;</span> + value + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">    .catch(<span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">      res.send(<span class="string">&#x27;a problem &#x27;</span> + err.message + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Now the user at least gets the error response</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl localhost:3000/crash-promise</span><br><span class="line">a problem value is not defined</span><br></pre></td></tr></table></figure>
+<p>For our error testing purposes we need both features. We want to reply to the user, but we need
+to make sure we know about all silently rejected promises even more. Thus our crash callback
+should simply generate a rejected promise without holding the response.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">app.get(<span class="string">&#x27;/crash-promise&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;rejecting promise&#x27;</span>)</span><br><span class="line">  <span class="built_in">Promise</span>.reject(<span class="number">42</span>)</span><br><span class="line">  res.send(<span class="string">&#x27;rejected a promise\n&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<h2><span id="generate-all-crashes-at-once">Generate all crashes at once</span></h2><p>To simplify testing any server, I have put the above three crashes into a single module one an include
+in any Express (or Koa) server as middleware. You can find it at 
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/crasher">bahmutov/crasher</a> and simply use like this</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> app = express()</span><br><span class="line">app.get(<span class="string">&#x27;/crash&#x27;</span>, <span class="built_in">require</span>(<span class="string">&#x27;crasher&#x27;</span>))</span><br></pre></td></tr></table></figure>
+<p>When called, all three errors will be raised: sync and async errors, and an unhandled rejected
+promise. See the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/crasher/blob/master/index.js">implementation</a> for details.</p>
+<p>Let us see now how to handle these errors without crashing the server, and how to report
+these errors to an external error monitoring service.</p>
+<h2><span id="receiving-all-errors-in-an-express-app">Receiving all errors in an Express app</span></h2><p>We need to collect all three types of errors. For sync errors that happen while processing
+the request, we can just add <a target="_blank" rel="noopener" href="http://expressjs.com/en/guide/error-handling.html">another middleware</a>
+In Express server we should put this middleware at the very last position of the route</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> app = express()</span><br><span class="line">app.get(<span class="string">&#x27;/crash&#x27;</span>, <span class="built_in">require</span>(<span class="string">&#x27;crasher&#x27;</span>))</span><br><span class="line"><span class="comment">// other routes</span></span><br><span class="line">app.use(<span class="function"><span class="keyword">function</span> <span class="title">errorHandler</span>(<span class="params">err, req, res, next</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.error(err.message)</span><br><span class="line">  res.status(<span class="number">500</span>)</span><br><span class="line">  res.send(<span class="string">&#x27;error &#x27;</span> + err.message + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line">app.listen(<span class="number">3000</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;Example app listening on port 3000!&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Now we receive the error when the code crashes synchronously
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ node demo/server-with-error-handling.js</span><br><span class="line">Example app listening on port 3000!</span><br><span class="line"><span class="comment"># from another tab: curl localhost:3000/crash-sync</span></span><br><span class="line">sync crashing</span><br><span class="line">Sync error</span><br></pre></td></tr></table></figure></p>
+<p>For async errors, we need to catch <em>all out of band</em> errors. Node has such
+capability, we just need to register a listener. This is not specific to the
+Express application, but to every Node process, see 
+the <a target="_blank" rel="noopener" href="https://nodejs.org/api/process.html#process_event_uncaughtexception">Process module docs</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// place somewhere in the beginning</span></span><br><span class="line">process.on(<span class="string">&#x27;uncaughtException&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">&#x27;global exception:&#x27;</span>, err.message)</span><br><span class="line">&#125;)</span><br><span class="line">app.listen(<span class="number">3000</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;Example app listening on port 3000!&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Now we are notified about all global asynchronous errors and our server no longer crashes!
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Example app listening on port 3000!</span><br><span class="line"><span class="comment"># from another tab: curl localhost:3000/crash-async</span></span><br><span class="line">async crashing</span><br><span class="line">global exception: Async error</span><br><span class="line"><span class="comment"># server is happily running</span></span><br></pre></td></tr></table></figure></p>
+<p>Finally, to know about rejected promises, the new version of Node (v5) has another global
+event we can use called <a target="_blank" rel="noopener" href="https://nodejs.org/api/process.html#process_event_unhandledrejection">&quot;unhandledRejection&quot;</a>.
+We can handle it the same way as async errors.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">process.on(<span class="string">&#x27;unhandledRejection&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">reason, promise</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">&#x27;unhandled promise rejection:&#x27;</span>, reason.message || reason)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>If the reason for promise rejection is an instance of Error, then we print the message,
+otherwise just print the <code>reason</code> value itself.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Example app listening on port 3000!</span><br><span class="line"><span class="comment"># from another tab: curl localhost:3000/crash-promise</span></span><br><span class="line">rejecting promise</span><br><span class="line">unhandled promise rejection: 42</span><br></pre></td></tr></table></figure>
+<p>Great, all types of errors are handled without crashing the server.</p>
+<h2><span id="receiving-all-errors-in-a-koa-app">Receiving all errors in a Koa app</span></h2><p><a target="_blank" rel="noopener" href="http://koajs.com/">Koa</a> is a great step up from Express.</p>
+<p>First, let us write an example Koa server that throws each type of error</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> koa = <span class="built_in">require</span>(<span class="string">&#x27;koa&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> route = <span class="built_in">require</span>(<span class="string">&#x27;koa-route&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> app = koa()</span><br><span class="line">app.use(route.get(<span class="string">&#x27;/crash-sync&#x27;</span>, <span class="function"><span class="keyword">function</span> * (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;sync crashing&#x27;</span>)</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;Sync error&#x27;</span>)</span><br><span class="line">  <span class="comment">// this code is unreachable</span></span><br><span class="line">  <span class="built_in">this</span>.body = <span class="string">&#x27;We will crash sync\n&#x27;</span> <span class="comment">// eslint-disable-line no-unreachable</span></span><br><span class="line">&#125;))</span><br><span class="line">app.use(route.get(<span class="string">&#x27;/crash-async&#x27;</span>, <span class="function"><span class="keyword">function</span> * (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;async crashing&#x27;</span>)</span><br><span class="line">  <span class="built_in">setTimeout</span>(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;Async error&#x27;</span>)</span><br><span class="line">  &#125;, <span class="number">100</span>)</span><br><span class="line">  <span class="comment">// this code runs fine</span></span><br><span class="line">  <span class="built_in">this</span>.body = <span class="string">&#x27;We will crash async\n&#x27;</span></span><br><span class="line">&#125;))</span><br><span class="line">app.use(route.get(<span class="string">&#x27;/crash-promise&#x27;</span>, <span class="function"><span class="keyword">function</span> * (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;rejecting promise&#x27;</span>)</span><br><span class="line">  <span class="built_in">Promise</span>.reject(<span class="number">42</span>)</span><br><span class="line">  <span class="built_in">this</span>.body = <span class="string">&#x27;rejected a promise\n&#x27;</span></span><br><span class="line">&#125;))</span><br><span class="line">app.listen(<span class="number">3000</span>)</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;Koa app listening on port 3000!&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>We can run and crash this Koa server just like we could crash an Express one, except Koa
+does not send the stack on synchronous exception by default.</p>
+<p>Let us handle the exceptions in Koa. Not only we can get the errors downstream from the
+first middleware callback, Koa also will emit the errors, so we can log them at a single
+location. See the example code at <a target="_blank" rel="noopener" href="https://github.com/koajs/koa/wiki/Error-Handling">Koa wiki</a>.</p>
+<p>At the bare minimum:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">app.on(<span class="string">&#x27;error&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">&#x27;Koa app error&#x27;</span>, err.stack)</span><br><span class="line">&#125;)</span><br><span class="line">process.on(<span class="string">&#x27;uncaughtException&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">&#x27;global exception:&#x27;</span>, err.message)</span><br><span class="line">&#125;)</span><br><span class="line">process.on(<span class="string">&#x27;unhandledRejection&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">reason, promise</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">&#x27;unhandled promise rejection:&#x27;</span>, reason.message || reason)</span><br><span class="line">&#125;)</span><br><span class="line">app.listen(<span class="number">3000</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ node demo/server-koa-with-error-handling.js</span><br><span class="line">Koa app listening on port 3000!</span><br><span class="line"><span class="comment"># from another tab: curl localhost:3000/crash-sync</span></span><br><span class="line">sync crashing</span><br><span class="line">Koa app error Error: Sync error</span><br><span class="line"><span class="comment"># and full stack trace in the server&#x27;s terminal</span></span><br><span class="line"><span class="comment"># on the client</span></span><br><span class="line">Internal Server Error</span><br></pre></td></tr></table></figure>
+<p>If you want more details, we also have access to the request context object</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">app.on(<span class="string">&#x27;error&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err, ctx</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">&#x27;Koa app error&#x27;</span>, err.stack)</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">&#x27;on url&#x27;</span>, ctx.req.url)</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">&#x27;with headers&#x27;</span>, ctx.req.headers)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># curl localhost:3000/crash-sync</span></span><br><span class="line">sync crashing</span><br><span class="line">Koa app error Error: Sync error</span><br><span class="line">on url /crash-sync</span><br><span class="line">with headers &#123; <span class="string">&#x27;user-agent&#x27;</span>: <span class="string">&#x27;curl/7.37.0&#x27;</span>,</span><br><span class="line">  host: <span class="string">&#x27;localhost:3000&#x27;</span>,</span><br><span class="line">  accept: <span class="string">&#x27;*/*&#x27;</span> &#125;</span><br></pre></td></tr></table></figure>
+<p>If we handle an error in our middleware and still want to log / send it to crash reporting
+service, we should <code>emit</code> it.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> * <span class="title">syncError</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;sync crashing&#x27;</span>)</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;Sync error&#x27;</span>)</span><br><span class="line">  <span class="comment">// this code is unreachable</span></span><br><span class="line">  <span class="built_in">this</span>.body = <span class="string">&#x27;We will crash sync\n&#x27;</span> <span class="comment">// eslint-disable-line no-unreachable</span></span><br><span class="line">&#125;</span><br><span class="line">app.use(route.get(<span class="string">&#x27;/crash-sync&#x27;</span>, syncError))</span><br><span class="line">app.use(route.get(<span class="string">&#x27;/crash-handle-sync&#x27;</span>, <span class="function"><span class="keyword">function</span> * (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">yield</span> syncError()</span><br><span class="line">  &#125; <span class="keyword">catch</span> (err) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;Sync error happened, and we caught it&#x27;</span>)</span><br><span class="line">    <span class="built_in">this</span>.body = <span class="string">&#x27;Sync error handled&#x27;</span></span><br><span class="line">    <span class="built_in">this</span>.app.emit(<span class="string">&#x27;error&#x27;</span>, err, <span class="built_in">this</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;))</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ node demo/server-koa-with-error-handling.js</span><br><span class="line">Koa app listening on port 3000!</span><br><span class="line"><span class="comment"># from another tab: curl localhost:3000/crash-handle-sync</span></span><br><span class="line"><span class="comment"># the client sees &quot;Sync error handled&quot;</span></span><br><span class="line"><span class="comment"># the server&#x27;s log shows</span></span><br><span class="line">sync crashing</span><br><span class="line">Sync error happened, and we caught it</span><br><span class="line">Koa app error Error: Sync error</span><br><span class="line">  &lt;full stack&gt;</span><br><span class="line">on url /crash-handle-sync</span><br><span class="line">with headers &#123; <span class="string">&#x27;user-agent&#x27;</span>: <span class="string">&#x27;curl/7.37.0&#x27;</span>,</span><br><span class="line">  host: <span class="string">&#x27;localhost:3000&#x27;</span>,</span><br><span class="line">  accept: <span class="string">&#x27;*/*&#x27;</span> &#125;</span><br></pre></td></tr></table></figure>
+<p>We have the best of both worlds - we can handle the errors gracefully and respond to the user,
+yet collect every such error.</p>
+<h2><span id="sending-collected-errors-to-the-crash-service">Sending collected errors to the crash service</span></h2><p>Once you setup or buy account on a crash reporting service, you should forward all
+collected errors there. For example, here is forwarding errors to Sentry using its 
+<a target="_blank" rel="noopener" href="https://github.com/getsentry/raven-node#readme">Raven client</a>. If the Sentry URL is
+not configured, the code just prints the error to the terminal.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> raven = <span class="built_in">require</span>(<span class="string">&#x27;raven&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> sentryUrl = process.env.SENTRY_URL</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">consoleErrorReporter</span> (<span class="params">err, details</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">`The exception details`</span>)</span><br><span class="line">  <span class="built_in">console</span>.error(err.stack)</span><br><span class="line">  <span class="keyword">if</span> (details) &#123;</span><br><span class="line">    <span class="built_in">console</span>.error(<span class="string">&#x27;details&#x27;</span>, details)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isProduction</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> process.env.NODE_ENV === <span class="string">&#x27;production&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> reporter</span><br><span class="line"><span class="keyword">if</span> (sentryUrl &amp;&amp; isProduction()) &#123;</span><br><span class="line">  <span class="keyword">const</span> client = <span class="keyword">new</span> raven.Client(sentryUrl, &#123;&#125;)</span><br><span class="line">  reporter = client.captureException.bind(client)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  reporter = consoleErrorReporter</span><br><span class="line">&#125;</span><br><span class="line">process.on(<span class="string">&#x27;uncaughtException&#x27;</span>, <span class="function">(<span class="params">err</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">`Caught global exception: <span class="subst">$&#123;err&#125;</span>`</span>)</span><br><span class="line">  reporter(err)</span><br><span class="line">&#125;)</span><br><span class="line">process.on(<span class="string">&#x27;unhandledRejection&#x27;</span>, <span class="function">(<span class="params">reason</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">`Unhandled rejection: <span class="subst">$&#123;reason&#125;</span>`</span>)</span><br><span class="line">  reporter(<span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;Unhandled promise rejection&#x27;</span>),</span><br><span class="line">    &#123; <span class="attr">extra</span>: &#123; <span class="attr">reason</span>: reason &#125;&#125;)</span><br><span class="line">&#125;)</span><br><span class="line">app.on(<span class="string">&#x27;error&#x27;</span>, <span class="function">(<span class="params">err, ctx</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">`Caught app exception: <span class="subst">$&#123;err&#125;</span>`</span>)</span><br><span class="line">  reporter(err, &#123; <span class="attr">url</span>: ctx.req.url &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>If you use <a target="_blank" rel="noopener" href="https://github.com/bahmutov/crasher">crasher</a> and everything is setup and deployed correctly, 
+when you execute <code>curl &lt;domain&gt;:/crash</code> you should see the errors on Sentry a couple of seconds later.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/crasher/master/images/sentry-crashes.png" alt="sentry errors"></p>
+<p>Other crash reporting services can be used in similar fashion.</p>
+<h2><span id="conclusions">Conclusions</span></h2><ul>
+<li>Server errors come in different flavors. </li>
+<li>You should set up a crash end point to test how your server actually handles
+the different types of errors.</li>
+</ul>
+<h3><span id="useful-links">Useful links</span></h3><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/crasher">crasher</a> - middleware for Express / Koa servers
+that generates the above crash scenarios.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/raven-express">raven-express</a> - quickly forwards the Express
+crashes to the Sentry server.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/crash-reporter-middleware">crash-reporter-middleware</a> - figures
+out which crash reporting service is configured by inspecting variables and configures
+the appropriate reporter client.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/getsentry/raven-node#readme">Raven client</a> for sending errors to Sentry</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/MindscapeHQ/raygun4node">Raygun client</a> for sending errors to Raygun.io</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/crash-store">crash-store</a> - run your own crash receiver for Raygun client
+to send exceptions to.</li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/how-to-crash/" data-id="ckpyeu4bv01q26zvg5tsnb6k8" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/how-to-crash/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/assertions/" rel="tag">assertions</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/promises/" rel="tag">promises</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/sentry/" rel="tag">sentry</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../playing-havoc-with-node-module-system/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Playing havoc with Node module system
+        
+      </div>
+    </a>
+  
+  
+    <a href="../developing-wiseli/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Developing Wiseli</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/how-to-crash/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

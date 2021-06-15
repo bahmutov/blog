@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Effective React Tests | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Note: this blog posts closely follows How to write effective tests for React apps with react testing library? but uses Cypress and cypress-react-unit-test to write tests that work in the real browser.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Effective React Tests">
+<meta property="og:url" content="https://glebbahmutov.com/blog/effective-react-tests/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Note: this blog posts closely follows How to write effective tests for React apps with react testing library? but uses Cypress and cypress-react-unit-test to write tests that work in the real browser.">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/init.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/init2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/test.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/finished-test.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/coverage.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/test-dom.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/ajax.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/test-import.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/test-fetch.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/test-route2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/count-spec.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/full-count-spec.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/test-store.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/hook1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/hookN.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/effective-tests/hook-in-test-component.png">
+<meta property="article:published_time" content="2020-10-19T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.273Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="cypress">
+<meta property="article:tag" content="react">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/effective-tests/init.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-effective-react-tests" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2020-10-19T04:00:00.000Z" itemprop="datePublished">Oct 19 2020</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Effective React Tests
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to write effective React tests using Cypress
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>Note:</strong> this blog posts closely follows <a target="_blank" rel="noopener" href="https://soshace.com/how-to-write-effective-tests-for-react-apps-with-react-testing-library/">How to write effective tests for React apps with react testing library?</a> but uses <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress">Cypress</a> and <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-react-unit-test">cypress-react-unit-test</a> to write tests that work in the real browser.</p>
+<p>In this blog post I will show how to write good tests for React components, for React components using a Redux store, and for custom React hooks.</p>
+<blockquote class="pullquote"><p>🎁 You can find the source code for this post in the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/effective-react-tests">bahmutov/effective-react-tests</a> repo.</p>
+</blockquote>
+<h2><span id="the-setup">The Setup</span></h2><p>Let&#39;s create a few React components, and I will use <code>react-scripts</code> to bundle them</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yarn add -D react react-dom react-scripts</span></span><br><span class="line">info Direct dependencies</span><br><span class="line">├─ react-dom@16.14.0</span><br><span class="line">├─ react-scripts@3.4.3</span><br><span class="line">└─ react@16.14.0</span><br></pre></td></tr></table></figure>
+<p>After we have installed half of Internet, let&#39;s write a component that submits a form.</p>
+<figure class="highlight js"><figcaption><span>src/App.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">App</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> [state, setState] = React.useState(&#123;</span><br><span class="line">    name: <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">    age: <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">const</span> handleSubmit = <span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">    e.preventDefault();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> updateName = <span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">    e.preventDefault();</span><br><span class="line">    setState(&#123;...state, <span class="attr">name</span>: e.target.value&#125;)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> updateAge = <span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">    e.preventDefault();</span><br><span class="line">    setState(&#123;...state, <span class="attr">age</span>: e.target.value&#125;)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;div className=<span class="string">&quot;App&quot;</span>&gt;</span><br><span class="line">      &lt;h1&gt;Welcome &#123;state.name&#125;&lt;/h1&gt;</span><br><span class="line">      &lt;form onSubmit=&#123;handleSubmit&#125;&gt;</span><br><span class="line">        &lt;label&gt;</span><br><span class="line">          Name:</span><br><span class="line">          &lt;input type=<span class="string">&quot;text&quot;</span> value=&#123;state.name&#125; onChange=&#123;updateName&#125; /&gt;</span><br><span class="line">        &lt;/label&gt;</span><br><span class="line">        &lt;br /&gt;</span><br><span class="line">        &lt;label&gt;</span><br><span class="line">          Age:</span><br><span class="line">          &lt;input type=<span class="string">&quot;number&quot;</span> value=&#123;state.age&#125; onChange=&#123;updateAge&#125; /&gt;</span><br><span class="line">        &lt;/label&gt;</span><br><span class="line">        &lt;br /&gt;</span><br><span class="line">        &lt;input type=<span class="string">&quot;submit&quot;</span> value=<span class="string">&quot;Submit&quot;</span> disabled=&#123;state.name === <span class="string">&#x27;&#x27;</span>&#125;/&gt;</span><br><span class="line">      &lt;/form&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  );</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> App;</span><br></pre></td></tr></table></figure>
+<p>Let&#39;s test it to ensure that the Age input has attribute <code>type=number</code>, and the Submit button is disabled when the Name field is empty.</p>
+<h2><span id="installing-cypress-and-cypress-react-unit-test">Installing Cypress and cypress-react-unit-test</span></h2><p>Cypress is a full end-to-end test runner, and <code>cypress-react-unit-test</code> is an adaptor that allows Cypress to mount React components. Once mounted, the components become full-fledged web applications, and you can use all <a target="_blank" rel="noopener" href="https://on.cypress.io/api">Cypress commands</a> to test the application like a real user would.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yarn add -D cypress cypress-react-unit-test</span></span><br><span class="line">info Direct dependencies</span><br><span class="line">├─ cypress-react-unit-test@4.16.2</span><br><span class="line">└─ cypress@5.4.0</span><br></pre></td></tr></table></figure>
+<p>Open Cypress once to scaffold its spec files</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yarn cypress open</span></span><br></pre></td></tr></table></figure>
+<p>Then run the <code>init</code> command (this alias comes with <code>cypress-react-unit-test</code> install) to show you how to use cypress-react-unit-test with Cypress.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yarn init</span></span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/effective-tests/init.png" alt="The init wizard determines how React app is bundled"></p>
+<p>Cypress can detect and hook into bundlers using <code>react-scripts (CRA)</code>, Next.js, Babel, and Webpack configs. In this case, we confirm that we want to use <code>create-react-app</code> settings used by the app. Then the wizard shows the code to paste into the <code>cypress.json</code> and <code>cypress/plugins</code> and <code>cypress/support</code> files to make sure the tests are bundled using your application&#39;s settings.</p>
+<p><img src="/blog/images/effective-tests/init2.png" alt="The suggestions shown by the wizard"></p>
+<h2><span id="testing-a-react-component">Testing a React component</span></h2><p>Let&#39;s write our first test.</p>
+<figure class="highlight js"><figcaption><span>src/App.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; mount &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-react-unit-test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> App <span class="keyword">from</span> <span class="string">&#x27;./App&#x27;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;App&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;works&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    mount(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Start Cypress and click the spec</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yarn cypress open</span></span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/effective-tests/test.png" alt="The first test shows the component in action"></p>
+<p>Once we mount the component, we can write the test to check everything it needs to do. I am showing writing the test in the short video below.</p>
+<center>
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/qJXsCLxXDzY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</center>
+
+<p>The final test checks the Submit button, the welcome message, and the Age number input:</p>
+<figure class="highlight js"><figcaption><span>src/App.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; mount &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-react-unit-test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> App <span class="keyword">from</span> <span class="string">&#x27;./App&#x27;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;App&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;works&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    mount(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>)</span><br><span class="line">    <span class="comment">// submit should be disabled</span></span><br><span class="line">    cy.get(<span class="string">&#x27;input[type=submit]&#x27;</span>).should(<span class="string">&#x27;be.disabled&#x27;</span>)</span><br><span class="line">    <span class="comment">// type name, and the</span></span><br><span class="line">    cy.contains(<span class="string">&#x27;label&#x27;</span>, <span class="string">&#x27;Name:&#x27;</span>).find(<span class="string">&#x27;input&#x27;</span>).type(<span class="string">&#x27;Gleb&#x27;</span>)</span><br><span class="line">    <span class="comment">// welcome message should have that name</span></span><br><span class="line">    cy.contains(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;Welcome Gleb&#x27;</span>)</span><br><span class="line">    <span class="comment">// Age input should have type number</span></span><br><span class="line">    cy.contains(<span class="string">&#x27;label&#x27;</span>, <span class="string">&#x27;Age:&#x27;</span>).find(<span class="string">&#x27;input[type=number]&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/effective-tests/finished-test.png" alt="The finished test"></p>
+<p><strong>Note:</strong> you can argue that <code>cy.contains(&#39;h1&#39;, &#39;Welcome Gleb&#39;)</code> unnecessarily ties the text to the <code>&lt;h1&gt;</code> element. You might say the exact selector is an implementation detail. In that case, you may use command <code>cy.contains(&#39;Welcome Gleb&#39;)</code> to search just by text or regular expression, or use some other selector - it is your choice.</p>
+<h2><span id="code-coverage">Code coverage</span></h2><p>Code coverage is built into <code>cypress-react-unit-test</code> and does not need further configuration. Every time we run the tests, the coverage report in different formats is saved locally. Open the HTML static report to see every source files and how it was covered by the tests.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> open coverage/lcov-report/index.html</span></span><br></pre></td></tr></table></figure>
+<p>Seems like we missed a couple of lines</p>
+<p><img src="/blog/images/effective-tests/coverage.png" alt="The test missed a few source lines"></p>
+<p>You can extend the test and make sure every source line is executed. This end-to-end and by extension the component tests in the real browser are an <a href="/blog/combined-end-to-end-and-unit-test-coverage/" title="excellent way to quickly reach 100% code coverage">excellent way to quickly reach 100% code coverage</a>.</p>
+<h2><span id="mocking-api-requests">Mocking API requests</span></h2><p>Let&#39;s look at a form and see how we can confirm the right data is being submitted. Let&#39;s take a Form component below</p>
+<figure class="highlight js"><figcaption><span>src/Form.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> apiService <span class="keyword">from</span> <span class="string">&#x27;./api&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">SimpleAPIForm</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> [state, setState] = React.useState(&#123;</span><br><span class="line">    message: <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">    post: <span class="string">&#x27;&#x27;</span></span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">const</span> handleSubmit = <span class="keyword">async</span> e =&gt; &#123;</span><br><span class="line">    e.preventDefault();</span><br><span class="line">    <span class="keyword">const</span> response = <span class="keyword">await</span> apiService.postProducts(state.post);</span><br><span class="line">    <span class="keyword">if</span>(response.ok) &#123;</span><br><span class="line">        setState(&#123;</span><br><span class="line">            message: <span class="string">&#x27;Successfully Created Post!!&#x27;</span>,</span><br><span class="line">            post: <span class="string">&#x27;&#x27;</span></span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> updateEmail = <span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">    e.preventDefault();</span><br><span class="line">    setState(&#123;...state, <span class="attr">post</span>: e.target.value&#125;)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;div className=<span class="string">&quot;App&quot;</span>&gt;</span><br><span class="line">      &#123;state.message ? <span class="xml"><span class="tag">&lt;<span class="name">h1</span>&gt;</span>&#123;state.message&#125;<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span> : <span class="literal">null</span>&#125;</span><br><span class="line">      &lt;form onSubmit=&#123;handleSubmit&#125;&gt;</span><br><span class="line">        &lt;label&gt;</span><br><span class="line">            Body:</span><br><span class="line">          &lt;input type=<span class="string">&quot;text&quot;</span> value=&#123;state.post&#125; onChange=&#123;updateEmail&#125; /&gt;</span><br><span class="line">        &lt;/label&gt;</span><br><span class="line">        &lt;br /&gt;</span><br><span class="line">        &lt;input type=<span class="string">&quot;submit&quot;</span> value=<span class="string">&quot;Post&quot;</span> /&gt;</span><br><span class="line">      &lt;/form&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  );</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> SimpleAPIForm;</span><br></pre></td></tr></table></figure>
+<p>It uses <code>api.js</code> to submit the form</p>
+<figure class="highlight js"><figcaption><span>src/api.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">postProducts</span>(<span class="params">title</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> requestOptions = &#123;</span><br><span class="line">      method: <span class="string">&#x27;POST&#x27;</span>,</span><br><span class="line">      headers: &#123; <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;application/json&#x27;</span> &#125;,</span><br><span class="line">      body: <span class="built_in">JSON</span>.stringify(&#123; title &#125;)</span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="keyword">const</span> response = <span class="keyword">await</span> fetch(<span class="string">&#x27;https://reqres.in/api/products&#x27;</span>, requestOptions);</span><br><span class="line">  <span class="keyword">return</span> response;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Imagine we are writing a test for the Form component using <code>cypress-react-unit-test</code>. How would we go about confirming the form executes a network call correctly with expected parameters?</p>
+<p>We can submit the form using the user interface</p>
+<figure class="highlight js"><figcaption><span>src/Form.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"><span class="keyword">import</span> Form <span class="keyword">from</span> <span class="string">&#x27;./Form&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; mount &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-react-unit-test&#x27;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;Form&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;calls the api method to submit the form&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    mount(<span class="xml"><span class="tag">&lt;<span class="name">Form</span> /&gt;</span></span>)</span><br><span class="line">    cy.contains(<span class="string">&#x27;label&#x27;</span>, <span class="string">&#x27;Body:&#x27;</span>).find(<span class="string">&#x27;input&#x27;</span>).type(<span class="string">&#x27;Sample&#123;enter&#125;&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>How should we confirm it?</p>
+<h3><span id="via-dom">Via DOM</span></h3><p>We can confirm the form has been submitted using the DOM change.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">describe(<span class="string">&#x27;Form&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;calls the api method to submit the form&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    mount(<span class="xml"><span class="tag">&lt;<span class="name">Form</span> /&gt;</span></span>)</span><br><span class="line">    cy.contains(<span class="string">&#x27;label&#x27;</span>, <span class="string">&#x27;Body:&#x27;</span>).find(<span class="string">&#x27;input&#x27;</span>).type(<span class="string">&#x27;Sample&#123;enter&#125;&#x27;</span>)</span><br><span class="line">    cy.contains(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;Successfully Created Post!!&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The test passes:</p>
+<p><img src="/blog/images/effective-tests/test-dom.png" alt="The form is submitted"></p>
+<p>Now let&#39;s confirm the form is being sent to the server with the right data. We can spy or stub the form submission in several places, as shown in the diagram below: at the module boundary, at the <code>window.fetch</code> level, or at the network call level.</p>
+<p><img src="/blog/images/effective-tests/ajax.png" alt="API and Ajax and Network APIs we can observe from the test"></p>
+<p>Let&#39;s see an example of every stub in action.</p>
+<blockquote class="pullquote"><p>💡 I personally recommend stubbing Ajax requests at the network level. Stubbing at the module API level is prone to changes when the components change. Stubbing at the <code>window.fetch</code> also seems like stubbing an implementation detail, while network control gives you a <a href="/blog/cy-route-vs-route2/" title="superpower">superpower</a>.</p>
+</blockquote>
+<h3><span id="via-module-api">Via module API</span></h3><p>Well, the <code>Form</code> component is using <code>api.js</code> module to actually post the form. Maybe our test can use the module&#39;s method to assert the submission? Yes you can! Any ES6 export can be spied or stubbed using <code>cypress-react-unit-test</code>.</p>
+<p>Here is the test that stubs the module import from <code>api.js</code> module and confirms it was called with expected arguments</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"><span class="keyword">import</span> Form <span class="keyword">from</span> <span class="string">&#x27;./Form&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; mount &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-react-unit-test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> api <span class="keyword">from</span> <span class="string">&#x27;./api&#x27;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;Form&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;stubs the api method&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    mount(<span class="xml"><span class="tag">&lt;<span class="name">Form</span> /&gt;</span></span>)</span><br><span class="line">    cy.stub(api, <span class="string">&#x27;postProducts&#x27;</span>).resolves(&#123;<span class="attr">ok</span>: <span class="literal">true</span>&#125;).as(<span class="string">&#x27;postProducts&#x27;</span>)</span><br><span class="line">    cy.contains(<span class="string">&#x27;label&#x27;</span>, <span class="string">&#x27;Body:&#x27;</span>).find(<span class="string">&#x27;input&#x27;</span>).type(<span class="string">&#x27;Sample&#123;enter&#125;&#x27;</span>)</span><br><span class="line">    cy.get(<span class="string">&#x27;@postProducts&#x27;</span>).should(<span class="string">&#x27;have.been.calledOnce&#x27;</span>)</span><br><span class="line">      .its(<span class="string">&#x27;args.0&#x27;</span>).should(<span class="string">&#x27;deep.equal&#x27;</span>, [<span class="string">&#x27;Sample&#x27;</span>])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/effective-tests/test-import.png" alt="Testing the API method call via stubbed export"></p>
+<h3><span id="via-stubbing-windowfetch">Via stubbing window.fetch</span></h3><p>We have just stubbed the internal module import from <code>Form</code> component to the <code>api</code> module it is using. The internal APIs of the code we write is always fluid and hard to predict - since we and other teams control them. Plus we want to test the <code>api.js</code> code too! Thus it might be better to intercept the <code>window.fetch</code> call the <code>api.js</code> module is making - because the <code>fetch</code> API is standard and will not change.</p>
+<p>Let&#39;s stub <code>window.fetch</code> method instead. This is the method <code>api.js</code> is calling after all to send the Ajax request to the server. If we can observe it, then we can refactor <code>Form</code> and <code>api</code> modules and as long as the test is passing we will be good.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;stubs the window.fetch method&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  mount(<span class="xml"><span class="tag">&lt;<span class="name">Form</span> /&gt;</span></span>)</span><br><span class="line">  cy.stub(<span class="built_in">window</span>, <span class="string">&#x27;fetch&#x27;</span>).resolves(&#123;<span class="attr">ok</span>: <span class="literal">true</span>&#125;).as(<span class="string">&#x27;fetch&#x27;</span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;label&#x27;</span>, <span class="string">&#x27;Body:&#x27;</span>).find(<span class="string">&#x27;input&#x27;</span>).type(<span class="string">&#x27;Sample&#123;enter&#125;&#x27;</span>)</span><br><span class="line">  cy.get(<span class="string">&#x27;@fetch&#x27;</span>).should(<span class="string">&#x27;have.been.calledOnce&#x27;</span>)</span><br><span class="line">    .its(<span class="string">&#x27;args.0&#x27;</span>).should(<span class="string">&#x27;deep.equal&#x27;</span>, [<span class="string">&#x27;https://reqres.in/api/products&#x27;</span>, &#123;</span><br><span class="line">      body: <span class="string">&#x27;&#123;&quot;title&quot;:&quot;Sample&quot;&#125;&#x27;</span>,</span><br><span class="line">      method: <span class="string">&quot;POST&quot;</span>,</span><br><span class="line">      headers: &#123;</span><br><span class="line">        <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&quot;application/json&quot;</span>,</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;])</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The test is passing - the <code>window.fetch</code> is happening as expected</p>
+<p><img src="/blog/images/effective-tests/test-fetch.png" alt="Testing that fetch happens"></p>
+<h3><span id="via-network-stub">Via network stub</span></h3><p>Finally, the <code>fetch</code> or <code>XMLHttpRequest</code> methods used to send the form to the backend are implementation details. If the call to the backend is happening, we should not tie the test to the implementation details. Let&#39;s instead of stubbing <code>window.fetch</code> method stub the underlying network call using <a href="/blog/cy-route-vs-route2/" title="cy.route2 method">cy.route2 method</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;observes the network call&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  mount(<span class="xml"><span class="tag">&lt;<span class="name">Form</span> /&gt;</span></span>)</span><br><span class="line">  <span class="comment">// stub any POST request to the given URL and respond with an empty object</span></span><br><span class="line">  cy.route2(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;https://reqres.in/api/products&#x27;</span>, &#123;&#125;).as(<span class="string">&#x27;submit&#x27;</span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;label&#x27;</span>, <span class="string">&#x27;Body:&#x27;</span>).find(<span class="string">&#x27;input&#x27;</span>).type(<span class="string">&#x27;Sample&#123;enter&#125;&#x27;</span>)</span><br><span class="line">  cy.wait(<span class="string">&#x27;@submit&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The test intercepts the network call outside the browser, thus we can fully confirm te Ajax call happens and we do not care if it was made using <code>fetch</code> protocol or <code>XMLHttpRequest</code> method.</p>
+<p><img src="/blog/images/effective-tests/test-route2.png" alt="Testing that Ajax happens"></p>
+<h2><span id="testing-redux-component">Testing Redux component</span></h2><p>Now let&#39;s add a bare-bones Redux data store to our application (and to our components), and see how our tests can work with it. The application&#39;s <code>index.js</code> file sets everything up, surrounding the top-level component with a Redux store.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yarn add -D react-redux redux</span></span><br><span class="line">info Direct dependencies</span><br><span class="line">├─ react-redux@7.2.1</span><br><span class="line">└─ redux@4.0.5</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><figcaption><span>src/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> ReactDOM <span class="keyword">from</span> <span class="string">&#x27;react-dom&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> App <span class="keyword">from</span> <span class="string">&#x27;./App&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> Form <span class="keyword">from</span> <span class="string">&#x27;./Form&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> Counter <span class="keyword">from</span> <span class="string">&#x27;./Count&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; Provider &#125; <span class="keyword">from</span> <span class="string">&#x27;react-redux&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> store <span class="keyword">from</span> <span class="string">&#x27;./store&#x27;</span>;</span><br><span class="line"></span><br><span class="line">ReactDOM.render(</span><br><span class="line">  &lt;React.StrictMode&gt;</span><br><span class="line">    &lt;Provider store=&#123;store&#125;&gt;</span><br><span class="line">      &lt;Counter /&gt;</span><br><span class="line">    &lt;/Provider&gt;</span><br><span class="line">  &lt;/React.StrictMode&gt;,</span><br><span class="line">  <span class="built_in">document</span>.getElementById(<span class="string">&#x27;root&#x27;</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>The <code>src/store.js</code> creates the store</p>
+<figure class="highlight js"><figcaption><span>src/store.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; createStore &#125; <span class="keyword">from</span> <span class="string">&quot;redux&quot;</span>;</span><br><span class="line"><span class="keyword">import</span> rootReducer <span class="keyword">from</span> <span class="string">&quot;./reducers&quot;</span>;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> createStore(rootReducer)</span><br></pre></td></tr></table></figure>
+<p>The reducers file increments and decrements the counter in response to actions</p>
+<figure class="highlight js"><figcaption><span>src/reducers.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> initialState = &#123;<span class="attr">count</span>: <span class="number">0</span>&#125;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">reducers</span>(<span class="params">state = initialState, action</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">switch</span> (action.type) &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="string">&#x27;INCREMENT&#x27;</span>:</span><br><span class="line">      <span class="keyword">return</span> &#123;</span><br><span class="line">        count: state.count + <span class="number">1</span>,</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">case</span> <span class="string">&#x27;DECREMENT&#x27;</span>:</span><br><span class="line">      <span class="keyword">return</span> &#123;</span><br><span class="line">        count: state.count - <span class="number">1</span>,</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">case</span> <span class="string">&#x27;RESET&#x27;</span>:</span><br><span class="line">      <span class="keyword">return</span> &#123;</span><br><span class="line">        count: <span class="number">0</span></span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      <span class="keyword">return</span> state</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Finally, the <code>Count</code> component renders the current count and dispatches increment and decrement events.</p>
+<figure class="highlight js"><figcaption><span>src/Count.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123;useSelector, useDispatch&#125; <span class="keyword">from</span> <span class="string">&#x27;react-redux&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Count</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> state = useSelector(<span class="function"><span class="params">state</span> =&gt;</span> state.count);</span><br><span class="line">    <span class="keyword">const</span> dispatch = useDispatch();</span><br><span class="line">    <span class="keyword">const</span> decrement = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">        dispatch(&#123;<span class="attr">type</span>: <span class="string">&#x27;DECREMENT&#x27;</span>&#125;)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> increment = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">        dispatch(&#123;<span class="attr">type</span>: <span class="string">&#x27;INCREMENT&#x27;</span>&#125;)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> reset = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">        dispatch(&#123;<span class="attr">type</span>: <span class="string">&#x27;RESET&#x27;</span>&#125;)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        &lt;div&gt;</span><br><span class="line">          &lt;h2&gt;Current Count: &#123;state&#125;&lt;/h2&gt;</span><br><span class="line">          &lt;div&gt;</span><br><span class="line">            &lt;button onClick=&#123;decrement&#125;&gt;-&lt;/button&gt;</span><br><span class="line">            &lt;button onClick=&#123;reset&#125;&gt;Reset&lt;/button&gt;</span><br><span class="line">            &lt;button onClick=&#123;increment&#125;&gt;+&lt;/button&gt;</span><br><span class="line">          &lt;/div&gt;</span><br><span class="line">        &lt;/div&gt;</span><br><span class="line">    )</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> Count;</span><br></pre></td></tr></table></figure>
+<p>Let&#39;s set up our test <code>src/Count.spec.js</code> to just mount the component. Since the component needs the Redux store, we surround the component with the store&#39;s provider.</p>
+<figure class="highlight js"><figcaption><span>src/Count.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; mount &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-react-unit-test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> Count <span class="keyword">from</span> <span class="string">&#x27;./Count&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; Provider &#125; <span class="keyword">from</span> <span class="string">&#x27;react-redux&#x27;</span></span><br><span class="line"><span class="keyword">import</span> store <span class="keyword">from</span> <span class="string">&#x27;./store&#x27;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;Count&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;redux component functionality&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// Count component runs as a full application</span></span><br><span class="line">    <span class="comment">// during the test. Thus we need to provide a store</span></span><br><span class="line">    <span class="comment">// just like a real application would do</span></span><br><span class="line">    mount(</span><br><span class="line">      &lt;Provider store=&#123;store&#125;&gt;</span><br><span class="line">        &lt;Count /&gt;</span><br><span class="line">      &lt;/Provider&gt;</span><br><span class="line">    )</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>We can see the mounted component and even can exercise it ourselves - it is a fully running web application, after all.</p>
+<p><img src="/blog/images/effective-tests/count-spec.gif" alt="Mounted Count component is working when using manually"></p>
+<p>Let&#39;s repeat the above steps using <code>cy</code> commands.</p>
+<figure class="highlight js"><figcaption><span>src/Count.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;redux component functionality&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// Count component runs as a full application</span></span><br><span class="line">  <span class="comment">// during the test. Thus we need to provide a store</span></span><br><span class="line">  <span class="comment">// just like a real application would do</span></span><br><span class="line">  mount(</span><br><span class="line">    &lt;Provider store=&#123;store&#125;&gt;</span><br><span class="line">      &lt;Count /&gt;</span><br><span class="line">    &lt;/Provider&gt;</span><br><span class="line">  )</span><br><span class="line">  cy.contains(<span class="string">&#x27;Current Count: 0&#x27;</span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;+&#x27;</span>).click()</span><br><span class="line">  cy.contains(<span class="string">&#x27;Current Count: 1&#x27;</span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;-&#x27;</span>).click().click()</span><br><span class="line">  cy.contains(<span class="string">&#x27;Current Count: -1&#x27;</span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;Reset&#x27;</span>).click()</span><br><span class="line">  cy.contains(<span class="string">&#x27;Current Count: 0&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The test exercises the component, just like a real user does</p>
+<p><img src="/blog/images/effective-tests/full-count-spec.gif" alt="Full Count spec"></p>
+<p>One benefit the component tests have over end-to-end tests is easy access to the objects passed as props. For example, when we mounted the <code>Count</code> component, we have passed the Redux <code>store</code> object. By controlling the component through its DOM, we have changed the internal store. From the test, we can assert the changes by directly inspecting the <code>store</code> object</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> store <span class="keyword">from</span> <span class="string">&#x27;./store&#x27;</span></span><br><span class="line">...</span><br><span class="line">cy.contains(<span class="string">&#x27;-&#x27;</span>).click().click()</span><br><span class="line">cy.contains(<span class="string">&#x27;Current Count: -1&#x27;</span>)</span><br><span class="line">cy.wrap(store).invoke(<span class="string">&#x27;getState&#x27;</span>).should(<span class="string">&#x27;deep.equal&#x27;</span>, &#123;<span class="attr">count</span>: -<span class="number">1</span>&#125;)</span><br></pre></td></tr></table></figure>
+<p>By using Cypress time-traveling debugger, we can click on the <code>cy.wrap</code> command and see the component&#39;s DOM state at that moment, and see that our assertion has passed. The Redux store indeed contains <code>count: -1</code>.</p>
+<p><img src="/blog/images/effective-tests/test-store.png" alt="Testing the Redux store"></p>
+<h2><span id="testing-a-custom-hook">Testing a custom hook</span></h2><p>Let&#39;s say we want to write a custom React hook, like this one</p>
+<figure class="highlight js"><figcaption><span>src/CustomHook.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">useMultiplier</span>(<span class="params">&#123; initialNum = <span class="number">1</span> &#125; = &#123;&#125;</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> [num, setNum] = React.useState(initialNum);</span><br><span class="line">  <span class="keyword">const</span> multiply = <span class="function"><span class="params">factor</span> =&gt;</span> setNum( initialNum * factor );</span><br><span class="line">  <span class="keyword">return</span> &#123; num, multiply &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">export</span> &#123;useMultiplier&#125;;</span><br></pre></td></tr></table></figure>
+<p>We can follow the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-react-unit-test/tree/main/cypress/component/advanced/hooks">hooks example</a>, and test this hook using <code>mountHook</code> function from <code>cypress-react-unit-test</code> library.</p>
+<figure class="highlight js"><figcaption><span>src/CustomHook.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; mountHook &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-react-unit-test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; useMultiplier &#125; <span class="keyword">from</span> <span class="string">&#x27;./CustomHook&#x27;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;useMultiplier&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;works by itself&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    mountHook(<span class="function">() =&gt;</span> useMultiplier(&#123; <span class="attr">initialNum</span>: <span class="number">1</span> &#125;)).then(<span class="function"><span class="params">hook</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="built_in">console</span>.log(hook)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The above code mounts the hook, and exposes the result.</p>
+<p><img src="/blog/images/effective-tests/hook1.png" alt="Mounted hook exposes current value and the update method"></p>
+<p>Now let&#39;s change the hook&#39;s data by calling the exposed method <code>hook.current.multiply</code></p>
+<figure class="highlight js"><figcaption><span>src/CustomHook.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; mountHook &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-react-unit-test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; useMultiplier &#125; <span class="keyword">from</span> <span class="string">&#x27;./CustomHook&#x27;</span></span><br><span class="line"></span><br><span class="line">describe(<span class="string">&#x27;useMultiplier&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;works by itself&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    mountHook(<span class="function">() =&gt;</span> useMultiplier(&#123; <span class="attr">initialNum</span>: <span class="number">1</span> &#125;)).then(<span class="function"><span class="params">hook</span> =&gt;</span> &#123;</span><br><span class="line">      expect(hook.current.num).to.equal(<span class="number">1</span>)</span><br><span class="line">      hook.current.multiply(<span class="number">5</span>)</span><br><span class="line">      expect(hook.current.num).to.equal(<span class="number">5</span>)</span><br><span class="line">      hook.current.multiply(<span class="number">7</span>)</span><br><span class="line">      expect(hook.current.num).to.equal(<span class="number">7</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The test passes</p>
+<p><img src="/blog/images/effective-tests/hookN.png" alt="Exercising the custom  hook"></p>
+<p>The above approach works - but it acts more like an isolated unit test. We would rather test the hook inside a test React component. We can create such component on the fly inside the test.</p>
+<figure class="highlight js"><figcaption><span>src/Counter.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; mount &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-react-unit-test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; useMultiplier &#125; <span class="keyword">from</span> <span class="string">&#x27;./CustomHook&#x27;</span></span><br><span class="line"></span><br><span class="line">it(<span class="string">&#x27;works inside a component&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">let</span> result = <span class="literal">null</span>;</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">Test</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    result = useMultiplier(&#123;<span class="attr">initialNum</span>: <span class="number">1</span>&#125;);</span><br><span class="line">    <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span>Result &#123;result.num&#125;<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;</span><br><span class="line">  &#125;</span><br><span class="line">  mount(<span class="xml"><span class="tag">&lt;<span class="name">Test</span> /&gt;</span></span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;Result 1&#x27;</span>)</span><br><span class="line">    .then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">      result.multiply(<span class="number">4</span>)</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">  cy.contains(<span class="string">&#x27;Result 4&#x27;</span>)</span><br><span class="line">    .then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">      expect(result.num).to.equal(<span class="number">4</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/effective-tests/hook-in-test-component.png" alt="Testing custom hook using a test component"></p>
+<p>The component test again gives us an advantage - it allows us to access the hook&#39;s current state whenever it is updated, or to trigger an update. The test drives the component using the hook and can verify that the hook works by checking the DOM, or by checking the hook&#39;s internal property.</p>
+<h2><span id="learn-more">Learn more</span></h2><p>Find lots of examples in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-react-unit-test">cypress-react-unit-test</a> and read <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-react-unit-test#blog-posts">multiple blog posts</a>. Testing React components inside a real browser should be efficient and even fun.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/effective-react-tests/" data-id="ckpyeu4bo01pq6zvg5l9u40aj" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/effective-react-tests/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/react/" rel="tag">react</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../writing-webpack-loader/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Writing Webpack Loader
+        
+      </div>
+    </a>
+  
+  
+    <a href="../testing-csp-almost/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Testing Content-Security-Policy using Cypress ... Almost</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/effective-react-tests/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

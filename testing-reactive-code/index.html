@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Testing reactive code | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="There is very little material on unit testing reactive JavaScript code. This blog post tries to describe many little problems I have encountered with a few solutions.   The problem Refactor for testab">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Testing reactive code">
+<meta property="og:url" content="https://glebbahmutov.com/blog/testing-reactive-code/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="There is very little material on unit testing reactive JavaScript code. This blog post tries to describe many little problems I have encountered with a few solutions.   The problem Refactor for testab">
+<meta property="og:locale">
+<meta property="article:published_time" content="2016-02-17T05:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.368Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="reactive">
+<meta property="article:tag" content="testing">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-testing-reactive-code" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-02-17T05:00:00.000Z" itemprop="datePublished">Feb 17 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Testing reactive code
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to unit test Rx code on Node with Mocha (and Ava).
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>There is very little material on unit testing reactive JavaScript code. This blog
+post tries to describe many little problems I have encountered with a few solutions.</p>
+<!-- toc -->
+<ul>
+<li><a href="#the-problem">The problem</a></li>
+<li><a href="#refactor-for-testability">Refactor for testability</a></li>
+<li><a href="#our-first-unit-test">Our first unit test</a></li>
+<li><a href="#catching-errors-in-the-unit-test">Catching errors in the unit test</a></li>
+<li><a href="#testing-with-ava">Testing with Ava</a></li>
+<li><a href="#verifying-data-vs-verifying-timestamps">Verifying data vs verifying timestamps</a></li>
+<li><a href="#caution-functions-vs-arrow-expressions">Caution: functions vs arrow expressions</a></li>
+<li><a href="#build-test-streams">Build test streams</a></li>
+<li><a href="#helper-test-observer">Helper test observer</a></li>
+<li><a href="#testing-hot-observables">Testing hot observables</a></li>
+<li><a href="#virtual-timing-for-faster-tests">Virtual timing for faster tests</a><ul>
+<li><a href="#schedulers">Schedulers</a></li>
+<li><a href="#rxtestscheduler-example">Rx.TestScheduler example</a></li>
+</ul>
+</li>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#additional-information">Additional information</a></li>
+</ul>
+<!-- tocstop -->
+<h2><span id="the-problem">The problem</span></h2><p>Give the following simple Rx example below, how would you unit test it?</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// even-numbers.js</span></span><br><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> array = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]</span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = Rx.Observable.fromArray(array)</span><br><span class="line">  .filter(<span class="function"><span class="params">x</span> =&gt;</span> x % <span class="number">2</span> === <span class="number">0</span>)</span><br><span class="line">evenNumbers_.subscribe(</span><br><span class="line">  (x) =&gt; <span class="built_in">console</span>.log(<span class="string">`even number <span class="subst">$&#123;x&#125;</span>`</span>),</span><br><span class="line">  (err) =&gt; <span class="built_in">console</span>.error(err),</span><br><span class="line">  () =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;all done&#x27;</span>)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>We can run the code and see the result to confirm it works</p>
+<pre><code>$ node even-numbers.js 
+even number 2
+even number 4
+even number 6
+all done
+</code></pre><p>How do we unit test the stream of even numbers?</p>
+<h2><span id="refactor-for-testability">Refactor for testability</span></h2><p>In the above example, the code that sets up the stream of even numbers is mixed with the
+code that actually subscribes to the stream and prints the information to the console.
+While we could <a href="../unit-testing-cli-programs/">unit test the command line output</a>, this 
+would be far from ideal for unit tests.</p>
+<p>Let us split the stream creation from the printing code. We can create the 
+<code>evenNumbers_</code> stream in the <code>even-numbers.js</code> and subscribe to it in the file <code>index.js</code></p>
+<figure class="highlight js"><figcaption><span>even-numbers.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> array = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]</span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = Rx.Observable.fromArray(array)</span><br><span class="line">  .filter(<span class="function"><span class="params">x</span> =&gt;</span> x % <span class="number">2</span> === <span class="number">0</span>)</span><br><span class="line"><span class="built_in">module</span>.exports = evenNumbers_</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><figcaption><span>index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> evenNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-numbers&#x27;</span>)</span><br><span class="line">evenNumbers_.subscribe(</span><br><span class="line">  (x) =&gt; <span class="built_in">console</span>.log(<span class="string">`even number <span class="subst">$&#123;x&#125;</span>`</span>),</span><br><span class="line">  (err) =&gt; <span class="built_in">console</span>.error(err),</span><br><span class="line">  () =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;all done&#x27;</span>)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>This runs just fine</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ node index.js </span><br><span class="line">even number 2</span><br><span class="line">even number 4</span><br><span class="line">even number 6</span><br><span class="line">all done</span><br></pre></td></tr></table></figure>
+<h2><span id="our-first-unit-test">Our first unit test</span></h2><p>We can write a few simple unit tests, using <a target="_blank" rel="noopener" href="http://mochajs.org/">Mocha</a> - my favorite
+unit <a href="../picking-javascript-testing-framework/">testing framework</a>. Let us confirm
+that we get an Observable instance</p>
+<figure class="highlight js"><figcaption><span>spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> la = <span class="built_in">require</span>(<span class="string">&#x27;lazy-ass&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> is = <span class="built_in">require</span>(<span class="string">&#x27;check-more-types&#x27;</span>)</span><br><span class="line">describe(<span class="string">&#x27;even numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> evenNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-numbers&#x27;</span>)</span><br><span class="line">  it(<span class="string">&#x27;is observable&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    la(is.fn(evenNumbers_.subscribe), <span class="string">&#x27;has subscribe method&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Let us make sure the sequence finishes after a few numbers. Since the test is asynchronous,
+we will use a callback to let Mocha runtime know when the stream has finished.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> la = <span class="built_in">require</span>(<span class="string">&#x27;lazy-ass&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> is = <span class="built_in">require</span>(<span class="string">&#x27;check-more-types&#x27;</span>)</span><br><span class="line">describe(<span class="string">&#x27;even numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> evenNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-numbers&#x27;</span>)</span><br><span class="line">  <span class="keyword">const</span> noop = <span class="function">() =&gt;</span> &#123;&#125;</span><br><span class="line">  it(<span class="string">&#x27;finishes&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">    evenNumbers_.subscribe(noop, noop, done)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>We used a dummy function <code>noop</code> when subscribing and ignored everything but the &quot;stream completed&quot;
+event.</p>
+<p>Let us confirm that we get 3 even numbers from this stream. We can increment the count
+on each number received and can check the total when the stream completes</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;has 3 numbers&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">var</span> count = <span class="number">0</span></span><br><span class="line">  <span class="keyword">const</span> onNumber = <span class="function">() =&gt;</span> &#123; count += <span class="number">1</span> &#125;</span><br><span class="line">  evenNumbers_.subscribe(onNumber, noop, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    la(count === <span class="number">3</span>, <span class="string">&#x27;got 3 numbers&#x27;</span>, count)</span><br><span class="line">    done()</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<h2><span id="catching-errors-in-the-unit-test">Catching errors in the unit test</span></h2><p>Let us also confirm that there were no error events. For example, an error could happen somewhere
+inside the stream</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// even-numbers.js</span></span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = Rx.Observable.fromArray(array)</span><br><span class="line">  .filter(<span class="function"><span class="params">x</span> =&gt;</span> x % <span class="number">2</span> === <span class="number">0</span>)</span><br><span class="line">  .map(<span class="function"><span class="params">x</span> =&gt;</span> &#123; <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;oh no&#x27;</span>) &#125;)</span><br></pre></td></tr></table></figure>
+<p>Our test should fail with useful information if there is an error event. Let us rethrow an Error
+instance if the stream has an error.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// spec.js</span></span><br><span class="line">it(<span class="string">&#x27;has no errors&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> crash = <span class="function">(<span class="params">err</span>) =&gt;</span> &#123; <span class="keyword">throw</span> err &#125;  <span class="comment">// rethrow</span></span><br><span class="line">  evenNumbers_.subscribe(noop, crash, done)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>If we run this unit test, we get a long stack trace</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Error oh no</span><br><span class="line">  at even-numbers.js:7:21</span><br><span class="line">  at tryCatcher (node_modules&#x2F;rx&#x2F;dist&#x2F;rx.js:63:31)</span><br><span class="line">  at InnerObserver.next (node_modules&#x2F;rx&#x2F;dist&#x2F;rx.js:5389:43)</span><br><span class="line">  at InnerObserver.Rx.internals.AbstractObserver.AbstractObserver.onNext (node_modules&#x2F;rx&#x2F;dist&#x2F;rx.js:1752:31)</span><br><span class="line">  at InnerObserver.tryCatcher (node_modules&#x2F;rx&#x2F;dist&#x2F;rx.js:63:31)</span><br><span class="line">  at AutoDetachObserverPrototype.next (node_modules&#x2F;rx&#x2F;dist&#x2F;rx.js:5864:51)</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+<p>The long stack is a little bit too much. Luckily we can enable the long stack support. This will
+make the reactive code slower, thus we do this in the unit test.</p>
+<figure class="highlight js"><figcaption><span>spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line">Rx.config.longStackSupport = <span class="literal">true</span></span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-numbers&#x27;</span>)</span><br><span class="line">describe(<span class="string">&#x27;even numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> noop = <span class="function">() =&gt;</span> &#123;&#125;</span><br><span class="line">  it(<span class="string">&#x27;has no errors&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> crash = <span class="function">(<span class="params">err</span>) =&gt;</span> &#123; <span class="keyword">throw</span> err &#125;</span><br><span class="line">    evenNumbers_.subscribe(noop, crash, done)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Error: oh no</span><br><span class="line">    at even-numbers.js:5:21</span><br><span class="line">    at tryCatcher (node_modules&#x2F;rx&#x2F;dist&#x2F;rx.js:63:31)</span><br><span class="line">    at InnerObserver.tryCatcher (node_modules&#x2F;rx&#x2F;dist&#x2F;rx.js:63:31)</span><br><span class="line">    at InnerObserver.tryCatcher (node_modules&#x2F;rx&#x2F;dist&#x2F;rx.js:63:31)</span><br><span class="line">    at tryCatcher (node_modules&#x2F;rx&#x2F;dist&#x2F;rx.js:63:31)</span><br><span class="line">    at Context.&lt;anonymous&gt; (spec.js:26:18)</span><br><span class="line">From previous event:</span><br><span class="line">    at Object.&lt;anonymous&gt; (even-numbers.js:3:36)</span><br><span class="line">    at Object.&lt;anonymous&gt; (spec.js:5:22)</span><br><span class="line">    at Array.forEach (native)</span><br><span class="line">    at node.js:963:3</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+<p>The stack is much more helpful. Notice we had to load <code>Rx</code> in the unit test <em>before</em>
+the production code has loaded it. This is because the Node runtime caches loaded modules.
+We must enable the long stack support before <code>even-numbers.js</code> uses Rx to configure the 
+stream.</p>
+<h2><span id="testing-with-ava">Testing with Ava</span></h2><p>In addition to Mocha, I have tried testing reactive streams using <a target="_blank" rel="noopener" href="https://github.com/sindresorhus/ava">Ava</a>.
+Mocha is nice because it understands promises natively, but Ava can understand async unit tests
+that return promises, generators, and even observables! For example, to make sure our stream
+only returns even numbers, we could just return the observable</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> test <span class="keyword">from</span> <span class="string">&#x27;ava&#x27;</span></span><br><span class="line"><span class="keyword">import</span> evenNumbers_ <span class="keyword">from</span> <span class="string">&#x27;./even-numbers&#x27;</span></span><br><span class="line">test(<span class="string">&#x27;checks 3 even numbers&#x27;</span>, <span class="function"><span class="params">t</span> =&gt;</span> &#123;</span><br><span class="line">  t.plan(<span class="number">3</span>)</span><br><span class="line">  <span class="keyword">return</span> evenNumbers_</span><br><span class="line">    .map(<span class="function"><span class="params">n</span> =&gt;</span> &#123;</span><br><span class="line">      t.true(n % <span class="number">2</span> === <span class="number">0</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>We even made sure in our tests to check how many even numbers were processed using <code>t.plan(n)</code>
+function that sets the expected number of assertions in the unit test. Every time <code>t.true()</code>
+runs, the assertion counter is incremented. At the end of the test the two numbers are compared,
+making sure our test took the execution path we expected.</p>
+<p>Unfortunately, Ava understands <a target="_blank" rel="noopener" href="https://github.com/zenparsing/es-observable">ES6 Observables</a>
+and not as they are implemented in RxJS v4. Thus I had to modify the code a little to use 
+RxJs v5. The change was simple in our example</p>
+<pre><code>npm install --save rxjs
+</code></pre><p>The only change in the <code>even-numbers.js</code> was the require name</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rxjs/Rx&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> array = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]</span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = Rx.Observable.fromArray(array)</span><br><span class="line">  .filter(<span class="function"><span class="params">x</span> =&gt;</span> x % <span class="number">2</span> === <span class="number">0</span>)</span><br><span class="line"><span class="built_in">module</span>.exports = evenNumbers_</span><br></pre></td></tr></table></figure>
+<p>If we had more complicated code, the migration from Rx v4 to v5 would be 
+<a target="_blank" rel="noopener" href="https://github.com/ReactiveX/RxJS/blob/master/MIGRATION.md">more complicated</a></p>
+<h2><span id="verifying-data-vs-verifying-timestamps">Verifying data vs verifying timestamps</span></h2><p>A reactive stream has really two types of information</p>
+<ol>
+<li>The data itself (including the order). For example, even numbers stream has
+the following data <code>2, 4, 6</code>. </li>
+<li>The timing information when the events arrive. For example, the following stream
+has delays between the numbers.</li>
+</ol>
+<figure class="highlight js"><figcaption><span>even-delays.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> array = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]</span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = Rx.Observable.fromArray(array)</span><br><span class="line">  .filter(<span class="function"><span class="params">x</span> =&gt;</span> x % <span class="number">2</span> === <span class="number">0</span>)</span><br><span class="line">  .delay(<span class="function"><span class="params">x</span> =&gt;</span> Rx.Observable.timer(x * <span class="number">500</span>))</span><br><span class="line">  .timeInterval()</span><br></pre></td></tr></table></figure>
+<p>If we use this stream and print the time intervals (that measure time since the last event)
+we get the following</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ node index.js </span><br><span class="line">even number &#123; value: 2, interval: 1009 &#125;</span><br><span class="line">even number &#123; value: 4, interval: 995 &#125;</span><br><span class="line">even number &#123; value: 6, interval: 1004 &#125;</span><br><span class="line">all done</span><br></pre></td></tr></table></figure>
+<p>In marble terms, our stream looks like this.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">|---1-2-3-4-5-6-X-&gt;</span><br><span class="line">|     filter( x is even)</span><br><span class="line">|-----2---4---6-X-&gt;</span><br><span class="line">|     delay( x * 500ms )</span><br><span class="line">|-----------2-----------4-----------6-X-&gt;</span><br><span class="line">time 0      1009ms      2004ms      3008ms </span><br></pre></td></tr></table></figure>
+<p>Notice the <code>delay</code> operator delays an event from the start of the observable stream, which
+for our purposes is timestamp 0 of the program.</p>
+<p>How can we check the values (<code>2, 4, 6</code>) and when the events arrive (1 second apart in this case)?
+Again, we must start with refactoring to separate the two aspects. This will make testing easier.
+For example, we can create the delayed number stream from the even number stream.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// even-numbers.js</span></span><br><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> array = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]</span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = Rx.Observable.fromArray(array)</span><br><span class="line">  .filter(<span class="function"><span class="params">x</span> =&gt;</span> x % <span class="number">2</span> === <span class="number">0</span>)</span><br><span class="line"><span class="built_in">module</span>.exports = evenNumbers_</span><br><span class="line"><span class="comment">// even-delays.js</span></span><br><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-numbers&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> delayedNumbers_ = evenNumbers_</span><br><span class="line">  .delay(<span class="function"><span class="params">x</span> =&gt;</span> Rx.Observable.timer(x * <span class="number">500</span>))</span><br><span class="line">  .timeInterval()</span><br><span class="line"><span class="built_in">module</span>.exports = delayedNumbers_</span><br></pre></td></tr></table></figure>
+<p>We will test the simple numbers list in the first test</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> evenNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-numbers&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> noop = <span class="function">() =&gt;</span> &#123;&#125;</span><br><span class="line">it(<span class="string">&#x27;has 3 numbers&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> numbers = []</span><br><span class="line">  <span class="keyword">const</span> onNumber = <span class="function"><span class="params">x</span> =&gt;</span> numbers.push(x)</span><br><span class="line">  evenNumbers_.subscribe(onNumber, noop, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    la(_.isEqual(numbers, [<span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>]))</span><br><span class="line">    done()</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>We can also verify the delayed numbers are generated with expected time intervals.
+First, we need to tell Mocha to wait longer for the unit test to finish, and second,
+we need to grab the timestamps. I will use a couple of extra helper functions
+to round the timestamps to seconds</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> delayedNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-delays&#x27;</span>)</span><br><span class="line">describe(<span class="string">&#x27;delayed numbers&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">this</span>.timeout(<span class="number">7000</span>) <span class="comment">// allow each unit test to run for 7 seconds</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> roundHundred = <span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">Math</span>.round(x/<span class="number">100</span>)*<span class="number">100</span></span><br><span class="line">  <span class="keyword">const</span> msToSeconds = <span class="function"><span class="params">x</span> =&gt;</span> x / <span class="number">1000</span></span><br><span class="line"></span><br><span class="line">  it(<span class="string">&#x27;finishes within 7 seconds&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">    delayedNumbers_.subscribe(noop, noop, done)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  it(<span class="string">&#x27;has the right timestamps&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> timestamps = []</span><br><span class="line">    <span class="keyword">const</span> keepTimestamp = <span class="function"><span class="params">x</span> =&gt;</span> timestamps.push(</span><br><span class="line">      msToSeconds(roundHundred(x.interval))</span><br><span class="line">    )</span><br><span class="line">    delayedNumbers_.subscribe(keepTimestamp, noop, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">      la(_.isEqual(timestamps, [<span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>]))</span><br><span class="line">      done()</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>We expect the <code>timestamps</code> array in the second test to have values <code>[2, 2, 2]</code> at the
+end of the test.</p>
+<h2><span id="caution-functions-vs-arrow-expressions">Caution: functions vs arrow expressions</span></h2><p><strong>Note</strong> we have used <code>describe(&#39;...&#39;, function () &#123;&#125;)</code> callback in the above example
+rather than the arrow function <code>describe(&#39;...&#39;, () =&gt; &#123;&#125;)</code> because the Mocha runtime
+uses suite and test context objects under the hood.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">describe(<span class="string">&#x27;delayed numbers&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">this</span>.timeout(<span class="number">7000</span>) <span class="comment">// Works</span></span><br><span class="line">&#125;);</span><br><span class="line">describe(<span class="string">&#x27;delayed numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">this</span>.timeout(<span class="number">7000</span>) <span class="comment">// does NOT work, &quot;this&quot; is global</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>Be careful when binding the context to the outer scope in Mocha, and in RxJS. For example,
+the following are different ways to create an observer are different</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// works</span></span><br><span class="line"><span class="keyword">const</span> observer = Rx.Observer.create(</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">onNext</span>(<span class="params"></span>) </span>&#123;&#125;,</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">onError</span>(<span class="params"></span>) </span>&#123;&#125;,</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">onComplete</span>(<span class="params"></span>) </span>&#123;&#125;</span><br><span class="line">)</span><br><span class="line">stream_.subscribe(observer)</span><br><span class="line"><span class="comment">// does NOT work</span></span><br><span class="line"><span class="keyword">const</span> observer = Rx.Observer.create(</span><br><span class="line">  () =&gt; &#123;&#125;,</span><br><span class="line">  () =&gt; &#123;&#125;,</span><br><span class="line">  () =&gt; &#123;&#125;</span><br><span class="line">)</span><br><span class="line">stream_.subscribe(observer)</span><br></pre></td></tr></table></figure>
+<p>Always <code>use strict</code> in your code to avoid accidentally using the global object as the scope
+for the fat arrows, and try to stick to explicit functions. 
+I have been burnt by this error in both MochaJS and RxJS, so hope this saves you some time.</p>
+<h2><span id="build-test-streams">Build test streams</span></h2><p>In the above example test, we have switched from stream composition (<code>evenNumbers_</code> to <code>delayedNumbers_</code>)
+to functional composition (<code>msToSeconds(roundHundred(x.interval))</code> expression)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> roundHundred = <span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">Math</span>.round(x/<span class="number">100</span>)*<span class="number">100</span></span><br><span class="line"><span class="keyword">const</span> msToSeconds = <span class="function"><span class="params">x</span> =&gt;</span> x / <span class="number">1000</span></span><br><span class="line">it(<span class="string">&#x27;has the right timestamps&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> timestamps = []</span><br><span class="line">  <span class="keyword">const</span> keepTimestamp = <span class="function"><span class="params">x</span> =&gt;</span> timestamps.push(</span><br><span class="line">    msToSeconds(roundHundred(x.interval))</span><br><span class="line">  )</span><br><span class="line">  delayedNumbers_.subscribe(keepTimestamp, <span class="function"><span class="params">err</span> =&gt;</span> &#123; <span class="keyword">throw</span> err &#125;, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    la(_.isEqual(timestamps, [<span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>]))</span><br><span class="line">    done()</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Since we already have reactive streams, we can easily avoid additional functional pipelining,
+building up test streams instead. In this case, we want to extend the <code>delayedNumers</code> stream
+and grab just the timestamps, creating a stream specifically for testing.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;has the right timestamps&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> verifyTimestamps = <span class="function"><span class="params">ts</span> =&gt;</span> la(_.isEqual(ts, [<span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>]), ts)</span><br><span class="line">  delayedNumbers_</span><br><span class="line">    .pluck(<span class="string">&#x27;interval&#x27;</span>)</span><br><span class="line">    .map(roundHundred)</span><br><span class="line">    .map(msToSeconds)</span><br><span class="line">    .bufferWithCount(<span class="number">3</span>)</span><br><span class="line">    .subscribe(verifyTimestamps, <span class="function"><span class="params">err</span> =&gt;</span> &#123; <span class="keyword">throw</span> err &#125;, done)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Basically, we transform each event, massaging the data, and buffering until we get 3 timestamps
+that we send to the <code>verifyTimestamps</code>. I prefer this form because it cleanly separates
+the data check (first <code>.subscribe</code> callback) from the stream complete event (plain <code>done</code> function).
+On the other hand, we no longer make sure that we <em>actually verified the timestamps</em>.
+For example, if the underlying stream never invokes <code>onNext</code> (that is, no events every happen),
+then the <code>verifyTimestamps</code> callback never executes, and the test just finishes.</p>
+<p>Mocha (unlike Ava) does not support assertion counting (because the test runtime is really
+decoupled from any particular assertion library). Thus we cannot easily set the expected number
+of assertions and catch the lack of events.</p>
+<p>This is a great opportunity to build a tiny helper for testing streams.</p>
+<h2><span id="helper-test-observer">Helper test observer</span></h2><p>We have subscribed to test streams using 3 separate callback functions. RxJS has a second
+form of subscribing, passing a single observer 
+<a target="_blank" rel="noopener" href="https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/operators/subscribe.md">instance instead</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> observer = Rx.Observer.create(</span><br><span class="line">  <span class="built_in">console</span>.log,</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="built_in">console</span>.log(<span class="string">&#x27;done&#x27;</span>) &#125;</span><br><span class="line">)</span><br><span class="line">evenNumbers_.subscribe(observer)</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">2</span></span><br><span class="line"><span class="comment">4</span></span><br><span class="line"><span class="comment">6</span></span><br><span class="line"><span class="comment">done</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>This subscribe format is convenient for creating an observer that makes sure its <code>onNext</code>
+has been executed, for example. Here is one implementation</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">makeTestObserver</span>(<span class="params">onNext, onError, onComplete</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">arguments</span>.length === <span class="number">2</span>) &#123;</span><br><span class="line">    onComplete = onError</span><br><span class="line">    onError = <span class="literal">null</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (!onError) &#123;</span><br><span class="line">    onError = <span class="function"><span class="params">err</span> =&gt;</span> &#123; <span class="keyword">throw</span> err &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (!onComplete) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;Missing &quot;onComplete&quot; callback&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">var</span> onNextCalled</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> obs = Rx.Observer.create(</span><br><span class="line">    <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      onNextCalled = <span class="literal">true</span></span><br><span class="line">      <span class="keyword">return</span> onNext.apply(<span class="literal">null</span>, <span class="built_in">arguments</span>)</span><br><span class="line">    &#125;,</span><br><span class="line">    onError,</span><br><span class="line">    <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (!onNextCalled) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;onNext has never been called&#x27;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> onComplete.apply(<span class="literal">null</span>, <span class="built_in">arguments</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  )</span><br><span class="line">  <span class="keyword">return</span> obs</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Now our unit tests can be dependable without much boilerplate</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;does everything using test Observer&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> verifyTimestamps = <span class="function"><span class="params">ts</span> =&gt;</span> la(_.isEqual(ts, [<span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>]), ts)</span><br><span class="line">  <span class="keyword">const</span> testObserver = makeTestObserver(verifyTimestamps, done)</span><br><span class="line">  delayedNumbers_</span><br><span class="line">    .map(<span class="function"><span class="params">x</span> =&gt;</span> x.interval)</span><br><span class="line">    .map(roundHundred)</span><br><span class="line">    .map(msToSeconds)</span><br><span class="line">    .bufferWithCount(<span class="number">3</span>)</span><br><span class="line">    .subscribe(testObserver)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Less boilerplate - simpler testing.</p>
+<h2><span id="testing-hot-observables">Testing hot observables</span></h2><p>So far we had simple &quot;cold observables&quot;. Every subscriber got the same sequence of numbers,
+even if there were multiple subscribers.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">evenNumbers_.subscribe(</span><br><span class="line">  <span class="built_in">console</span>.log,</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="built_in">console</span>.log(<span class="string">&#x27;done&#x27;</span>) &#125;</span><br><span class="line">)</span><br><span class="line">evenNumbers_.subscribe(</span><br><span class="line">  <span class="built_in">console</span>.log,</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="built_in">console</span>.log(<span class="string">&#x27;done&#x27;</span>) &#125;</span><br><span class="line">)</span><br><span class="line">evenNumbers_.subscribe(</span><br><span class="line">  <span class="built_in">console</span>.log,</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="built_in">console</span>.log(<span class="string">&#x27;done&#x27;</span>) &#125;</span><br><span class="line">)</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">  prints 3 times</span></span><br><span class="line"><span class="comment">  2</span></span><br><span class="line"><span class="comment">  4</span></span><br><span class="line"><span class="comment">  6</span></span><br><span class="line"><span class="comment">  done</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>But some observables, like current time stamps or mouse clicks stream, are &quot;hot&quot; - they 
+send &quot;live&quot; events, and if a subscriber missed them, those events are gone and will not be 
+repeated. Most common way to miss events is to subscribe to the events after it has
+already started broadcasting. </p>
+<p>In RxJS we can create &quot;hot&quot; even numbers stream from a cold one using <code>.publish()</code> method call.
+The new <code>hotNumbers_</code> stream will start broad casting after we execute <code>.connect()</code> call.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// hot-numbers.js</span></span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-numbers&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> hotNumbers_ = evenNumbers_.publish()</span><br><span class="line">hotNumbers_.connect() <span class="comment">// starts the stream</span></span><br><span class="line"><span class="built_in">module</span>.exports = hotNumbers_</span><br></pre></td></tr></table></figure>
+<p>The stream <code>hotNumbers_</code> starts right away, and if we subscribe to it from another file - well,
+it will be too late</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// use-hot-numbers.js</span></span><br><span class="line"><span class="keyword">const</span> hotNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./hot-numbers&#x27;</span>)</span><br><span class="line">hotNumbers_.subscribe(</span><br><span class="line">  <span class="built_in">console</span>.log,</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="built_in">console</span>.log(<span class="string">&#x27;done&#x27;</span>) &#125;</span><br><span class="line">)</span><br><span class="line">hotNumbers_.subscribe(</span><br><span class="line">  <span class="built_in">console</span>.log,</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="built_in">console</span>.log(<span class="string">&#x27;done&#x27;</span>) &#125;</span><br><span class="line">)</span><br><span class="line">hotNumbers_.subscribe(</span><br><span class="line">  <span class="built_in">console</span>.log,</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="built_in">console</span>.log(<span class="string">&#x27;done&#x27;</span>) &#125;</span><br><span class="line">)</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">  prints</span></span><br><span class="line"><span class="comment">  done</span></span><br><span class="line"><span class="comment">  done</span></span><br><span class="line"><span class="comment">  done</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>Once the hot stream has completed, it stays completed and any subscriber gets just the &quot;done&quot;
+callback executed. This is similar to adding another <code>.then(cb)</code> step to a Promise that has been
+fulfilled - the callback will be executed with the value, but the initial promise function will not
+be run again.</p>
+<p>Hot observables make testing more complex. We must ensure 2 things</p>
+<ol>
+<li>We connect to the hot observable before it starts broadcasting.</li>
+<li>We recreate a hot observable from scratch in each unit test, because the events are
+not going to be repeated.</li>
+</ol>
+<p>I would refactor the production code so that each module returns either a cold observable
+or a function returning a new hot observable. For example, the <code>even-numbers.js</code> returns
+a cold observable, and <code>hot-numbers.js</code> returns a hot one.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// even-numbers.js - returns COLD observable</span></span><br><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> array = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]</span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = Rx.Observable.fromArray(array)</span><br><span class="line">  .filter(<span class="function"><span class="params">x</span> =&gt;</span> x % <span class="number">2</span> === <span class="number">0</span>)</span><br><span class="line"><span class="built_in">module</span>.exports = evenNumbers_</span><br><span class="line"><span class="comment">// hot-numbers - returns factory function for a HOT observable</span></span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-numbers&#x27;</span>)</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">makeHotNumbers</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> hotNumbers_ = evenNumbers_.publish()</span><br><span class="line">  <span class="keyword">return</span> hotNumbers_</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">module</span>.exports = makeHotNumbers</span><br></pre></td></tr></table></figure>
+<p>The production code that wants to use <code>hotNumbers_</code> instance would call the function
+and the call the <code>.connect()</code> method to start pushing the events</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> hot_ = makeHotNumbers()</span><br><span class="line"><span class="comment">// connect whatever is necessary to hot_</span></span><br><span class="line">hot_.connect() <span class="comment">// starts the events</span></span><br></pre></td></tr></table></figure>
+<p>The unit tests can make a fresh hot observable and start events, when needed.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> makeEvenNumbers = <span class="built_in">require</span>(<span class="string">&#x27;./hot-numbers&#x27;</span>)</span><br><span class="line">describe(<span class="string">&#x27;even numbers only&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">var</span> hot_</span><br><span class="line">  beforeEach(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    hot_ = makeEvenNumbers()</span><br><span class="line">  &#125;)</span><br><span class="line">  it(<span class="string">&#x27;has 3 numbers&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> numbers = []</span><br><span class="line">    <span class="keyword">const</span> onNumber = <span class="function"><span class="params">x</span> =&gt;</span> numbers.push(x)</span><br><span class="line">    hot_.subscribe(onNumber, <span class="built_in">console</span>.error, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">      la(_.isEqual(numbers, [<span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>]), <span class="string">&#x27;numbers&#x27;</span>, numbers)</span><br><span class="line">      done()</span><br><span class="line">    &#125;)</span><br><span class="line">    hot_.connect()</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The separation between the construction code and the actual execution is similar to 
+IO Monad concept and moving side effects into specific parts of the code 
+(like the application&#39;s periphery or unit tests). In RxJS case, the construction of hot 
+observable is pure - we can call the <code>makeEvenNumbers()</code> as many times as we want with the
+same result - a fresh observable. The side effects are only possible when we execute
+<code>hot_.connect()</code> - the changing internal state of the observable being the side effect.</p>
+<p>I have described a very similar concept for a single async action wrapped inside
+a Task object. Read the blog post 
+<a href="../difference-between-promise-and-task/">Difference between a Promise and a Task</a>.
+to see the same tight boundary between the pure code construction and the side-effects
+during the execution.</p>
+<h2><span id="virtual-timing-for-faster-tests">Virtual timing for faster tests</span></h2><p>We have a problem with delayed numbers stream - it uses real world timer, taking too long!
+Waiting 6 seconds in our test just to confirm that 3 even numbers appear 2 seconds apart
+is taking too long. Can we use a virtual timer in our unit tests instead?</p>
+<h3><span id="schedulers">Schedulers</span></h3><p>Take a simple source of events, for example a timer generating timestamps every second.
+To make sure it terminates, we will use <code>.take(3)</code> method call to only grab first 3 events</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line"><span class="keyword">var</span> source = Rx.Observable.timer(<span class="number">100</span>, <span class="number">1000</span>).take(<span class="number">3</span>)</span><br><span class="line">source.subscribe(</span><br><span class="line">  (x) =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;at&#x27;</span>, +(<span class="keyword">new</span> <span class="built_in">Date</span>()), <span class="string">&#x27;value&#x27;</span>, x),</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  () =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;completed&#x27;</span>)</span><br><span class="line">)</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">  $ node timer-test.js </span></span><br><span class="line"><span class="comment">  at 1455802419515 value 0</span></span><br><span class="line"><span class="comment">  at 1455802420514 value 1</span></span><br><span class="line"><span class="comment">  at 1455802421510 value 2</span></span><br><span class="line"><span class="comment">  completed</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>The timer observable emits an event, then waits 1 second, emits the second event, 
+waits 1 second, etc. The waiting period is controled by a <em>scheduler</em>. Most Rx methods
+take a scheduler instance as the last argument, including <a target="_blank" rel="noopener" href="https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/operators/timer.md">Rx.Observable.timer</a>.
+There are [several schedulers] included in Rx, but for testing, we can use
+<a target="_blank" rel="noopener" href="https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/testing/testscheduler.md">Rx.TestScheduler</a>. Here is how to use it.</p>
+<p>First, if we just pass an instance to the <code>timer</code> method nothing happens - the program
+finishes without any events!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> timerScheduler = <span class="keyword">new</span> Rx.TestScheduler()</span><br><span class="line"><span class="keyword">var</span> source = Rx.Observable.timer(<span class="number">100</span>, <span class="number">1000</span>, timerScheduler).take(<span class="number">3</span>)</span><br><span class="line">source.subscribe(</span><br><span class="line">  (x) =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;at&#x27;</span>, +(<span class="keyword">new</span> <span class="built_in">Date</span>()), <span class="string">&#x27;value&#x27;</span>, x),</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  () =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;completed&#x27;</span>)</span><br><span class="line">)</span><br><span class="line"><span class="comment">// prints nothing!</span></span><br></pre></td></tr></table></figure>
+<p>This is because the test scheduler needs explicit events from <em>us</em>, including 
+<em>when to execute them</em>. We will schedule 3 &quot;onNext&quot; events and then 1 &quot;onComplete&quot;.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> timerScheduler = <span class="keyword">new</span> Rx.TestScheduler()</span><br><span class="line"><span class="keyword">var</span> source = Rx.Observable.timer(<span class="number">100</span>, <span class="number">1000</span>, timerScheduler).take(<span class="number">3</span>)</span><br><span class="line">source.subscribe(</span><br><span class="line">  (x) =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;at&#x27;</span>, +(<span class="keyword">new</span> <span class="built_in">Date</span>()), <span class="string">&#x27;value&#x27;</span>, x),</span><br><span class="line">  <span class="built_in">console</span>.error,</span><br><span class="line">  () =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;completed&#x27;</span>)</span><br><span class="line">)</span><br><span class="line">timerScheduler.startScheduler(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> timerScheduler.createColdObservable(</span><br><span class="line">    Rx.ReactiveTest.onNext(<span class="number">200</span>, <span class="number">0</span>),</span><br><span class="line">    Rx.ReactiveTest.onNext(<span class="number">300</span>, <span class="number">1</span>),</span><br><span class="line">    Rx.ReactiveTest.onNext(<span class="number">400</span>, <span class="number">2</span>),</span><br><span class="line">    Rx.ReactiveTest.onCompleted(<span class="number">500</span>)</span><br><span class="line">  )</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>We used <code>startScheduler()</code> method that returns an observable of <code>Rx.ReactiveTest</code> events.
+Now our timer generates events very quickly (in real time)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ node timer-test.js </span><br><span class="line">at 1455802551646 value 0</span><br><span class="line">at 1455802551651 value 1</span><br><span class="line">at 1455802551652 value 2</span><br><span class="line">completed</span><br></pre></td></tr></table></figure>
+<h3><span id="rxtestscheduler-example">Rx.TestScheduler example</span></h3><p>Since we need to pass a scheduler when creating an Observable if we want to speed up
+the time, we have to refactor even cold observables into factory methods. For example,
+let us make a factory method to delay even numbers</p>
+<figure class="highlight js"><figcaption><span>even-delays-scheduled.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> evenNumbers_ = <span class="built_in">require</span>(<span class="string">&#x27;./even-numbers&#x27;</span>)</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">makeDelayedNumbers</span>(<span class="params">scheduler</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> delayedNumbers_ = evenNumbers_</span><br><span class="line">    .delay(<span class="function"><span class="params">x</span> =&gt;</span> Rx.Observable.timer(x * <span class="number">1000</span>, scheduler))</span><br><span class="line">    .timeInterval()</span><br><span class="line">  <span class="keyword">return</span> delayedNumbers_</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">module</span>.exports = makeDelayedNumbers</span><br></pre></td></tr></table></figure>
+<p>The production code does not need to pass anything; the default scheduler will be
+used if the argument <code>sheduler</code> is undefined.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">delayedNumbers_ = makeDelayedNumbers()</span><br><span class="line">delayedNumbers_</span><br><span class="line">  .pluck(<span class="string">&#x27;value&#x27;</span>)</span><br><span class="line">  .subscribe(</span><br><span class="line">    (x) =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;at&#x27;</span>, +(<span class="keyword">new</span> <span class="built_in">Date</span>()), <span class="string">&#x27;value&#x27;</span>, x),</span><br><span class="line">    <span class="built_in">console</span>.error,</span><br><span class="line">    () =&gt; &#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">&#x27;completed at&#x27;</span>, +(<span class="keyword">new</span> <span class="built_in">Date</span>()))</span><br><span class="line">    &#125;</span><br><span class="line">  )</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">  prints</span></span><br><span class="line"><span class="comment">    at 1455803481722 value 2</span></span><br><span class="line"><span class="comment">    at 1455803483721 value 4</span></span><br><span class="line"><span class="comment">    at 1455803485724 value 6</span></span><br><span class="line"><span class="comment">    completed at 1455803485725</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>Inside our unit test, we will construct a test scheduler and we will make the test run
+fast</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Rx = <span class="built_in">require</span>(<span class="string">&#x27;rx&#x27;</span>)</span><br><span class="line">Rx.config.longStackSupport = <span class="literal">true</span></span><br><span class="line"><span class="keyword">const</span> makeDelayedNumbers = <span class="built_in">require</span>(<span class="string">&#x27;./even-delays-scheduled&#x27;</span>)</span><br><span class="line">describe(<span class="string">&#x27;virtual timing&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> delayedNumbers_, testScheduler</span><br><span class="line">  beforeEach(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    testScheduler = <span class="keyword">new</span> Rx.TestScheduler()</span><br><span class="line">    delayedNumbers_ = makeDelayedNumbers(testScheduler)</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">startTimer</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    testScheduler.startScheduler(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> testScheduler.createColdObservable(</span><br><span class="line">        Rx.ReactiveTest.onNext(<span class="number">200</span>, <span class="number">0</span>),</span><br><span class="line">        Rx.ReactiveTest.onNext(<span class="number">300</span>, <span class="number">1</span>),</span><br><span class="line">        Rx.ReactiveTest.onNext(<span class="number">400</span>, <span class="number">2</span>),</span><br><span class="line">        Rx.ReactiveTest.onCompleted(<span class="number">500</span>)</span><br><span class="line">      )</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">  it(<span class="string">&#x27;gets the even numbers&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">    delayedNumbers_</span><br><span class="line">      .pluck(<span class="string">&#x27;value&#x27;</span>)</span><br><span class="line">      .subscribe(</span><br><span class="line">        (x) =&gt; <span class="built_in">console</span>.log(<span class="string">&#x27;at&#x27;</span>, +(<span class="keyword">new</span> <span class="built_in">Date</span>()), <span class="string">&#x27;value&#x27;</span>, x),</span><br><span class="line">        <span class="built_in">console</span>.error,</span><br><span class="line">        () =&gt; &#123;</span><br><span class="line">          <span class="built_in">console</span>.log(<span class="string">&#x27;completed at&#x27;</span>, +(<span class="keyword">new</span> <span class="built_in">Date</span>()))</span><br><span class="line">          done()</span><br><span class="line">        &#125;</span><br><span class="line">      )</span><br><span class="line">    startTimer()</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Running this unit test is much faster</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; mocha virtual-timing-spec.js</span><br><span class="line">  virtual timing</span><br><span class="line">    at 1455803627601 value 2</span><br><span class="line">    at 1455803627603 value 4</span><br><span class="line">    at 1455803627603 value 6</span><br><span class="line">    completed at 1455803627603</span><br><span class="line">    ✓ gets the even numbers</span><br><span class="line">  1 passing (28ms)</span><br></pre></td></tr></table></figure>
+<p>Of course, the extra test code complexity is a huge trade off in this case.</p>
+<h2><span id="summary">Summary</span></h2><p>When unit testing reactive streams</p>
+<ul>
+<li>Use <code>done</code> Mocha callback to let the testing runtime continue</li>
+<li>Turn on the long stack support before the production code loads</li>
+<li>Do not forget to verify the test path by confirming the number of assertions,
+or by throwing an exception if a stream goes through a different path</li>
+<li>Build additional streams with extracted test data for easy validation</li>
+<li>If you already use Rx v5 try Ava test runner</li>
+<li>There is plenty of room for writing your own little helper functions to remove 
+the stream testing boilerplate</li>
+<li>If the tests are really really slow, consider using <code>Rx.TestScheduler</code> to drive
+the events on virtual time</li>
+</ul>
+<h2><span id="additional-information">Additional information</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://blog.hyphe.me/rxjs-testing-in-real-world-applications/">RxJs Testing in Real World Applications</a>
+really good examples testing real world code and using schedulers.</li>
+<li><a target="_blank" rel="noopener" href="https://xgrommx.github.io/rx-book/content/getting_started_with_rxjs/testing_and_debugging.html">Testing your Rx application</a> - mostly talks about fake timers and long stack support.</li>
+<li><a target="_blank" rel="noopener" href="http://staltz.com/how-to-debug-rxjs-code.html">How to Debug RxJS code</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Reactive-Extensions/RxJS/blob/master/doc/gettingstarted/creating.md#cold-vs-hot-observables">Cold and hot</a> observables.</li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/testing-reactive-code/" data-id="ckpyeu4cz01se6zvg052p72ql" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/testing-reactive-code/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/reactive/" rel="tag">reactive</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../developing-wiseli/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Developing Wiseli
+        
+      </div>
+    </a>
+  
+  
+    <a href="../microservices-in-the-cloud-tutum/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Microservices in the cloud with Tutum</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/testing-reactive-code/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

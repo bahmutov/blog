@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Trying GitHub Actions | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Recently GitHub Actions went into general availability with very generous usage limits for public repositories, and I have started playing with them. Here are a couple of experiments.   Fixing code fo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Trying GitHub Actions">
+<meta property="og:url" content="https://glebbahmutov.com/blog/trying-github-actions/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Recently GitHub Actions went into general availability with very generous usage limits for public repositories, and I have started playing with them. Here are a couple of experiments.   Fixing code fo">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/code-formatted.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/npm-install.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/first-install.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/second-install.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/github-action-release.png">
+<meta property="og:image" content="https://github.com/bahmutov/cy-spok/workflows/main/badge.svg?branch=master">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/badges-markdown.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/badges.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/commit-status.png">
+<meta property="article:published_time" content="2019-11-15T05:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.375Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="tutorial">
+<meta property="article:tag" content="github">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/github-actions/code-formatted.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-trying-github-actions" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2019-11-15T05:00:00.000Z" itemprop="datePublished">Nov 15 2019</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Trying GitHub Actions
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Run Prettier inside a GitHub Action to fix code formatting, quick NPM install with caching inside actions, running end-to-end Cypress tests using custom action.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Recently <a target="_blank" rel="noopener" href="https://help.github.com/en/actions">GitHub Actions</a> went into general availability with very generous <a target="_blank" rel="noopener" href="https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#usage-limits">usage limits for public repositories</a>, and I have started playing with them. Here are a couple of experiments.</p>
+<!-- toc -->
+<ul>
+<li><a href="#fixing-code-formatting">Fixing code formatting</a></li>
+<li><a href="#action-versioning">Action versioning</a><ul>
+<li><a href="#security">Security</a></li>
+</ul>
+</li>
+<li><a href="#npm-or-yarn-install">NPM or Yarn install</a><ul>
+<li><a href="#building-action">Building action</a></li>
+</ul>
+</li>
+<li><a href="#testing-on-every-os">Testing on every OS</a></li>
+<li><a href="#end-to-end-testing">End-to-end testing</a></li>
+<li><a href="#npm-publishing">NPM publishing</a></li>
+<li><a href="#badges">Badges</a></li>
+<li><a href="#set-commit-status">Set commit status</a></li>
+<li><a href="#deploying-github-pages">Deploying GitHub Pages</a></li>
+<li><a href="#running-period-jobs">Running period jobs</a></li>
+<li><a href="#more-examples">More examples</a></li>
+</ul>
+<!-- tocstop -->
+<p><strong>Note:</strong> I have covered the topics below in my recent talk <a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=zhPqf5z_crc">GitHub Actions in Actions</a>, <a target="_blank" rel="noopener" href="https://slides.com/bahmutov/gh-actions/">slides</a>.</p>
+<h2><span id="fixing-code-formatting">Fixing code formatting</span></h2><p>It is easy to forget to <a href="../configure-prettier-in-vscode/">format code</a> before pushing it to GitHub. I usually use <a target="_blank" rel="noopener" href="https://github.com/typicode/husky">husky</a> pre-commit hooks with <a target="_blank" rel="noopener" href="https://github.com/okonet/lint-staged">lint-staged</a> but that requires configuration. It would be so much simpler if continuous integration server could run the formatting task and if there were any changed files, would commit and push them to the source repository, fixing any problems. Turns out, this is pretty (pun intended) simple as the example repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/gh-action-with-prettier">bahmutov/gh-action-with-prettier</a> shows. Here is the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/gh-action-with-prettier/blob/master/.github/workflows/ci.yml">.github/workflows/ci.yml</a> file.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Prettier</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">build:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Prettier</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v1</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cache</span> <span class="string">node</span> <span class="string">modules</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/cache@v1</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">~/.npm</span></span><br><span class="line">          <span class="attr">key:</span> <span class="string">$&#123;&#123;</span> <span class="string">runner.os</span> <span class="string">&#125;&#125;-node-$&#123;&#123;</span> <span class="string">hashFiles(&#x27;**/package-lock.json&#x27;)</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">restore-keys:</span> <span class="string">|</span></span><br><span class="line">            <span class="string">$&#123;&#123;</span> <span class="string">runner.os</span> <span class="string">&#125;&#125;-node-</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">ci</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">run</span> <span class="string">format</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">git</span> <span class="string">status</span></span><br><span class="line">      <span class="comment"># commit any changed files</span></span><br><span class="line">      <span class="comment"># https://github.com/mikeal/publish-to-github-action</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">mikeal/publish-to-github-action@master</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="attr">GITHUB_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.GITHUB_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>The above steps check out the remote source code, install NPM modules (with caching using <a target="_blank" rel="noopener" href="https://github.com/actions/cache">actions/cache</a> helper), then run Prettier via <code>npm run format</code> and finally use action <a target="_blank" rel="noopener" href="https://github.com/mikeal/publish-to-github-action">mikeal/publish-to-github-action</a> I have found at <a target="_blank" rel="noopener" href="https://github.com/marketplace?type=actions">GitHub Marketplace</a>. This action is super simple - it is a code I usually have written myself to commit local changes and push to remote, see <a target="_blank" rel="noopener" href="https://github.com/mikeal/publish-to-github-action/blob/master/entrypoint.sh">its entrypoint.sh</a>.</p>
+<p>The integration of code repository (in this case GitHub) with CI (GitHub Actions) is very convenient from the security point of view. In this case, a secret <code>GITHUB_TOKEN</code> is automatically injected by the CI - allowing us to easily interact with the remote repository, no extra steps necessary.</p>
+<p><img src="/blog/images/github-actions/code-formatted.png" alt="Code was formatted and pushed to the repo"></p>
+<p><strong>Update:</strong> I now prefer using <a target="_blank" rel="noopener" href="https://github.com/stefanzweifel/git-auto-commit-action">stefanzweifel/git-auto-commit-action</a> to commit and push any changed files.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># if there are any updated PNG images, commit and push them</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Commit</span> <span class="string">any</span> <span class="string">changed</span> <span class="string">images</span> <span class="string">💾</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">stefanzweifel/git-auto-commit-action@v4</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">commit_message:</span> <span class="string">Updated</span> <span class="string">screenshots</span></span><br><span class="line">    <span class="attr">branch:</span> <span class="string">main</span></span><br><span class="line">    <span class="attr">file_pattern:</span> <span class="string">&#x27;*.png&#x27;</span></span><br></pre></td></tr></table></figure>
+<h2><span id="action-versioning">Action versioning</span></h2><p>Actions are fetched directly from GitHub repositories, not from NPM. Thus you can specify what action to use using a <a target="_blank" rel="noopener" href="https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsuses">branch name, tag or commit</a>.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">steps:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@74bc508</span> <span class="comment"># Reference a specific commit</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@v1</span>      <span class="comment"># Reference the major version of a release</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@v1.2</span>    <span class="comment"># Reference a minor version of a release</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@master</span>  <span class="comment"># Reference a branch</span></span><br></pre></td></tr></table></figure>
+<p>I recommend using either latest published branch like:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@v1</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@v1.2.1</span></span><br></pre></td></tr></table></figure>
+<h3><span id="security">Security</span></h3><p>Using branch tags is dangerous though, read <a target="_blank" rel="noopener" href="https://julienrenaux.fr/2019/12/20/github-actions-security-risk/">this post</a> since you can execute unknown code when the tag changes. Thus if you want to sleep slightly better at night, please use the full commit sha of the actions you have reviewed.</p>
+<h2><span id="npm-or-yarn-install">NPM or Yarn install</span></h2><p>GitHub has published <a target="_blank" rel="noopener" href="https://github.com/actions/toolkit">Actions Toolkit</a> for writing <a target="_blank" rel="noopener" href="https://github.com/features/actions">actions</a> using JavaScript or TypeScript. This is excellent - always bet on JavaScript! The only problem - some actions for a typical Node project require quite a bit of copy / paste code. For example, every Node project needs to cache <code>~/.npm</code> folder, thus it needs the following boilerplate action.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cache</span> <span class="string">node</span> <span class="string">modules</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">actions/cache@v1</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">~/.npm</span></span><br><span class="line">    <span class="attr">key:</span> <span class="string">$&#123;&#123;</span> <span class="string">runner.os</span> <span class="string">&#125;&#125;-node-$&#123;&#123;</span> <span class="string">hashFiles(&#x27;**/package-lock.json&#x27;)</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">restore-keys:</span> <span class="string">|</span></span><br><span class="line">      <span class="string">$&#123;&#123;</span> <span class="string">runner.os</span> <span class="string">&#125;&#125;-node-</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">ci</span></span><br></pre></td></tr></table></figure>
+<p>Ughh, wouldn&#39;t it be nice to have nice reusable &quot;Install NPM modules and cache them, please&quot; action? Unfortunately, <a target="_blank" rel="noopener" href="https://github.com/actions/cache">action/cache</a> itself is an action - and cannot be used from JavaScript ☹️. There is a little bit of discussion <a target="_blank" rel="noopener" href="https://github.com/actions/cache/issues/55">here</a> on the issue I have opened, but worry not - Open Source to the rescue. I have cloned <code>actions/cache</code> into <a target="_blank" rel="noopener" href="https://github.com/cypress-io/github-actions-cache">cypress-io/github-actions-cache</a> and have refactored the code in branch <code>reusable-functions</code> to allow using <code>restoreCache</code> and <code>saveCache</code> functions from other JavaScript code. Easy-peasy.</p>
+<p>Let&#39;s write <code>npm-install</code> action - here is the main logic of the action</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">restoreCachedNpm()</span><br><span class="line">.then(<span class="function"><span class="params">npmCacheHit</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;npm cache hit&#x27;</span>, npmCacheHit)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> install().then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (npmCacheHit) &#123;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> saveCachedNpm()</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line">.catch(<span class="function"><span class="params">error</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(error)</span><br><span class="line">  core.setFailed(error.message)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>If the previously cached <code>~/.npm</code> or <code>~/.cache/yarn</code> depending on the presence of <code>yarn.lock</code> folder was successfully restored, then we perform immutable install using <code>npm ci</code> or <code>yarn --frozen-lockfile</code> command and are done. If the cache hit was missed, then we need to save the NPM modues folder in action&#39;s cache.</p>
+<p>Restoring and saving NPM cache folder functions use the forked <code>cache</code> module and rely on platform and lock file hash to know when a new cache is necessary.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> hasha = <span class="built_in">require</span>(<span class="string">&#x27;hasha&#x27;</span>)</span><br><span class="line"><span class="comment">// we are using dependency</span></span><br><span class="line"><span class="comment">// &quot;cache&quot;: &quot;github:cypress-io/github-actions-cache#8bec6cc&quot;</span></span><br><span class="line"><span class="keyword">const</span> &#123; restoreCache, saveCache &#125; = <span class="built_in">require</span>(<span class="string">&#x27;cache/lib/index&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> useYarn = fs.existsSync(<span class="string">&#x27;yarn.lock&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> lockFilename = useYarn ? <span class="string">&#x27;yarn.lock&#x27;</span> : <span class="string">&#x27;package-lock.json&#x27;</span></span><br><span class="line"><span class="keyword">const</span> lockHash = hasha.fromFileSync(lockFilename)</span><br><span class="line"><span class="keyword">const</span> platformAndArch = <span class="string">`<span class="subst">$&#123;process.platform&#125;</span>-<span class="subst">$&#123;process.arch&#125;</span>`</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// this is simplified code for clarity</span></span><br><span class="line"><span class="comment">// see action file index.js for full details</span></span><br><span class="line"><span class="keyword">const</span> NPM_CACHE = &#123;</span><br><span class="line">  inputPath: <span class="string">&#x27;~/.npm&#x27;</span>, <span class="comment">// or &#x27;~/.cache/yarn&#x27;</span></span><br><span class="line">  primaryKey: <span class="string">`npm-<span class="subst">$&#123;platformAndArch&#125;</span>-<span class="subst">$&#123;lockHash&#125;</span>`</span>,</span><br><span class="line">  restoreKeys: <span class="string">`npm-<span class="subst">$&#123;platformAndArch&#125;</span>-`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> restoreCachedNpm = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;trying to restore cached NPM modules&#x27;</span>)</span><br><span class="line">  <span class="keyword">return</span> restoreCache(</span><br><span class="line">    NPM_CACHE.inputPath,</span><br><span class="line">    NPM_CACHE.primaryKey,</span><br><span class="line">    NPM_CACHE.restoreKeys</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> saveCachedNpm = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;saving NPM modules&#x27;</span>)</span><br><span class="line">  <span class="keyword">return</span> saveCache(NPM_CACHE.inputPath, NPM_CACHE.primaryKey)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3><span id="building-action">Building action</span></h3><p>Because the action needs to be ready to go, you need to bundle the action using <a href>zeti/ncc</a> for example. Thus the action&#39;s <code>package.json</code> file includes the <code>build</code> script.</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;build&quot;</span>: <span class="string">&quot;ncc build -o dist index.js&quot;</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">&quot;devDependencies&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;@zeit/ncc&quot;</span>: <span class="string">&quot;0.20.5&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The generated <code>dist</code> folder is checked in - because GitHub actions are fetched straight from GitHub source, no from NPM registry. For publishing I use another GitHub action <a target="_blank" rel="noopener" href="https://github.com/cycjimmy/semantic-release-action">cycjimmy/semantic-release-action</a> that tags and pushes new releases on GitHub and also update <code>v&lt;major version&gt;</code> branch, like <code>v1</code> to always point at the latest release.</p>
+<p>Finally, I have described action&#39;s main properties in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/npm-install/blob/master/action.yml">action.yml</a> and published it on <a target="_blank" rel="noopener" href="https://github.com/marketplace/actions/npm-or-yarn-install-with-caching">GitHub Marketplace</a>.</p>
+<p><img src="/blog/images/github-actions/npm-install.png" alt="The lonely NPM install action"></p>
+<p>You can see this action in ... action at <a target="_blank" rel="noopener" href="https://github.com/bahmutov/npm-install-action-example/actions">bahmutov/npm-install-action-example/actions</a>. The CI file is simple</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/main.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">main</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">build-and-test:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Build</span> <span class="string">and</span> <span class="string">test</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v1</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">bahmutov/npm-install@v1</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">t</span></span><br></pre></td></tr></table></figure>
+<p>Name <code>bahmutov/npm-install@v1</code> refers to branch <code>v1</code> of the GitHub repository <a target="_blank" rel="noopener" href="https://github.com/bahmutov/npm-install/tree/v1">bahmutov/npm-install</a> where the latest semantic release is pushed. On the first build, the cache is empty, and <code>npm ci</code> has to fetch NPM modules from the registry. Then the folder <code>~/.npm</code> is cached.</p>
+<p><img src="/blog/images/github-actions/first-install.png" alt="First install"></p>
+<p>On the second build, the cache is hit, and <code>npm ci</code> is faster - because it uses only modules from the restored <code>~/.npm</code> folder, and then skips saving unchanged cache folder.</p>
+<p><img src="/blog/images/github-actions/second-install.png" alt="Second install"></p>
+<p>Nice, feel free to use this action from your projects, and <a target="_blank" rel="noopener" href="https://github.com/bahmutov/npm-install/issues">open new issue</a> if you find a problem. You can also build your own actions using the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/npm-install#npm">exported NPM function</a>.</p>
+<h2><span id="testing-on-every-os">Testing on every OS</span></h2><p>You can run the same job on every OS using <code>matrix</code> strategy</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">build-and-test:</span></span><br><span class="line">    <span class="attr">strategy:</span></span><br><span class="line">      <span class="comment"># do not stop the matrix if one of the jobs fails</span></span><br><span class="line">      <span class="attr">fail-fast:</span> <span class="literal">false</span></span><br><span class="line">      <span class="attr">matrix:</span></span><br><span class="line">        <span class="attr">os:</span> [<span class="string">macos-latest</span>, <span class="string">windows-latest</span>, <span class="string">ubuntu-20.04</span>]</span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">$&#123;&#123;</span> <span class="string">matrix.os</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<h2><span id="end-to-end-testing">End-to-end testing</span></h2><p>Finally, I have written <a target="_blank" rel="noopener" href="https://github.com/cypress-io/github-action">cypress-io/github-action</a> to make running Cypress tests on GitHub super simple. Here is how to run tests on a single Linux machine</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">End-to-end</span> <span class="string">tests</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">cypress-run:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v1</span></span><br><span class="line">      <span class="comment"># Install NPM dependencies, cache them correctly</span></span><br><span class="line">      <span class="comment"># and run all Cypress tests</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">run</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v1</span></span><br></pre></td></tr></table></figure>
+<p>Here is more complicated case: running tests in parallel in <a target="_blank" rel="noopener" href="https://on.cypress.io/parallelization">load balancing mode</a></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Parallel</span> <span class="string">Cypress</span> <span class="string">Tests</span></span><br><span class="line"></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">test:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">run</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">strategy:</span></span><br><span class="line">      <span class="attr">matrix:</span></span><br><span class="line">        <span class="comment"># run 3 copies of the current job in parallel</span></span><br><span class="line">        <span class="attr">containers:</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v1</span></span><br><span class="line"></span><br><span class="line">      <span class="comment"># because of &quot;record&quot; and &quot;parallel&quot; parameters</span></span><br><span class="line">      <span class="comment"># these containers will load balance all found tests among themselves</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">run</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v1</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">record:</span> <span class="literal">true</span></span><br><span class="line">          <span class="attr">parallel:</span> <span class="literal">true</span></span><br><span class="line">          <span class="attr">group:</span> <span class="string">&#x27;Actions example&#x27;</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="comment"># pass the Dashboard record key as an environment variable</span></span><br><span class="line">          <span class="attr">CYPRESS_RECORD_KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.CYPRESS_RECORD_KEY</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>Super simple and even works across Windows, Mac and Linux machines on CI, see <a target="_blank" rel="noopener" href="https://github.com/cypress-io/github-action#examples">Cypress GitHub Action examples</a>.</p>
+<h2><span id="npm-publishing">NPM publishing</span></h2><p>If you are a fan of <a target="_blank" rel="noopener" href="https://semver.org/">semantic versioning</a> like I am, you are probably using <a target="_blank" rel="noopener" href="https://github.com/semantic-release/semantic-release">semantic-release</a> to publish NPM packages automatically from CI. This type of release becomes even simpler with GitHub actions thanks to <a target="_blank" rel="noopener" href="https://github.com/cycjimmy/semantic-release-action">cycjimmy/semantic-release-action</a>.</p>
+<p>First, go to <a target="_blank" rel="noopener" href="https://www.npmjs.com/settings/bahmutov/tokens">https://www.npmjs.com/settings/<username>/tokens</username></a> and get a new &quot;Read and Write&quot; token. Save it to clipboard - it will never be displayed again!</p>
+<p>Second, go to the project&#39;s Settings / Secrets and add a new secret with name <code>NPM_TOKEN</code> and paste the NPM auth token from the clipboard.</p>
+<p>Add the following step to your workflow</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># after test step</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Semantic</span> <span class="string">Release</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">cycjimmy/semantic-release-action@v2</span></span><br><span class="line">  <span class="attr">id:</span> <span class="string">semantic</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">branch:</span> <span class="string">main</span></span><br><span class="line">    <span class="attr">extra_plugins:</span> <span class="string">|</span></span><br><span class="line">      <span class="string">@semantic-release/git</span></span><br><span class="line">      <span class="string">@semantic-release/changelog</span></span><br><span class="line">  <span class="attr">env:</span></span><br><span class="line">    <span class="attr">GITHUB_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.GITHUB_TOKEN</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">NPM_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.NPM_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>The <code>GITHUB_TOKEN</code> secret is automatically created and injected by the GH Action App in your repository, you don&#39;t need to create it. Each time there is a Git commit on the <code>main</code> branch since the last release, the above action will publish new NPM version and will create a GitHub release. See example in action in repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cy-spok/actions">bahmutov/cy-spok</a>, where you can see <code>github-actions</code> user publishing releases.</p>
+<p><img src="/blog/images/github-actions/github-action-release.png" alt="Semantic release from GH Action"></p>
+<h2><span id="badges">Badges</span></h2><p>You can add <a target="_blank" rel="noopener" href="https://help.github.com/en/actions/automating-your-workflow-with-github-actions/configuring-a-workflow#adding-a-workflow-status-badge-to-your-repository">GH Action badge</a> to your README file. I prefer using the syntax that includes workflow name and explicit branch:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">https:&#x2F;&#x2F;github.com&#x2F;&lt;OWNER&gt;&#x2F;&lt;REPOSITORY&gt;&#x2F;workflows&#x2F;&lt;WORKFLOW_NAME&gt;&#x2F;badge.svg?branch&#x3D;&lt;BRANCH&gt;</span><br><span class="line"># example</span><br><span class="line">![cy-spok status](https:&#x2F;&#x2F;github.com&#x2F;bahmutov&#x2F;cy-spok&#x2F;workflows&#x2F;main&#x2F;badge.svg?branch&#x3D;main)</span><br></pre></td></tr></table></figure>
+<p><img src="https://github.com/bahmutov/cy-spok/workflows/main/badge.svg?branch=master" alt="cy-spok status"></p>
+<p>If you want to use badge as a link and go to the Actions tab of the repo, I like separating the urls into their own lines.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[![ci status][ci image]][ci url]</span><br><span class="line">[ci image]: https:&#x2F;&#x2F;github.com&#x2F;bahmutov&#x2F;cy-spok&#x2F;workflows&#x2F;main&#x2F;badge.svg?branch&#x3D;main</span><br><span class="line">[ci url]: https:&#x2F;&#x2F;github.com&#x2F;bahmutov&#x2F;cy-spok&#x2F;actions</span><br></pre></td></tr></table></figure>
+<p>One thing I like doing is creating separate workflows for the same project and putting multiple badges in the same README. If there are example projects, we could put their badges there too. This creates a single CI status &quot;dashboard&quot; in the Markdown file, something <a href="../status-dashboard-from-markdown/">I have recommended a long time ago</a></p>
+<p><img src="/blog/images/github-actions/badges-markdown.png" alt="Status badges Markdown table"></p>
+<p><img src="/blog/images/github-actions/badges.png" alt="Status badges"></p>
+<h2><span id="set-commit-status">Set commit status</span></h2><p>You can set commit status using GitHub REST API, if you know GH repository and commit SHA and have a token with permissions. A REST call using curl would look like this:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">curl --request POST \</span><br><span class="line">  --url https:&#x2F;&#x2F;api.github.com&#x2F;repos&#x2F;$&#123;&#123; github.repository &#125;&#125;&#x2F;statuses&#x2F;$&#123;&#123; github.sha &#125;&#125; \</span><br><span class="line">  --header &#39;authorization: Bearer $&#123;&#123; secrets.GITHUB_TOKEN &#125;&#125;&#39; \</span><br><span class="line">  --header &#39;content-type: application&#x2F;json&#39; \</span><br><span class="line">  --data &#39;&#123;</span><br><span class="line">    &quot;state&quot;: &quot;success&quot;,</span><br><span class="line">    &quot;description&quot;: &quot;REST commit status&quot;,</span><br><span class="line">    &quot;context&quot;: &quot;a test&quot;</span><br><span class="line">  &#125;&#39;</span><br></pre></td></tr></table></figure>
+<p>When running on GitHub Actions, the repository and sha are already set via <a target="_blank" rel="noopener" href="https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables">default environment variables</a>, and the user can pass the <code>GITHUB_TOKEN</code> created by the GH App itself.</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># reads GITHUB_REPOSITORY and GITHUB_SHA from environment</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Set</span> <span class="string">code</span> <span class="string">coverage</span> <span class="string">commit</span> <span class="string">status</span> <span class="string">📫</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">npx</span> <span class="string">set-gh-status</span></span><br><span class="line">  <span class="attr">env:</span></span><br><span class="line">    <span class="attr">GITHUB_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.GITHUB_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>See implementation in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/check-code-coverage">bahmutov/check-code-coverage</a>.</p>
+<p><img src="/blog/images/github-actions/commit-status.png" alt="Commit status check"></p>
+<h2><span id="deploying-github-pages">Deploying GitHub Pages</span></h2><p>I like using <a target="_blank" rel="noopener" href="https://github.com/peaceiris/actions-gh-pages">peaceiris/actions-gh-pages</a> to deploy the repository or a single folder to GitHub pages.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Deploy</span> <span class="string">🚀</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">peaceiris/actions-gh-pages@v3</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">github_token:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.GITHUB_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<h2><span id="running-period-jobs">Running period jobs</span></h2><p>You can use cron syntax to run the workflow periodically. For example, to run the tests every night use the following workflow trigger syntax:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">schedule:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">cron:</span> <span class="string">&#x27;0 3 * * *&#x27;</span></span><br></pre></td></tr></table></figure>
+<h2><span id="more-examples">More examples</span></h2><ul>
+<li><a href="/blog/versioned-doc-pages/" title="Versioned Docs Pages">Versioned Docs Pages</a></li>
+<li><a href="/blog/develop-preview-test/" title="Test the Preview Vercel Deploys">Test the Preview Vercel Deploys</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/auto-pr-gh-action-example">Open or merge pull requests automatically</a></li>
+<li>A great tutorial about using and building actions in 30 (!) parts from <a target="_blank" rel="noopener" href="https://edwardthomson.com/">Edward Thomson</a> is <a target="_blank" rel="noopener" href="https://edwardthomson.com/blog/github_actions_advent_calendar.html">here</a></li>
+<li>while working on a GitHub action, you can unit test it, but also apply the action to examples in subfolders that act like end-to-end examples. See <a target="_blank" rel="noopener" href="https://github.com/bahmutov/npm-install#testing">bahmutov/npm-install Testing section</a></li>
+<li>test a static site deployed to GitHub Pages before (twice) and after deploy in blog post <a href="/blog/triple-tested/" title="Triple Tested Static Site Deployed to GitHub Pages Using GitHub Actions">Triple Tested Static Site Deployed to GitHub Pages Using GitHub Actions</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/trying-github-actions/" data-id="ckpyeu4d301sn6zvg2dzq1v17" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/trying-github-actions/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/github/" rel="tag">github</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../cypress-talks/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Cypress Talks
+        
+      </div>
+    </a>
+  
+  
+    <a href="../cypress-fiddle/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Run End-to-end Tests from Markdown Files</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/trying-github-actions/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

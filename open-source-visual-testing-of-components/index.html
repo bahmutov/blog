@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Visual testing for React components using open source tools | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Let&#39;s take a look at a modern React application like this Sudoku game that you can play online at https:&#x2F;&#x2F;sudoku-raravi.now.sh&#x2F;.   Talks Sudoku game Implementation Numbers component cypress-react-">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Visual testing for React components using open source tools">
+<meta property="og:url" content="https://glebbahmutov.com/blog/open-source-visual-testing-of-components/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Let&#39;s take a look at a modern React application like this Sudoku game that you can play online at https:&#x2F;&#x2F;sudoku-raravi.now.sh&#x2F;.   Talks Sudoku game Implementation Numbers component cypress-react-">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/numbers.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/numbers-without-css.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/numbers-with-css.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/numbers-styled.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/number-click.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/selected-number.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/numbers-selected.snap.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/numbers-selected.diff.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/timer.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/control-the-clock.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/random-board.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/play-move.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/skip-snapshots.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/sudoku/ci-diff.png">
+<meta property="article:published_time" content="2020-06-16T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.316Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="cypress">
+<meta property="article:tag" content="visual testing">
+<meta property="article:tag" content="react">
+<meta property="article:tag" content="tutorial">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/sudoku/numbers.gif">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-open-source-visual-testing-of-components" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2020-06-16T04:00:00.000Z" itemprop="datePublished">Jun 16 2020</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Visual testing for React components using open source tools
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Comparing React components pixel by pixel to catch style problems
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Let&#39;s take a look at a modern React application like this <a target="_blank" rel="noopener" href="https://github.com/raravi/sudoku">Sudoku</a> game that you can play online at <a target="_blank" rel="noopener" href="https://sudoku-raravi.now.sh/">https://sudoku-raravi.now.sh/</a>.</p>
+<!-- toc -->
+<ul>
+<li><a href="#talks">Talks</a></li>
+<li><a href="#sudoku-game">Sudoku game</a></li>
+<li><a href="#implementation">Implementation</a></li>
+<li><a href="#numbers-component">Numbers component</a></li>
+<li><a href="#cypress-react-unit-test">cypress-react-unit-test</a></li>
+<li><a href="#visual-testing">Visual testing</a></li>
+<li><a href="#controlling-the-clock">Controlling the clock</a></li>
+<li><a href="#deterministic-board">Deterministic board</a></li>
+<li><a href="#local-workflow">Local workflow</a></li>
+<li><a href="#continuous-integration">Continuous Integration</a></li>
+<li><a href="#pull-request-workflow">Pull request workflow</a></li>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#more-info">More info</a></li>
+</ul>
+<!-- tocstop -->
+<h2><span id="talks">Talks</span></h2><p>I have covered this topic in a JSNationLive 2020 presentation</p>
+<center>
+  <iframe src="https://slides.com/bahmutov/i-see-what-is-going-on/embed?style=light" width="576" height="420" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+</center>
+
+<p>Video (20 minutes)</p>
+<center>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/00BNExlJUU8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</center>
+
+<p>Later I have shown an expanded version of this talk at Des Moines meetup</p>
+<center>
+  <iframe src="https://slides.com/bahmutov/visual-testing/embed?style=light" width="576" height="420" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+</center>
+
+<p>Video (1 hour video)</p>
+<center>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/gUFdU5fQs4o" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</center>
+
+<h2><span id="sudoku-game">Sudoku game</span></h2><p>The game is nicely done. There are different difficulty levels, game modes and it looks very polished.</p>
+<iframe style="width: 100%; height: 400px" src="https://www.youtube-nocookie.com/embed/lxWEE0vDq6c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+<p>It is a well-designed web application with responsive styles for 3 different browser widths</p>
+<iframe style="width: 100%; height: 400px" src="https://www.youtube-nocookie.com/embed/w00vpIEVZPQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+<p>The application is made out of React components, which we can see in the <code>src</code> folder, or by using React DevTools. There is <code>&lt;App /&gt;</code> and <code>&lt;Game /&gt;</code> components, and lots of smaller components matching the sections of the user interface.</p>
+<iframe style="width: 100%; height: 400px" src="https://www.youtube-nocookie.com/embed/f9sbdiAEHxs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+<h2><span id="implementation">Implementation</span></h2><p>Let&#39;s look at the code. <strong>Note:</strong> you can find my fork of the game at <a target="_blank" rel="noopener" href="https://github.com/bahmutov/sudoku">bahmutov/sudoku</a>, which includes all code shown in this blog post.</p>
+<figure class="highlight js"><figcaption><span>src/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; render &#125; <span class="keyword">from</span> <span class="string">&#x27;react-dom&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; App &#125; <span class="keyword">from</span> <span class="string">&#x27;./App&#x27;</span>;</span><br><span class="line"></span><br><span class="line">render(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>, <span class="built_in">document</span>.getElementById(<span class="string">&#x27;root&#x27;</span>));</span><br></pre></td></tr></table></figure>
+<p>The <code>App</code> component creates the React context object, imports the application&#39;s styles and creates the <code>Game</code> component</p>
+<figure class="highlight js"><figcaption><span>src/App.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; Game &#125; <span class="keyword">from</span> <span class="string">&#x27;./Game&#x27;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;./App.css&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; SudokuProvider &#125; <span class="keyword">from</span> <span class="string">&#x27;./context/SudokuContext&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * App is the root React component.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> App = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;SudokuProvider&gt;</span><br><span class="line">      &lt;Game /&gt;</span><br><span class="line">    &lt;/SudokuProvider&gt;</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The <code>Game</code> component is much larger source file, because it brings all the logic together</p>
+<figure class="highlight js"><figcaption><span>src/Game.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; useState, useEffect &#125; <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"><span class="keyword">import</span> moment <span class="keyword">from</span> <span class="string">&#x27;moment&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; Header &#125; <span class="keyword">from</span> <span class="string">&#x27;./components/layout/Header&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; GameSection &#125; <span class="keyword">from</span> <span class="string">&#x27;./components/layout/GameSection&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; StatusSection &#125; <span class="keyword">from</span> <span class="string">&#x27;./components/layout/StatusSection&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; Footer &#125; <span class="keyword">from</span> <span class="string">&#x27;./components/layout/Footer&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; getUniqueSudoku &#125; <span class="keyword">from</span> <span class="string">&#x27;./solver/UniqueSudoku&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; useSudokuContext &#125; <span class="keyword">from</span> <span class="string">&#x27;./context/SudokuContext&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> Game = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The <code>Game</code> component renders all the components shown above, passing props that receive user events</p>
+<figure class="highlight js"><figcaption><span>src/Game.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> (</span><br><span class="line">  &lt;&gt;</span><br><span class="line">    &lt;div className=&#123;overlay?<span class="string">&quot;container blur&quot;</span>:<span class="string">&quot;container&quot;</span>&#125;&gt;</span><br><span class="line">      &lt;Header onClick=&#123;onClickNewGame&#125;/&gt;</span><br><span class="line">      &lt;div className=<span class="string">&quot;innercontainer&quot;</span>&gt;</span><br><span class="line">        &lt;GameSection</span><br><span class="line">          onClick=&#123;<span class="function">(<span class="params">indexOfArray</span>) =&gt;</span> onClickCell(indexOfArray)&#125;</span><br><span class="line">        /&gt;</span><br><span class="line">        &lt;StatusSection</span><br><span class="line">          onClickNumber=&#123;<span class="function">(<span class="params">number</span>) =&gt;</span> onClickNumber(number)&#125;</span><br><span class="line">          onChange=&#123;<span class="function">(<span class="params">e</span>) =&gt;</span> onChangeDifficulty(e)&#125;</span><br><span class="line">          onClickUndo=&#123;onClickUndo&#125;</span><br><span class="line">          onClickErase=&#123;onClickErase&#125;</span><br><span class="line">          onClickHint=&#123;onClickHint&#125;</span><br><span class="line">          onClickMistakesMode=&#123;onClickMistakesMode&#125;</span><br><span class="line">          onClickFastMode=&#123;onClickFastMode&#125;</span><br><span class="line">        /&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">      &lt;Footer /&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  &lt;/&gt;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h2><span id="numbers-component">Numbers component</span></h2><p>Among individual smaller components there is <code>Numbers</code> component that you can use to enter numbers into the grid.</p>
+<p><img src="/blog/images/sudoku/numbers.gif" alt="Numbers component"></p>
+<p>The Numbers component receives its inputs from the parent component in two ways: via a context and via props.</p>
+<figure class="highlight js"><figcaption><span>src/components/Numbers.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; useSudokuContext &#125; <span class="keyword">from</span> <span class="string">&#x27;../context/SudokuContext&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * React component for the Number Selector in the Status Section.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> Numbers = <span class="function">(<span class="params">props</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">let</span> &#123; numberSelected &#125; = useSudokuContext();</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;div className=<span class="string">&quot;status__numbers&quot;</span>&gt;</span><br><span class="line">      &#123;</span><br><span class="line">        [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>].map(<span class="function">(<span class="params">number</span>) =&gt;</span> &#123;</span><br><span class="line">          <span class="keyword">if</span> (numberSelected === number.toString()) &#123;</span><br><span class="line">            <span class="keyword">return</span> (</span><br><span class="line">              &lt;div className=<span class="string">&quot;status__number status__number--selected&quot;</span></span><br><span class="line">                key=&#123;number&#125;</span><br><span class="line">                onClick=&#123;<span class="function">() =&gt;</span> props.onClickNumber(number.toString())&#125;&gt;&#123;number&#125;&lt;/div&gt;</span><br><span class="line">            )</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> (</span><br><span class="line">              &lt;div className=<span class="string">&quot;status__number&quot;</span> key=&#123;number&#125;</span><br><span class="line">                onClick=&#123;<span class="function">() =&gt;</span> props.onClickNumber(number.toString())&#125;&gt;&#123;number&#125;&lt;/div&gt;</span><br><span class="line">            )</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">      &#125;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>For example, the currently selected number (if any) is grabbed from the context.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> &#123; numberSelected &#125; = useSudokuContext();</span><br></pre></td></tr></table></figure>
+<p>The click handler is grabbed from the <code>props</code> argument and used to send the clicked number back to the parent component.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> Numbers = <span class="function">(<span class="params">props</span>) =&gt;</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  &lt;div className=<span class="string">&quot;status__number&quot;</span> key=&#123;number&#125;</span><br><span class="line">    onClick=&#123;<span class="function">() =&gt;</span> props.onClickNumber(number.toString())&#125;&gt;&#123;number&#125;&lt;/div&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>If we want to refactor the above component, how do we ensure that we don&#39;t break it? How do we ensure that it renders in exactly the same way, and that when the user clicks, the number is sent to the parent component? How do we write component tests?</p>
+<p>In my view, the component receives its inputs, the props and the context, and generates some output. The output is both the DOM nodes the component renders, and the <code>props.onClickNumber</code> invocations on click. Let&#39;s make sure the component works this way.</p>
+<h2><span id="cypress-react-unit-test">cypress-react-unit-test</span></h2><p>To test the React components I will install <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-react-unit-test">cypress-react-unit-test</a>. This adaptor allows the <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress">Cypress</a> test runner to mount React components like little mini web applications and then use the full Cypress API to interact with them. Our application uses <code>react-scripts</code>, thus the setup is trivial</p>
+<figure class="highlight js"><figcaption><span>cypress/support/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span>(<span class="string">&#x27;cypress-react-unit-test/support&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function">(<span class="params">on, config</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">require</span>(<span class="string">&#x27;cypress-react-unit-test/plugins/react-scripts&#x27;</span>)(on, config)</span><br><span class="line">  <span class="keyword">return</span> config</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight json"><figcaption><span>cypress.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;experimentalComponentTesting&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="attr">&quot;componentFolder&quot;</span>: <span class="string">&quot;src&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Let&#39;s write our first test.</p>
+<figure class="highlight js"><figcaption><span>src/components/Numbers.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; mount &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-react-unit-test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; Numbers &#125; <span class="keyword">from</span> <span class="string">&#x27;./Numbers&#x27;</span></span><br><span class="line">describe(<span class="string">&#x27;Numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;shows all numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    mount(<span class="xml"><span class="tag">&lt;<span class="name">Numbers</span> /&gt;</span></span>);</span><br><span class="line">    [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>].forEach(<span class="function"><span class="params">k</span> =&gt;</span> &#123;</span><br><span class="line">      cy.contains(<span class="string">&#x27;.status__number&#x27;</span>, k)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Open Cypress with <code>yarn cypress open</code> or <code>npx cypress open</code> and run the test. There is no need to start the application, because we are working with an individual component, not with a page.</p>
+<p>Hmm, the test passes, all the numbers are there. But the component does not look right!</p>
+<p><img src="/blog/images/sudoku/numbers-without-css.png" alt="First test to check all numbers are present"></p>
+<p>I think it is very important to <em>see</em> the component to understand what the users will experience. Our component needs styles - and the styles are in the <code>src/app.css</code> file. Because we point the <code>cypress/plugins/index.js</code> at the <code>react-scripts</code> settings, the spec files will use the same loaders and bundlers as the application code. Which means we can import <code>app.css</code> from the spec file too:</p>
+<figure class="highlight js"><figcaption><span>src/components/Numbers.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; Numbers &#125; <span class="keyword">from</span> <span class="string">&#x27;./Numbers&#x27;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;../App.css&#x27;</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/sudoku/numbers-with-css.png" alt="Include App.css in the test file"></p>
+<p>This is better, but still not exactly the same. Since the CSS assumes certain document structure, we need to surround our <code>&lt;Numbers/&gt;</code> with elements with specific class names.</p>
+<figure class="highlight js"><figcaption><span>src/components/Numbers.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mount(</span><br><span class="line">  &lt;div className=<span class="string">&quot;innercontainer&quot;</span>&gt;</span><br><span class="line">    &lt;section className=<span class="string">&quot;status&quot;</span>&gt;</span><br><span class="line">      &lt;Numbers /&gt;</span><br><span class="line">    &lt;/section&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>This looks much better - now we see what the user is going to see.</p>
+<p><img src="/blog/images/sudoku/numbers-styled.png" alt="Numbers component styled during test"></p>
+<p>Super. We can also confirm that the component calls the prop <code>onClickNumber</code> when the user clicks a number in the DOM:</p>
+<figure class="highlight js"><figcaption><span>src/components/Numbers.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;reacts to a click&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  mount(</span><br><span class="line">    &lt;div className=<span class="string">&quot;innercontainer&quot;</span>&gt;</span><br><span class="line">      &lt;section className=<span class="string">&quot;status&quot;</span>&gt;</span><br><span class="line">        &lt;Numbers onClickNumber=&#123;cy.stub().as(<span class="string">&#x27;click&#x27;</span>)&#125;/&gt;</span><br><span class="line">      &lt;/section&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  )</span><br><span class="line">  cy.contains(<span class="string">&#x27;.status__number&#x27;</span>, <span class="string">&#x27;9&#x27;</span>).click()</span><br><span class="line">  cy.get(<span class="string">&#x27;@click&#x27;</span>).should(<span class="string">&#x27;have.been.calledWith&#x27;</span>, <span class="string">&#x27;9&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>In the test above we pass <a target="_blank" rel="noopener" href="https://on.cypress.io/stub">cy.stub</a> and confirm it was called with expected number 9 when the user clicks on the DOM element.</p>
+<p><img src="/blog/images/sudoku/number-click.png" alt="Confirm the click happens"></p>
+<p>How does our component look when there is a selected number? In order to test this, we need to wrap the <code>&lt;Numbers /&gt;</code> component with a mock context provider.</p>
+<figure class="highlight js"><figcaption><span>src/components/Numbers.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123;SudokuContext&#125; <span class="keyword">from</span> <span class="string">&#x27;../context/SudokuContext&#x27;</span></span><br><span class="line">describe(<span class="string">&#x27;Numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it(<span class="string">&#x27;shows selected number&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    mount(</span><br><span class="line">      &lt;SudokuContext.Provider value=&#123;&#123; <span class="attr">numberSelected</span>: <span class="string">&#x27;4&#x27;</span> &#125;&#125; &gt;</span><br><span class="line">        &lt;div className=<span class="string">&quot;innercontainer&quot;</span>&gt;</span><br><span class="line">          &lt;section className=<span class="string">&quot;status&quot;</span>&gt;</span><br><span class="line">            &lt;Numbers /&gt;</span><br><span class="line">          &lt;/section&gt;</span><br><span class="line">        &lt;/div&gt;</span><br><span class="line">      &lt;/SudokuContext.Provider&gt;</span><br><span class="line">    )</span><br><span class="line">    cy.contains(<span class="string">&#x27;.status__number&#x27;</span>, <span class="string">&#x27;4&#x27;</span>).should(<span class="string">&#x27;have.class&#x27;</span>, <span class="string">&#x27;status__number--selected&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The number <code>4</code> does have the expected class <code>status__number--selected</code> and we do see the color difference.</p>
+<p><img src="/blog/images/sudoku/selected-number.png" alt="Selected number 4"></p>
+<p>Ok, but do we need to look at the tests to tell if the component looks correctly? Do we need a human in the loop? What if we change the <code>App.css</code> file and accidentally break some other component? This game has its own polished style, it would be a shame to break it accidentally.</p>
+<h2><span id="visual-testing">Visual testing</span></h2><p>If we want to confirm the look of the component, we could assert every computed CSS property of every DOM node ... but that would be unbelievably brittle and hard to maintain. Instead, we could render the component into an image and <em>look at it</em>. While computers are not very good (yet) at understanding images, they are really good at <em>comparing</em> them. So let&#39;s generate screenshots of our component with different inputs and store those images with the code. Any time there is a pull request, we will repeat the above steps and then compare the new images pixel by pixel with saved good images.</p>
+<p>There are many <a target="_blank" rel="noopener" href="https://on.cypress.io/visual-testing">commercial services</a> that do this, but in this blog post I will use open source image comparison plugin for Cypress called <a target="_blank" rel="noopener" href="https://github.com/palmerhq/cypress-image-snapshot">cypress-image-snapshot</a>. We can install it as a dev dependency and include its files in the support and plugins files.</p>
+<figure class="highlight js"><figcaption><span>cypress/support/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span>(<span class="string">&#x27;cypress-react-unit-test/support&#x27;</span>)</span><br><span class="line"><span class="built_in">require</span>(<span class="string">&#x27;cypress-image-snapshot/command&#x27;</span>).addMatchImageSnapshotCommand()</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function">(<span class="params">on, config</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">require</span>(<span class="string">&#x27;cypress-react-unit-test/plugins/react-scripts&#x27;</span>)(on, config)</span><br><span class="line">  <span class="built_in">require</span>(<span class="string">&#x27;cypress-image-snapshot/plugin&#x27;</span>).addMatchImageSnapshotPlugin(on, config)</span><br><span class="line">  <span class="keyword">return</span> config</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Now we get a new Cypress command <code>cy.matchImageSnapshot(&lt;snapshot name&gt;)</code>. Let&#39;s use it to create image snapshot of the Number component with selected digit &quot;4&quot;.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;shows selected number&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  mount(</span><br><span class="line">    &lt;SudokuContext.Provider value=&#123;&#123; <span class="attr">numberSelected</span>: <span class="string">&#x27;4&#x27;</span> &#125;&#125; &gt;</span><br><span class="line">      &lt;div className=<span class="string">&quot;innercontainer&quot;</span>&gt;</span><br><span class="line">        &lt;section className=<span class="string">&quot;status&quot;</span>&gt;</span><br><span class="line">          &lt;Numbers /&gt;</span><br><span class="line">        &lt;/section&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    &lt;/SudokuContext.Provider&gt;</span><br><span class="line">  )</span><br><span class="line">  cy.contains(<span class="string">&#x27;.status__number&#x27;</span>, <span class="string">&#x27;4&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;have.class&#x27;</span>, <span class="string">&#x27;status__number--selected&#x27;</span>)</span><br><span class="line">  cy.get(<span class="string">&#x27;.status__numbers&#x27;</span>)</span><br><span class="line">    .matchImageSnapshot(<span class="string">&#x27;numbers-selected&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>In the test we have confirmed the component has been rendered using an assertion</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cy.contains(<span class="string">&#x27;.status__number&#x27;</span>, <span class="string">&#x27;4&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;have.class&#x27;</span>, <span class="string">&#x27;status__number--selected&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>Then we create an image with the entire <code>.status__numbers</code> DOM element rendered.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cy.get(<span class="string">&#x27;.status__numbers&#x27;</span>)</span><br><span class="line">  .matchImageSnapshot(<span class="string">&#x27;numbers-selected&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>The snapshots are saved in <code>cypress/snapshots</code> folder.</p>
+<p><img src="/blog/images/sudoku/numbers-selected.snap.png" alt="Numbers component with selected number 4"></p>
+<p>If we edit the CSS file <code>src/App.css</code> and change the text padding around the numbers like this:</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">.status__number &#123;</span><br><span class="line"><span class="deletion">-   padding: 12px 0;</span></span><br><span class="line"><span class="addition">+   padding: 10px 0;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The test runs - and the generated snapshot (under the hood <code>cypress-image-snapshot</code> uses <a target="_blank" rel="noopener" href="https://on.cypress.io/screenshot">cy.screenshot</a>) is slightly different. It is hard to notice, so the pixel by pixel comparison done by the computer is perfect tool for automating it. The <code>cypress-image-snapshot</code> plugin produces the diff image in <code>cypress/snapshots/**/__diff_output__</code> folder. The diff image has three parts: on the left is the original baseline image. On the right is the current image. In the middle there is a composite image highlighting the difference.</p>
+<p><img src="/blog/images/sudoku/numbers-selected.diff.png" alt="Padding difference is caught by image comparison"></p>
+<p>The visual snapshots replace a lot of individual assertions. For example, there is no need to confirm that individual numbers are present in the DOM. Instead we can confirm the number of DOM elements with the class (to make sure the component has rendered) and take a single snapshot.</p>
+<figure class="highlight js"><figcaption><span>src/components/Numbers.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;shows all numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  mount(</span><br><span class="line">    &lt;div className=<span class="string">&quot;innercontainer&quot;</span>&gt;</span><br><span class="line">      &lt;section className=<span class="string">&quot;status&quot;</span>&gt;</span><br><span class="line">        &lt;Numbers /&gt;</span><br><span class="line">      &lt;/section&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  );</span><br><span class="line">-  <span class="comment">// trying to assert every number in the DOM</span></span><br><span class="line">-  [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>].forEach(<span class="function"><span class="params">k</span> =&gt;</span> &#123;</span><br><span class="line">-    cy.contains(<span class="string">&#x27;.status__number&#x27;</span>, k)</span><br><span class="line">-  &#125;)</span><br><span class="line">+ cy.get(<span class="string">&#x27;.status__number&#x27;</span>).should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">9</span>)</span><br><span class="line">+ cy.get(<span class="string">&#x27;.status__numbers&#x27;</span>).matchImageSnapshot(<span class="string">&#x27;all-numbers&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>A single image snapshot can confirm so much - as long as the components render consistently from the same data. Let&#39;s look how to ensure it.</p>
+<h2><span id="controlling-the-clock">Controlling the clock</span></h2><p>Inside the app, we have a timer that shows elapsed time since the start of the game</p>
+<p><img src="/blog/images/sudoku/timer.gif" alt="Game timer"></p>
+<figure class="highlight js"><figcaption><span>src/App.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; App &#125; <span class="keyword">from</span> <span class="string">&#x27;./App&#x27;</span></span><br><span class="line">it(<span class="string">&#x27;shows the timer&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  mount(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>)</span><br><span class="line">  <span class="comment">// the timer starts at zero, so this is probably ok</span></span><br><span class="line">  cy.contains(<span class="string">&#x27;.status__time&#x27;</span>, <span class="string">&#x27;00:00&#x27;</span>)</span><br><span class="line">    .matchImageSnapshot(<span class="string">&#x27;timer-zero&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Hmm, how do we make sure we take consistent snapshot of a timer element that keeps changing? By controlling the <a target="_blank" rel="noopener" href="https://on.cypress.io/stubs-spies-and-clocks">clock</a> using <a target="_blank" rel="noopener" href="https://on.cypress.io/clock">cy.clock</a> and <a target="_blank" rel="noopener" href="https://on.cypress.io/tick">cy.tick</a>.</p>
+<figure class="highlight js"><figcaption><span>src/App.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; App &#125; <span class="keyword">from</span> <span class="string">&#x27;./App&#x27;</span></span><br><span class="line">it(<span class="string">&#x27;shows the timer&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.clock()</span><br><span class="line">  mount(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;.status__time&#x27;</span>, <span class="string">&#x27;00:00&#x27;</span>)</span><br><span class="line">    .matchImageSnapshot(<span class="string">&#x27;timer-zero&#x27;</span>)</span><br><span class="line">  cy.tick(<span class="number">700</span> * <span class="number">1000</span>)</span><br><span class="line">  cy.contains(<span class="string">&#x27;.status__time&#x27;</span>, <span class="string">&#x27;11:40&#x27;</span>)</span><br><span class="line">    .matchImageSnapshot(<span class="string">&#x27;timer-passed&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Because we explicitly control the app&#39;s clock, the timer stays frozen at &quot;00:00&quot; when we take the first snapshot, and stays frozen at &quot;11:40&quot; when we take the second snapshot 700 seconds later. A nice bonus for this technique is that we can test an application with long actions in a blink of an eye.</p>
+<p><img src="/blog/images/sudoku/control-the-clock.gif" alt="Controlling the clock test"></p>
+<h2><span id="deterministic-board">Deterministic board</span></h2><p>If we can test the smaller components, why can&#39;t we mount the entire <code>&lt;App&gt;</code> and take an image snapshot? That would give us a lot of confidence.</p>
+<figure class="highlight js"><figcaption><span>src/App.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; App &#125; <span class="keyword">from</span> <span class="string">&#x27;./App&#x27;</span></span><br><span class="line">it(<span class="string">&#x27;shows the board&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  mount(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>)</span><br><span class="line">  <span class="comment">// DOES NOT WORK, JUST FOR DEMO</span></span><br><span class="line">  cy.get(<span class="string">&#x27;.container&#x27;</span>).matchImageSnapshot(<span class="string">&#x27;the-game&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Unfortunately the above test would not work. We cannot just take a snapshot - the board is generated randomly every time the game starts. Every new board will produce a new image, breaking the test.</p>
+<p><img src="/blog/images/sudoku/random-board.gif" alt="Random board"></p>
+<p>Let&#39;s look how the game generates the board data. The <code>&lt;App&gt;</code> component has the <code>&lt;Game&gt;</code> child component, which imports a function to generate the board.</p>
+<figure class="highlight js"><figcaption><span>src/Game.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; getUniqueSudoku &#125; <span class="keyword">from</span> <span class="string">&#x27;./solver/UniqueSudoku&#x27;</span></span><br><span class="line">...</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">_createNewGame</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> [temporaryInitArray, temporarySolvedArray] = getUniqueSudoku(difficulty, e);</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>To generate the same board, we will stub the ES6 import <code>getUniqueSudoku</code>. I have intercepted the results from <code>getUniqueSudoku()</code> call using the DevTools and saved the two arrays as two JSON fixture files.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// cypress/fixtures/init-array.json</span></span><br><span class="line">[<span class="string">&quot;0&quot;</span>, <span class="string">&quot;0&quot;</span>, <span class="string">&quot;9&quot;</span>, <span class="string">&quot;0&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;0&quot;</span>, <span class="string">&quot;0&quot;</span>, ...]</span><br><span class="line"><span class="comment">// cypress/fixtures/solved-array.json</span></span><br><span class="line">[<span class="string">&quot;6&quot;</span>, <span class="string">&quot;7&quot;</span>, <span class="string">&quot;9&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;8&quot;</span>, <span class="string">&quot;4&quot;</span>, ...]</span><br></pre></td></tr></table></figure>
+<p>Plugin <code>cypress-react-unit-test</code> comes with a Babel plugin that can mock ES6 module imports, and for any application that uses <code>react-scripts</code> it should work automatically. Let mock the <code>getUniqueSudoku</code> import and return the arrays loaded from the fixture files.</p>
+<figure class="highlight js"><figcaption><span>src/App.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; App &#125; <span class="keyword">from</span> <span class="string">&#x27;./App&#x27;</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> UniqueSudoku <span class="keyword">from</span> <span class="string">&#x27;./solver/UniqueSudoku&#x27;</span></span><br><span class="line">it(<span class="string">&#x27;shows the board&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.fixture(<span class="string">&#x27;init-array&#x27;</span>).then(<span class="function"><span class="params">initArray</span> =&gt;</span> &#123;</span><br><span class="line">    cy.fixture(<span class="string">&#x27;solved-array&#x27;</span>).then(<span class="function"><span class="params">solvedArray</span> =&gt;</span> &#123;</span><br><span class="line">      cy.stub(UniqueSudoku, <span class="string">&#x27;getUniqueSudoku&#x27;</span>).returns([initArray, solvedArray])</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">  cy.clock()</span><br><span class="line">  mount(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>)</span><br><span class="line">  cy.get(<span class="string">&#x27;.container&#x27;</span>).matchImageSnapshot(<span class="string">&#x27;the-game&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The above test always generates the same board, freezes the clock at &quot;00:00&quot; and generates a consistent snapshot image. Building on top of this approach, we can write a test that plays a move, since we have a deterministic board to start with.</p>
+<figure class="highlight js"><figcaption><span>src/App.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; App &#125; <span class="keyword">from</span> <span class="string">&#x27;./App&#x27;</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> UniqueSudoku <span class="keyword">from</span> <span class="string">&#x27;./solver/UniqueSudoku&#x27;</span></span><br><span class="line">it(<span class="string">&#x27;plays one move&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.fixture(<span class="string">&#x27;init-array&#x27;</span>).then(<span class="function"><span class="params">initArray</span> =&gt;</span> &#123;</span><br><span class="line">    cy.fixture(<span class="string">&#x27;solved-array&#x27;</span>).then(<span class="function"><span class="params">solvedArray</span> =&gt;</span> &#123;</span><br><span class="line">      cy.stub(UniqueSudoku, <span class="string">&#x27;getUniqueSudoku&#x27;</span>).returns([initArray, solvedArray])</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">  cy.clock()</span><br><span class="line">  mount(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>)</span><br><span class="line">  cy.get(<span class="string">&#x27;.game__cell&#x27;</span>).first().click()</span><br><span class="line">  <span class="comment">// we can even look at the solved array!</span></span><br><span class="line">  cy.contains(<span class="string">&#x27;.status__number&#x27;</span>, <span class="string">&#x27;6&#x27;</span>).click()</span><br><span class="line">  cy.get(<span class="string">&#x27;.game__cell&#x27;</span>).first()</span><br><span class="line">    .should(<span class="string">&#x27;have.class&#x27;</span>, <span class="string">&#x27;game__cell--highlightselected&#x27;</span>)</span><br><span class="line">  cy.get(<span class="string">&#x27;.container&#x27;</span>).matchImageSnapshot(<span class="string">&#x27;same-game-made-one-move&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/sudoku/play-move.png" alt="Test that makes a move"></p>
+<p>While a screenshot is nice, the power of Cypress comes from its full browser experience and time-traveling debugging feature. The video below shows what every test command does as we hover it.</p>
+<iframe style="width: 100%; height: 400px" src="https://www.youtube-nocookie.com/embed/WcXZpqAKwQQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+<p><strong>Tip:</strong> if a lot of tests load the same fixture, you can load it once and store in a closure variable.</p>
+<figure class="highlight js"><figcaption><span>src/App.spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> initArray</span><br><span class="line"><span class="keyword">let</span> solvedArray</span><br><span class="line">before(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.fixture(<span class="string">&#x27;init-array&#x27;</span>).then(<span class="function"><span class="params">arr</span> =&gt;</span> initArray = arr)</span><br><span class="line">  cy.fixture(<span class="string">&#x27;solved-array&#x27;</span>).then(<span class="function"><span class="params">arr</span> =&gt;</span> solvedArray = arr)</span><br><span class="line">&#125;)</span><br><span class="line">it(<span class="string">&#x27;plays one move&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.stub(UniqueSudoku, <span class="string">&#x27;getUniqueSudoku&#x27;</span>).returns([initArray, solvedArray])</span><br><span class="line">  cy.clock()</span><br><span class="line">  mount(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>)</span><br><span class="line">  ...</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Read blog post <a href="../import-cypress-fixtures/">Import Cypress fixtures</a> for details.</p>
+<h2><span id="local-workflow">Local workflow</span></h2><p>We can write visual tests for our components and generate consistent images by mocking data and the clock. Is this enough to use visual testing in our day-to-day life?</p>
+<p>No.</p>
+<p>If we take a visual snapshot in Cypress GUI opened with <code>yarn cypress open</code> on Mac we will get an image with a specific resolution, for example 1300x600 pixels. When we take the same snapshot in the headless mode using <code>yarn cypress run</code> we will get an image with only the half resolution in each dimension: 650x300 pixels. This is due to pixel density of the graphical application vs headless rendering mode. Thus I <em>disable snapshots</em> in the interactive mode from the support file.</p>
+<figure class="highlight js"><figcaption><span>cypress/support/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; addMatchImageSnapshotCommand &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-image-snapshot/command&#x27;</span>;</span><br><span class="line"><span class="keyword">if</span> (Cypress.config(<span class="string">&#x27;isInteractive&#x27;</span>)) &#123;</span><br><span class="line">  Cypress.Commands.add(<span class="string">&#x27;matchImageSnapshot&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    cy.log(<span class="string">&#x27;Skipping snapshot 👀&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  addMatchImageSnapshotCommand()</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">require</span>(<span class="string">&#x27;cypress-react-unit-test/support&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>When the test is running, the Command Log shows the places where the snapshots would be taken.</p>
+<p><img src="/blog/images/sudoku/skip-snapshots.png" alt="Skipped snapshots"></p>
+<p>To really take a snapshot, I execute <code>yarn cypress run</code>, inspect any new snapshot files, add them to the source control and push the code to the remote repository.</p>
+<p>If I need to update a saved image snapshot, I can delete the snapshot image and execute <code>yarn cypress run</code> to save new image. Or I can run Cypress with environment variable telling the <code>cypress-image-snapshot</code> to update every snapshot if there is difference.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> CYPRESS_updateSnapshots=<span class="literal">true</span> yarn cypress run</span></span><br></pre></td></tr></table></figure>
+<p><strong>Note:</strong> make sure to inspect every changed snapshot before committing, since all snapshots can be updated during the above command.</p>
+<h2><span id="continuous-integration">Continuous Integration</span></h2><p>Even when saving image snapshots in the headless mode we can encounter problems. For example, if we save the image snapshots on Mac and compare them to the images generated on Linux CI, there will be tiny pixel differences due to font rendering, aliasing, and different browser versions.</p>
+<p><img src="/blog/images/sudoku/ci-diff.png" alt="Mac vs Linux font rendering"></p>
+<p>The image above shows the detected pixel differences between <code>00:00</code> rendered on Mac (left) and on Linux (right). Even these tiny differences still fail the test.</p>
+<p>We can configure the <a target="_blank" rel="noopener" href="https://github.com/palmerhq/cypress-image-snapshot">cypress-image-snapshot</a> command to accept a small percentage of different pixels per image.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// when adding matchImageSnapshot command</span></span><br><span class="line">addMatchImageSnapshotCommand(&#123;</span><br><span class="line">  failureThreshold: <span class="number">0.03</span>, <span class="comment">// threshold for entire image</span></span><br><span class="line">  failureThresholdType: <span class="string">&#x27;percent&#x27;</span>, <span class="comment">// percent of image or number of pixels</span></span><br><span class="line">  customDiffConfig: &#123; <span class="attr">threshold</span>: <span class="number">0.1</span> &#125;, <span class="comment">// threshold for each pixel</span></span><br><span class="line">  capture: <span class="string">&#x27;viewport&#x27;</span>, <span class="comment">// capture viewport in screenshot</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>I do not trust such thresholds, since they can miss actual visual problems. Instead I recommend generating image snapshots using exactly the same environment as the one on CI. This is simple to do using Docker containers from <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress-docker-images">cypress-docker-images</a>. Instead of running the command <code>yarn cypress run</code> to generate or update snapshots, we will use a Docker image locally.</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span>: &#123;</span><br><span class="line">     <span class="attr">&quot;docker:run&quot;</span>: <span class="string">&quot;docker run -it -v $PWD:/e2e -w /e2e cypress/included:4.5.0&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Because the component tests do not require a server, we can run them with a single command using the pre-installed Cypress Docker image <code>cypress/included:&lt;version&gt;</code>. On CI we can use a Docker with exactly the same OS dependencies, fonts and browser version. Here is an example CI config</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">cypress-run:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">container:</span> <span class="string">cypress/browsers:node12.13.0-chrome80-ff74</span></span><br></pre></td></tr></table></figure>
+<p>The Docker image <code>cypress/included:4.5.0</code> is built from <code>cypress/browsers:node12.13.0-chrome80-ff74</code> image with Cypress globally installed. Thus the browser should render the same HTML pages in exactly the same way.</p>
+<h2><span id="pull-request-workflow">Pull request workflow</span></h2><p>Let&#39;s discuss what happens with image snapshots during pull requests. When someone opens a PR with a new feature or a bug fix, it is beneficial to separate the <em>functional</em> tests from the <em>visual</em> tests. If a button has changed its appearance, the functional tests should pass, and the visual tests should fail. This will tell us quickly if there are visual differences due to layout, color, or style changes.</p>
+<p>For this purpose, <a target="_blank" rel="noopener" href="https://github.com/bahmutov/sudoku">bahmutov/sudoku</a> runs tests on CI with an environment variable that tells the <a target="_blank" rel="noopener" href="https://github.com/palmerhq/cypress-image-snapshot">cypress-image-snapshot</a> plugin to generate image diffs, but not fail the command <code>matchImageSnapshot</code>.</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">run</span> <span class="string">🧪</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v1</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="comment"># let&#x27;s go through the tests and generate all diffs</span></span><br><span class="line">    <span class="attr">env:</span> <span class="string">failOnSnapshotDiff=false</span></span><br></pre></td></tr></table></figure>
+<p>At the end of the run we can find these diff images and report them separately using GitHub commit status check.</p>
+<figure class="highlight js"><figcaption><span>scripts/set-gh-check.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">getVisualDiffs</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> globby(<span class="string">&#x27;cypress/snapshots/**/__diff_output__/**.png&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line">getVisualDiffs().then(<span class="function"><span class="params">list</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> setGitHubCommitStatus(list.length, envOptions)</span><br><span class="line">&#125;).catch(onError)</span><br></pre></td></tr></table></figure>
+<p>If there are any DIFF images, then the status check will be <code>fail</code>. The video below shows a pull request where at first there are visual changes. Then the tests are updated and the next commit has no visual differences.</p>
+<iframe style="width: 100%; height: 400px" src="https://www.youtube-nocookie.com/embed/BDgqweqR36Y" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+<p>Whenever there are visual differences, you can inspect the diff images if you store them on CI as test artifacts; the snapshots are stored in <code>cypress/snapshots</code> folder.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Store</span> <span class="string">snapshots</span> <span class="string">📸</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">actions/upload-artifact@v1</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">snapshots</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">cypress/snapshots</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Set</span> <span class="string">commit</span> <span class="string">status</span> <span class="string">🖼</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line">    <span class="string">node</span> <span class="string">./scripts/set-gh-check.js</span></span><br></pre></td></tr></table></figure>
+<h2><span id="summary">Summary</span></h2><p>In this blog post we have looked at writing React component tests and using visual diffing to compare the current image against the good baseline image. We must generate the same image, which we can do by mocking the data and the clock to be deterministic. We also need to ensure that the snapshots are generated using exactly the same environment to be pixel-perfect matches.</p>
+<p>Finally, we briefly looked at the visual tests during pull request workflow. Looking back at the entire work, I conclude:</p>
+<ul>
+<li>writing React component tests using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-react-unit-test">cypress-react-unit-test</a> is fast and easy</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/palmerhq/cypress-image-snapshot">cypress-image-snapshot</a> plugin allows one to do visual testing for free, but we have to do a lot of work to manage images, render them, and review them during pull requests</li>
+</ul>
+<p>I would strongly recommend giving a commercial visual testing service a try: Applitools, Happo.io, and Percy.io have Cypress plugins and are free to try and cheap use.</p>
+<h2><span id="more-info">More info</span></h2><p>Take a look at the example Sudoku repository, and especially at the long list of short videos there: <a target="_blank" rel="noopener" href="https://github.com/bahmutov/sudoku#videos">bahmutov/sudoku#videos</a>. These videos show every part of the process I have described in this blog in more detail.</p>
+<p>You should also read the <a target="_blank" rel="noopener" href="https://on.cypress.io/visual-testing">Cypress visual testing guide</a>.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/open-source-visual-testing-of-components/" data-id="ckpyeu4c701qw6zvgh30dhtr8" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/open-source-visual-testing-of-components/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/react/" rel="tag">react</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../stop-the-money-pipeline/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Stop The Money Pipeline
+        
+      </div>
+    </a>
+  
+  
+    <a href="../import-cypress-fixtures/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Import Cypress fixtures</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/open-source-visual-testing-of-components/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

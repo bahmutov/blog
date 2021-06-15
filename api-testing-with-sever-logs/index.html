@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Black box API testing with server logs | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="In my previous blog post &quot;Add GUI to your E2E API tests&quot; I have used cy.request command to execute HTTP requests against a backend performing a black box API testing. In this blog post I wil">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Black box API testing with server logs">
+<meta property="og:url" content="https://glebbahmutov.com/blog/api-testing-with-sever-logs/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="In my previous blog post &quot;Add GUI to your E2E API tests&quot; I have used cy.request command to execute HTTP requests against a backend performing a black box API testing. In this blog post I wil">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/simple.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/request-object.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/cy-api-example.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/multiple.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/hover-cy-api.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/two-calls.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/two-calls-with-logs.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/print-logs.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/log-check.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/snapshots.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/snapshot-error.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/snapshot-diff.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/single-list.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-api/debug-error.png">
+<meta property="article:published_time" content="2019-07-19T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.230Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="nodejs">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/cy-api/simple.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-api-testing-with-sever-logs" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2019-07-19T04:00:00.000Z" itemprop="datePublished">Jul 19 2019</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Black box API testing with server logs
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to perform end-to-end API testing using Cypress test runner and take advantage of server logs.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>In my previous blog post <a target="_blank" rel="noopener" href="https://www.cypress.io/blog/2017/11/07/add-gui-to-your-e2e-api-tests/">&quot;Add GUI to your E2E API tests&quot;</a> I have used <a target="_blank" rel="noopener" href="https://on.cypress.io/request"><code>cy.request</code></a> command to execute HTTP requests against a backend performing a black box API testing. In this blog post I will show a new custom command <code>cy.api</code> that can take such API testing to the next level. In addition to the new user interface for your API requests, if you capture all server logs using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/all-logs">@bahmutov/all-logs</a>, then the API tests will capture those messages too, allowing you deep insight into what is happening on each API request.</p>
+<!-- toc -->
+<ul>
+<li><a href="#the-api-testing-problem">The API testing problem</a></li>
+<li><a href="#example-adding-numbers">Example - adding numbers</a></li>
+<li><a href="#cy-api-plugin">cy-api plugin</a></li>
+<li><a href="#multiple-tests">Multiple tests</a></li>
+<li><a href="#multiple-api-calls-in-the-same-test">Multiple API calls in the same test</a></li>
+<li><a href="#logs">Logs</a></li>
+<li><a href="#using-logs-in-test">Using logs in test</a></li>
+<li><a href="#concat-messages">Concat messages</a></li>
+<li><a href="#conclusions">Conclusions</a></li>
+<li><a href="#see-also">See also</a></li>
+</ul>
+<!-- tocstop -->
+<h2><span id="the-api-testing-problem">The API testing problem</span></h2><p>I have written A LOT of API tests, mostly against REST backends. For our <a target="_blank" rel="noopener" href="https://www.cypress.io/dashboard">Cypress Dashboard</a> REST API we have more than 1000 API tests ... so writing and debugging failing tests is a big part of my job. A typical test:</p>
+<ul>
+<li>sets the state using database model queries</li>
+<li>then uses <a target="_blank" rel="noopener" href="https://www.npmjs.com/package/supertest">supertest</a> to call an HTTP endpoint</li>
+<li>and checks the response</li>
+</ul>
+<p>Here is a typical simple <code>supertest</code> test case</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// server code</span></span><br><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> app = express()</span><br><span class="line">app.get(<span class="string">&#x27;/user&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  res.status(<span class="number">200</span>).json(&#123; <span class="attr">name</span>: <span class="string">&#x27;john&#x27;</span> &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// test code</span></span><br><span class="line"><span class="keyword">const</span> request = <span class="built_in">require</span>(<span class="string">&#x27;supertest&#x27;</span>)</span><br><span class="line"><span class="comment">// notice that the test uses &quot;app&quot; reference</span></span><br><span class="line">request(app)</span><br><span class="line">  .get(<span class="string">&#x27;/user&#x27;</span>)</span><br><span class="line">  .expect(<span class="string">&#x27;Content-Type&#x27;</span>, <span class="regexp">/json/</span>)</span><br><span class="line">  .expect(<span class="string">&#x27;Content-Length&#x27;</span>, <span class="string">&#x27;15&#x27;</span>)</span><br><span class="line">  .expect(<span class="number">200</span>)</span><br><span class="line">  .end(<span class="function"><span class="keyword">function</span>(<span class="params">err, res</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (err) <span class="keyword">throw</span> err</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>The test runs against the server instance, but might as well test against an URL - to keep a better separation between the test context and the server.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// test server running at localhost:5555</span></span><br><span class="line"><span class="keyword">const</span> request = <span class="built_in">require</span>(<span class="string">&#x27;supertest&#x27;</span>)(<span class="string">&#x27;http://localhost:5555&#x27;</span>)</span><br><span class="line">it(<span class="string">&#x27;responds with json&#x27;</span>, <span class="function">() =&gt;</span></span><br><span class="line">  request</span><br><span class="line">    .post(<span class="string">&#x27;/users&#x27;</span>)</span><br><span class="line">    .send(&#123;<span class="attr">name</span>: <span class="string">&#x27;john&#x27;</span>&#125;)</span><br><span class="line">    .set(<span class="string">&#x27;Accept&#x27;</span>, <span class="string">&#x27;application/json&#x27;</span>)</span><br><span class="line">    .expect(<span class="string">&#x27;Content-Type&#x27;</span>, <span class="regexp">/json/</span>)</span><br><span class="line">    .expect(<span class="number">200</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>I call this type of testing &quot;black box&quot; testing because we treat the API as an unknown entity that only communicates through HTTP requests and responses. When doing realistic tests, we need to make several calls: setting data, updating it, checking it. For example, testing if the user can create a new article using API might take several requests:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;creates an article for a user&#x27;</span>, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> userId = <span class="keyword">await</span> request(<span class="string">&#x27;/users&#x27;</span>).post(...) <span class="comment">// create user</span></span><br><span class="line">  <span class="keyword">const</span> article = <span class="keyword">await</span> request(<span class="string">&#x27;/artices&#x27;</span>).post(&#123;</span><br><span class="line">    userId,</span><br><span class="line">    ... <span class="comment">// rest of the article fields</span></span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="comment">// fetch all articles for the user to make sure</span></span><br><span class="line">  <span class="comment">// the new article has been correctly added</span></span><br><span class="line">  <span class="keyword">const</span> userArticles = <span class="keyword">await</span> request(<span class="string">&#x27;/articles?user=&#x27;</span> + userId)</span><br><span class="line">  <span class="comment">// assert userArticles includes the new article</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>There is a lot of logic that the backend goes through in order to process those test requests. There is just a slight problem - if a test fails, it is hard to debug why. I have to re-start the server with verbose logs (sometimes enabled for a specific namespace to limit the sudden avalanche of messages) and re-run just this particular test, then scroll through a LOT of terminal output to understand the failure.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DEBUG=server:* npm run test</span><br><span class="line">... thousands of log lines ...</span><br></pre></td></tr></table></figure>
+<p>This is slow and annoying. There must be a better way.</p>
+<h2><span id="example-adding-numbers">Example - adding numbers</span></h2><p>My first example comes from the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/server-logs-example">bahmutov/server-logs-example</a> repo. The server there responds to &quot;GET /&quot; requests with the sum of passed numbers. For example we can ask the server to add 2 and 3 together (I am using <a target="_blank" rel="noopener" href="https://httpie.org/">httpie</a> instead of <code>curl</code>)</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ http &#x27;:7000/?a=2&amp;b=3&#x27;</span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Date: Tue, 16 Jul 2019 01:37:13 GMT</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line"></span><br><span class="line">5</span><br></pre></td></tr></table></figure>
+<p>Let&#39;s write an end-to-end test for this server. I will use <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress">Cypress</a> Test Runner so I can have a GUI during testing. Here is the first test <a target="_blank" rel="noopener" href="https://github.com/bahmutov/server-logs-example/blob/master/cypress/integration/simple.js">cypress/integration/simple.js</a> that uses <a target="_blank" rel="noopener" href="https://on.cypress.io/request"><code>cy.request</code></a> and verifies the <code>body</code> of the response object.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://on.cypress.io/intelligent-code-completion</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line">it(<span class="string">&#x27;adds 2 + 3&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  cy.request(&#123;</span><br><span class="line">    url: <span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">    qs: &#123;</span><br><span class="line">      a: <span class="number">2</span>,</span><br><span class="line">      b: <span class="number">3</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">  .its(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;equal&#x27;</span>, <span class="string">&#x27;5&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The test passes - I can see the green assertion in the Command Log.</p>
+<p><img src="/blog/images/cy-api/simple.png" alt="Simple API test passing"></p>
+<p>Hmm, but what did we send to the server? The Command Log does not show it - if I want to see the query parameters, I need to open the browser Developer Tools and click on the <code>REQUEST</code> command - then the request object is dumped to the console and I can understand what happens during the test a little bit better.</p>
+<p><img src="/blog/images/cy-api/request-object.png" alt="Request object in DevTools Console"></p>
+<p>Ok, this is not exactly convenient:</p>
+<ul>
+<li>I need to keep the DevTools open</li>
+<li>I need to click on each command to inspect it</li>
+<li>During the headless <code>cypress run</code> the DevTools is not shown in the video, thus I won&#39;t be able to understand my tests by watching the video</li>
+</ul>
+<p>Meanwhile notice how the application frame stays completely blank - because we are not loading a website using <a target="_blank" rel="noopener" href="https://on.cypress.io/visit"><code>cy.visit</code></a> during our API test; we are only executing HTTP requests.</p>
+<h2><span id="cy-api-plugin">cy-api plugin</span></h2><p>Let me introduce the <code>cy.api</code> command that comes from <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cy-api">@bahmutov/cy-api</a> plugin for Cypress Test Runner. Install it as a dev dependency using your favorite NPM client:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yarn add -D @bahmutov/cy-api</span><br></pre></td></tr></table></figure>
+<p>And load it from <a target="_blank" rel="noopener" href="https://github.com/bahmutov/server-logs-example/blob/master/cypress/support/index.js">cypress/support/index.js</a> file</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&#x27;@bahmutov/cy-api/support&#x27;</span></span><br></pre></td></tr></table></figure>
+<p>Now in my Cypress test I can use a new command <code>cy-api</code> that takes exactly the same argument object as <code>cy.request</code>; here is <a target="_blank" rel="noopener" href="https://github.com/bahmutov/server-logs-example/blob/master/cypress/integration/cy-api-example.js">cypress/integration/cy-api-example.js</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// loads Cypress types + definition for custom &quot;cy.api&quot; command</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;@bahmutov/cy-api&quot; /&gt;</span></span><br><span class="line">it(<span class="string">&#x27;adds 2 + 3 (cy.api)&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  cy.api(&#123;</span><br><span class="line">    url: <span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">    qs: &#123;</span><br><span class="line">      a: <span class="number">2</span>,</span><br><span class="line">      b: <span class="number">3</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">  .its(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;equal&#x27;</span>, <span class="string">&#x27;5&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>When the <code>cy.api</code> command runs, it automatically renders the request and server response to the <em>empty application frame</em>.</p>
+<p><img src="/blog/images/cy-api/cy-api-example.png" alt="The cy-api command shows the relevant information"></p>
+<p>No longer you need to click on the request in the Command Log and have DevTools ready - the relevant information is right there on the screen at all times.</p>
+<h2><span id="multiple-tests">Multiple tests</span></h2><p>You can also use multiple <code>cy.api</code> commands in the same test, giving each one a name. All requests and responses will be displayed in the frame, and the frame will automatically scroll to show the last command.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;adds and subtracts&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  cy.api(</span><br><span class="line">    &#123;</span><br><span class="line">      url: <span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">      qs: &#123;</span><br><span class="line">        a: <span class="number">2</span>,</span><br><span class="line">        b: <span class="number">3</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&#x27;2 + 3&#x27;</span></span><br><span class="line">  )</span><br><span class="line">    .its(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;equal&#x27;</span>, <span class="string">&#x27;5&#x27;</span>)</span><br><span class="line">  cy.api(</span><br><span class="line">    &#123;</span><br><span class="line">      url: <span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">      qs: &#123;</span><br><span class="line">        a: <span class="number">2</span>,</span><br><span class="line">        b: -<span class="number">6</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&#x27;2 - 6&#x27;</span></span><br><span class="line">  )</span><br><span class="line">    .its(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;equal&#x27;</span>, <span class="string">&#x27;-4&#x27;</span>)</span><br><span class="line">  cy.api(</span><br><span class="line">    &#123;</span><br><span class="line">      url: <span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">      qs: &#123;</span><br><span class="line">        a: -<span class="number">10</span>,</span><br><span class="line">        b: <span class="number">0</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&#x27;-10 + 0&#x27;</span></span><br><span class="line">  )</span><br><span class="line">    .its(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;equal&#x27;</span>, <span class="string">&#x27;-10&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/cy-api/multiple.png" alt="Multiple API requests"></p>
+<p>Because the writing to the DOM happens in stages, hover over Command Log shows each part as it is added to the frame; time traveling debugger for your API requests!</p>
+<p><img src="/blog/images/cy-api/hover-cy-api.gif" alt="Time travel over API requests"></p>
+<h2><span id="multiple-api-calls-in-the-same-test">Multiple API calls in the same test</span></h2><p>From the test we can use results of the previous API call - either using <code>.then</code> closures (pyramid of doom, anyone?) or by storing results in the <a target="_blank" rel="noopener" href="https://on.cypress.io/variables-and-aliases">shared test context</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;adds 2 + 3 + 10&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// we can pass query parameters through url too</span></span><br><span class="line">  cy.api(</span><br><span class="line">    &#123;</span><br><span class="line">      url: <span class="string">&#x27;/?a=2&amp;b=3&#x27;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&#x27;first sum&#x27;</span></span><br><span class="line">  )</span><br><span class="line">    .its(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">    .as(<span class="string">&#x27;first sum&#x27;</span>) <span class="comment">// save result in shared test context</span></span><br><span class="line">    .then(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      cy.api(</span><br><span class="line">        &#123;</span><br><span class="line">          url: <span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">          qs: &#123;</span><br><span class="line">            <span class="comment">// because we use &quot;function () &#123;...&#125;&quot;</span></span><br><span class="line">            <span class="comment">// callback form, &quot;this&quot; refers to the</span></span><br><span class="line">            <span class="comment">// shared test context where we saved</span></span><br><span class="line">            <span class="comment">// the first sum using &quot;.as(&#x27;first sum&#x27;)&quot; command</span></span><br><span class="line">            <span class="comment">// https://on.cypress.io/as</span></span><br><span class="line">            a: <span class="built_in">this</span>[<span class="string">&#x27;first sum&#x27;</span>],</span><br><span class="line">            b: <span class="number">10</span></span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">&#x27;second sum&#x27;</span></span><br><span class="line">      )</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/cy-api/two-calls.png" alt="Passing result of the first API call to the second API call"></p>
+<h2><span id="logs">Logs</span></h2><p>Great, this makes the tests useful - yet there is nothing yet to simplify the debugging experience when a test fails. Let&#39;s look at that. If a test suddenly fails, it means something went wrong on the server. Our application server <a target="_blank" rel="noopener" href="https://github.com/bahmutov/server-logs-example/blob/master/server/index.js">server/index.js</a> logs the following messages while processing the requests:</p>
+<figure class="highlight js"><figcaption><span>server/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// we will use console.log, util.debuglog and debug modules to log stuff</span></span><br><span class="line"><span class="keyword">const</span> verbose = <span class="built_in">require</span>(<span class="string">&#x27;util&#x27;</span>).debuglog(<span class="string">&#x27;verbose&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> debug = <span class="built_in">require</span>(<span class="string">&#x27;debug&#x27;</span>)(<span class="string">&#x27;compute&#x27;</span>)</span><br><span class="line"></span><br><span class="line">http</span><br><span class="line">  .createServer(<span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; pathname, query &#125; = url.parse(req.url, <span class="literal">true</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// let&#x27;s just log the basic request parameters</span></span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;%s %s pathname %s&#x27;</span>, req.method, req.url, pathname)</span><br><span class="line">    <span class="comment">// and log the parsed query object in verbose mode</span></span><br><span class="line">    <span class="comment">// visible when NODE_DEBUG=verbose is set</span></span><br><span class="line">    verbose(<span class="string">&#x27;query is %o&#x27;</span>, query)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> a = <span class="built_in">parseFloat</span>(query.a)</span><br><span class="line">    <span class="keyword">const</span> b = <span class="built_in">parseFloat</span>(query.b)</span><br><span class="line">    <span class="keyword">const</span> sum = a + b</span><br><span class="line">    <span class="comment">// &quot;debug&quot; log only shows the computation if DEBUG=compute is set</span></span><br><span class="line">    debug(<span class="string">&#x27;%d + %d = %d&#x27;</span>, a, b, sum)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// return result to the caller</span></span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>By default, we are only logging the basic information; here I will be calling the server with <code>http &#39;:7000/?a=2&amp;b=3&#39;</code></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ node ./server</span><br><span class="line">listening on port 7000</span><br><span class="line">GET /?a=2&amp;b=3 pathname /</span><br></pre></td></tr></table></figure>
+<p>If I want more information, for example to check how the query was parsed, I can enable the built-in <a target="_blank" rel="noopener" href="https://nodejs.org/api/util.html#util_util_debuglog_section">util.debuglog</a> logs.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ NODE_DEBUG=verbose node ./server</span><br><span class="line">listening on port 7000</span><br><span class="line">GET /?a=2&amp;b=3 pathname /</span><br><span class="line">VERBOSE 35756: query is &#123; a: &#x27;2&#x27;, b: &#x27;3&#x27; &#125;</span><br></pre></td></tr></table></figure>
+<p><strong>Warning:</strong> the exact log messages from the <code>util.debuglog</code> module strongly depend on the Node version.</p>
+<p>We can now see our query object (and process id 35756). Or we can see other debug messages by turning on the <a target="_blank" rel="noopener" href="https://github.com/visionmedia/debug">debug</a> module</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ DEBUG=compute node ./server</span><br><span class="line">listening on port 7000</span><br><span class="line">GET /?a=2&amp;b=3 pathname /</span><br><span class="line">  compute 2 + 3 = 5 +0ms</span><br></pre></td></tr></table></figure>
+<p>Beautiful - what does this have to do with our API testing and <code>cy-api</code>? Well, using another module <a target="_blank" rel="noopener" href="https://github.com/bahmutov/all-logs">@bahmutov/all-logs</a> you can silently capture ALL logs from your server (even without turning them on) and then <code>cy.api</code> command will grab them during each request. Here is how to turn it on in your server.</p>
+<ol>
+<li>Instead of starting the server with <code>node ./server</code>, start it with <code>node -r @bahmutov/all-logs ./server</code>. This sets up the log interception.</li>
+<li>Add HTTP middleware to your server that <code>cy.api</code> can call to retrieve and reset collected messages. For example, our server is a plain <code>http</code> server and we can do the following:</li>
+</ol>
+<figure class="highlight js"><figcaption><span>server/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> logs = <span class="built_in">require</span>(<span class="string">&#x27;@bahmutov/all-logs/middleware/http&#x27;</span>)</span><br><span class="line">http</span><br><span class="line">  .createServer(<span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (logs(req, res) === <span class="literal">true</span>) &#123;</span><br><span class="line">      <span class="comment">// the HTTP request was for the server logs</span></span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> &#123; pathname, query &#125; = url.parse(req.url, <span class="literal">true</span>)</span><br><span class="line">    <span class="comment">// the rest of the code</span></span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>That is it. Let&#39;s look at our previous test with the <code>@bahmutov/all-logs</code> included. Wow, our Test Runner suddenly shows a lot more information!</p>
+<p><img src="/blog/images/cy-api/two-calls-with-logs.png" alt="API tests with server logs"></p>
+<p>The <code>cy.api</code> command fetches the intercepted logs from the server and shows them between the <code>Request</code> and <code>Response</code> sections. There are a lot of low level messages from Node itself, and in the future we plan to allow easy filtering by the log type (<code>console</code>, <code>util</code>, <code>debug</code>) and the namespace (in this case the namespaces were <code>HTTP</code>, <code>log</code> and <code>compute</code>). That is what those (currently non-functioning) checkboxes are for.</p>
+<h2><span id="using-logs-in-test">Using logs in test</span></h2><p>The <code>cy.api</code> command yields the same object as <a target="_blank" rel="noopener" href="https://on.cypress.io/request">cy.request</a> does, plus the <code>messages</code> list with all server-side logs. Here is the same test as above, but with printing the <code>body</code> and <code>messages</code> properties from the yielded object:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// there was first cy.api</span></span><br><span class="line"><span class="comment">// and this is the second one</span></span><br><span class="line">cy.api(</span><br><span class="line">  &#123;</span><br><span class="line">    url: <span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">    qs: &#123;</span><br><span class="line">      a: <span class="built_in">this</span>[<span class="string">&#x27;first sum&#x27;</span>],</span><br><span class="line">      b: <span class="number">10</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="string">&#x27;second sum&#x27;</span></span><br><span class="line">).then(<span class="function">(<span class="params">&#123; body, messages &#125;</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;answer&#x27;</span>, body)</span><br><span class="line">  <span class="built_in">console</span>.table(messages)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/cy-api/print-logs.png" alt="Printed result and logs"></p>
+<p>We can assert the result is what we are expecting, and that <code>debug compute</code> message records the correct parsed numbers. The <code>.then()</code> callback is below. I love writing BDD assertions that are readable!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">.then(<span class="function">(<span class="params">&#123; body, messages &#125;</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;answer&#x27;</span>, body)</span><br><span class="line">  <span class="built_in">console</span>.table(messages)</span><br><span class="line">  expect(body, <span class="string">&#x27;result&#x27;</span>).to.equal(<span class="string">&#x27;15&#x27;</span>) <span class="comment">// our api returns strings</span></span><br><span class="line">  <span class="comment">// use the Lodash &quot;find&quot; method to search by properties</span></span><br><span class="line">  <span class="keyword">const</span> computeLogMessage = Cypress._.find(messages, &#123;</span><br><span class="line">    type: <span class="string">&#x27;debug&#x27;</span>,</span><br><span class="line">    namespace: <span class="string">&#x27;compute&#x27;</span></span><br><span class="line">  &#125;)</span><br><span class="line">  expect(computeLogMessage)</span><br><span class="line">    .to.be.an(<span class="string">&#x27;object&#x27;</span>)</span><br><span class="line">    .and.have.property(<span class="string">&#x27;message&#x27;</span>, <span class="string">&#x27;5 + 10 = 15&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="/blog/images/cy-api/log-check.png" alt="Asserting the result and the log message"></p>
+<p>You might ask yourself - isn&#39;t this testing the implementation details? It is up to you to write tests that reach deeper into the server logic in order to test it from the from front-end. If you decide this approach ties the E2E tests too tightly to the implementation - don&#39;t check the logs from the tests, just have them in case the response value <code>15</code> is different from the expected one. But I would advise to set a policy on server-side logs that allows using the messages in tests. For example, you might have a <code>debug</code> namespace just for E2E tests that one CAN test against.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> debugE2E = <span class="built_in">require</span>(<span class="string">&#x27;debug&#x27;</span>)(<span class="string">&#x27;compute&#x27;</span>)</span><br><span class="line"><span class="comment">// messages via `debugE2E` are going to be asserted from the API E2E tests</span></span><br></pre></td></tr></table></figure>
+<p>If you decide to allow some messages to be used from tests, we can easily verify the major &quot;checkpoints&quot; along the way using snapshots. For example, I will add the <a target="_blank" rel="noopener" href="https://github.com/meinaart/cypress-plugin-snapshots">meinaart/cypress-plugin-snapshots</a> plugin by following the instructions in that repo&#39;s README file. Now we can write a test and do snapshots with just API response and filtered backend messages. The full source code is in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/server-logs-example/blob/master/cypress/integration/with-snapshots.js">cypress/integration/with-snapshots.js</a> and below:</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/with-snapshots.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pickImportantMessages = <span class="function">(<span class="params">&#123; body, messages &#125;</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// only look at logs from DEBUG=compute namespace</span></span><br><span class="line">  <span class="keyword">const</span> computations = Cypress._.filter(messages, &#123;</span><br><span class="line">    type: <span class="string">&#x27;debug&#x27;</span>,</span><br><span class="line">    namespace: <span class="string">&#x27;compute&#x27;</span></span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    result: body,</span><br><span class="line">    backendMessages: Cypress._.map(computations, <span class="string">&#x27;message&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">it(<span class="string">&#x27;performs expected computations&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.api(</span><br><span class="line">    &#123;</span><br><span class="line">      url: <span class="string">&#x27;/?a=2&amp;b=3&#x27;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&#x27;2 + 3&#x27;</span></span><br><span class="line">  )</span><br><span class="line">    .then(pickImportantMessages)</span><br><span class="line">    .toMatchSnapshot()</span><br><span class="line"></span><br><span class="line">  cy.api(</span><br><span class="line">    &#123;</span><br><span class="line">      url: <span class="string">&#x27;/?a=-1&amp;b=30&#x27;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&#x27;-1 + 30&#x27;</span></span><br><span class="line">  )</span><br><span class="line">    .then(pickImportantMessages)</span><br><span class="line">    .toMatchSnapshot()</span><br><span class="line"></span><br><span class="line">  cy.api(</span><br><span class="line">    &#123;</span><br><span class="line">      url: <span class="string">&#x27;/?a=+1&amp;b=+2&#x27;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&#x27;+1 + 2&#x27;</span></span><br><span class="line">  )</span><br><span class="line">    .then(pickImportantMessages)</span><br><span class="line">    .toMatchSnapshot()</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The snapshots are saved on the first run, and I can inspect the saved values by clicking on the &quot;Snapshot&quot; command.</p>
+<p><img src="/blog/images/cy-api/snapshots.png" alt="Individual snapshot value"></p>
+<p>Imagine something has changed. For example, I have changed the input parameters for the second <code>cy.api</code> call. Instead of <code>-1 + 30</code> the test passes <code>30 - 1</code> now. Let&#39;s see how the snapshot shows the difference.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">cy.api(</span><br><span class="line">  &#123;</span><br><span class="line">    url: <span class="string">&#x27;/?a=30&amp;b=-1&#x27;</span> <span class="comment">// instead of -1 + 30</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="string">&#x27;30 - 1&#x27;</span></span><br><span class="line">)</span><br><span class="line">  .then(pickImportantMessages)</span><br><span class="line">  .toMatchSnapshot()</span><br></pre></td></tr></table></figure>
+<p>Immediately the snapshot value is different from the value saved in the file <a target="_blank" rel="noopener" href="https://github.com/bahmutov/server-logs-example/blob/master/cypress/integration/__snapshots__/with-snapshots.js.snap">cypress/integration/<strong>snapshots</strong>/with-snapshots.js.snap</a>. The test fails.</p>
+<p><img src="/blog/images/cy-api/snapshot-error.png" alt="Snapshot error causes the test to fail"></p>
+<p>Clicking on the &quot;Compare snapshot&quot; button brings up the difference viewer.</p>
+<p><img src="/blog/images/cy-api/snapshot-diff.png" alt="Snapshot difference view"></p>
+<p>The beautiful thing - if the new value is expected, you can simply click &quot;Update snapshot&quot; button and the new &quot;snap&quot; will be saved.</p>
+<h2><span id="concat-messages">Concat messages</span></h2><p>The above test can be rewritten in shorter form, because all calls are independent of each other; we still need to execute them one by one to guarantee the same order.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;computes all given examples&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> list = []</span><br><span class="line">  <span class="keyword">const</span> addToList = list.push.bind(list)</span><br><span class="line">  ;[</span><br><span class="line">    <span class="comment">// all examples to compute</span></span><br><span class="line">    <span class="string">&#x27;/?a=2&amp;b=3&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;/?a=30&amp;b=-1&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;/?a=+1&amp;b=+2&#x27;</span></span><br><span class="line">  ].forEach(<span class="function"><span class="params">url</span> =&gt;</span> &#123;</span><br><span class="line">    cy.api(&#123; url &#125;)</span><br><span class="line">      .then(pickImportantMessages)</span><br><span class="line">      .then(addToList)</span><br><span class="line">  &#125;)</span><br><span class="line">  cy.wrap(list).toMatchSnapshot()</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Notice how we compare the entire list at once at the very end.</p>
+<p><img src="/blog/images/cy-api/single-list.png" alt="Single snapshot of all test messages and results"></p>
+<p>The beauty of this combined snapshot is: if we change the backend logic - for example by taking an absolute value of the arguments before adding them - the snapshot shows precisely where the good log and the current one started diverging!</p>
+<figure class="highlight js"><figcaption><span>server/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// added Math.abs on purpose to break the tests</span></span><br><span class="line"><span class="keyword">const</span> a = <span class="built_in">Math</span>.abs(<span class="built_in">parseFloat</span>(query.a))</span><br><span class="line"><span class="keyword">const</span> b = <span class="built_in">Math</span>.abs(<span class="built_in">parseFloat</span>(query.b))</span><br><span class="line"><span class="keyword">const</span> sum = a + b</span><br><span class="line">debug(<span class="string">&#x27;%d + %d = %d&#x27;</span>, a, b, sum)</span><br></pre></td></tr></table></figure>
+<p>The test fails - the snapshot does not match, and the difference in the message and in the result is obvious.</p>
+<p><img src="/blog/images/cy-api/debug-error.png" alt="Debugging the test failure using logs"></p>
+<p>But even better is finding the log message for that <code>cy.api</code> call, shown with green arrow - and immediately seeing the previous log message. The query argument <code>b</code> is <code>-1</code>, yet the parsed value is <code>1</code> - that points the finger at the argument conversion step. Perfect - the debugging cycle is short, just like I wanted.</p>
+<h2><span id="conclusions">Conclusions</span></h2><p>Testing the web application means testing the code at different levels: you still need unit tests and end-to-end web application tests. But the middle of the stack - the HTTP API deserves to be tested as well, since it is the foundation for the web application. The plugin <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cy-api">@bahmutov/cy-api</a> should help with API testing, and I hope the approach of capturing the detailed server-side logs helps when debugging a failing test.</p>
+<p>Give <code>cy.api</code> a spin and open a <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cy-api/issues">GitHub issue</a> if something does not work, or if you have an idea to make this type of testing better.</p>
+<h2><span id="see-also">See also</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/cy-api">@bahmutov/cy-api</a> plugin provides <code>cy.api</code> command</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/all-logs">@bahmutov/all-logs</a> captures all server-side logs</li>
+<li><a target="_blank" rel="noopener" href="https://www.cypress.io/blog/2017/11/07/add-gui-to-your-e2e-api-tests/">&quot;Add GUI to your E2E API tests&quot;</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cypress.io/blog/2018/01/16/end-to-end-snapshot-testing/">&quot;End-to-End Snapshot Testing&quot;</a> describes snapshot testing for web application testing</li>
+<li><a href="../picking-snapshot-library/">&quot;Picking snapshot library&quot;</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/meinaart/cypress-plugin-snapshots">meinaart/cypress-plugin-snapshots</a> is the snapshot plugin I love using in Cypress</li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/api-testing-with-sever-logs/" data-id="ckpyeu4bb01ov6zvgg11c0dpk" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/api-testing-with-sever-logs/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../realworld-app-action/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          How to write end-to-end test using app and api actions
+        
+      </div>
+    </a>
+  
+  
+    <a href="../capture-all-the-logs/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Capture all the logs</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/api-testing-with-sever-logs/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

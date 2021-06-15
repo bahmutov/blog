@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Call me Maybe | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="This post is a little addendum to the excellent  Safely Accessing Deeply Nested Values In JavaScript by  A. Sharif. Please read his post first, it has some useful things! In this post I will describe">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Call me Maybe">
+<meta property="og:url" content="https://glebbahmutov.com/blog/call-me-maybe/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="This post is a little addendum to the excellent  Safely Accessing Deeply Nested Values In JavaScript by  A. Sharif. Please read his post first, it has some useful things! In this post I will describe">
+<meta property="og:locale">
+<meta property="article:published_time" content="2017-03-24T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.239Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="functional">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-call-me-maybe" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2017-03-24T04:00:00.000Z" itemprop="datePublished">Mar 24 2017</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Call me Maybe
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Replacing the built-in OR and TERNARY operators with Maybe monads.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>This post is a little addendum to the excellent 
+<a target="_blank" rel="noopener" href="https://medium.com/javascript-inside/safely-accessing-deeply-nested-values-in-javascript-99bf72a0855a#.r01glupzn">Safely Accessing Deeply Nested Values In JavaScript</a> by 
+<a target="_blank" rel="noopener" href="https://twitter.com/sharifsbeat">A. Sharif</a>. Please read his post first, it has some useful things!</p>
+<p>In this post I will describe how I think about the functional code from the <em>user&#39;s perspective</em>.</p>
+<h2><span id="the-problem">The Problem</span></h2><p>How do you access nested properties in an object? Let us say we have an object with user comments and we want to get comments for the first post</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> props = &#123;</span><br><span class="line">  user: &#123;</span><br><span class="line">    posts: [</span><br><span class="line">      &#123; <span class="attr">title</span>: <span class="string">&#x27;Foo&#x27;</span>, <span class="attr">comments</span>: [ <span class="string">&#x27;Good one!&#x27;</span>, <span class="string">&#x27;Interesting...&#x27;</span> ] &#125;,</span><br><span class="line">      &#123; <span class="attr">title</span>: <span class="string">&#x27;Bar&#x27;</span>, <span class="attr">comments</span>: [ <span class="string">&#x27;Ok&#x27;</span> ] &#125;,</span><br><span class="line">      &#123; <span class="attr">title</span>: <span class="string">&#x27;Baz&#x27;</span>, <span class="attr">comments</span>: [] &#125;,</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">console</span>.log(props.user.posts[<span class="number">0</span>].comments)</span><br></pre></td></tr></table></figure>
+<p>What happens if a deeply nested property does not exist? The program crashes 
+and burns!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(props.users.posts[<span class="number">0</span>].comments)</span><br><span class="line"><span class="comment">// 🔥🔥🔥</span></span><br><span class="line"><span class="comment">// it was props.user, not props.users!</span></span><br></pre></td></tr></table></figure>
+<h2><span id="manual-solution">Manual solution</span></h2><p>So we need to check at every step if a property exists before accessing it. It gets tedious really 
+really quickly. We can write a helpful utility function for safely getting a 
+property. Just give this function a path and it will get you the deep value
+<em>or a null</em> if the path leads nowhere.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">xs, x</span>) =&gt;</span></span><br><span class="line">    (xs &amp;&amp; xs[x]) ? xs[x] : <span class="literal">null</span>, object)</span><br><span class="line"><span class="comment">// safe access</span></span><br><span class="line"><span class="keyword">const</span> pathToComments = [<span class="string">&#x27;user&#x27;</span>, <span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;comments&#x27;</span>]</span><br><span class="line"><span class="built_in">console</span>.log(get(pathToComments, props)) <span class="comment">//&gt; [&quot;Good one!&quot;,&quot;Interesting...&quot;]</span></span><br><span class="line"><span class="built_in">console</span>.log(get(pathToComments, &#123;&#125;)) <span class="comment">//&gt; null</span></span><br></pre></td></tr></table></figure>
+<p><strong>Hint:</strong> I am using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/comment-value">comment-value</a> to embed output values as source comments.</p>
+<h3><span id="user-friendly-api-design">User friendly API design</span></h3><p>Notice how user-friendly our function <code>get</code> is because it puts the <code>path</code> argument first and 
+<code>object</code> argument second. I always give this advice when designing the order of 
+function&#39;s arguments</p>
+<blockquote>
+<p>Place the argument most likely to be known first on the left</p>
+</blockquote>
+<p>This advice plays very nicely with the built-in JavaScript 
+<a href="../binding-vs-partial-application/">partial application</a> mechanism. 
+We are likely to know the <code>path</code> we want to access <em>before</em> we get the actual <code>object</code>.
+Thus we can create a nice <em>intermediate</em> function for getting us the nested value in a
+particular case.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pathToComments = [<span class="string">&#x27;user&#x27;</span>, <span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;comments&#x27;</span>]</span><br><span class="line"><span class="keyword">const</span> firstPostComments = get.bind(<span class="literal">null</span>, pathToComments)</span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(props)) <span class="comment">//&gt; [&quot;Good one!&quot;,&quot;Interesting...&quot;]</span></span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(&#123;&#125;)) <span class="comment">//&gt; null</span></span><br></pre></td></tr></table></figure>
+<h3><span id="even-friendlier-api-design">Even friendlier API design</span></h3><p>If we need to use the expression <code>get.bind(null, ...)</code> to create an intermediate access 
+function <em>every time we need it</em> we start complaining. And we can complain to the library&#39;s 
+authors and have <em>them</em> embed the partial application <em>inside</em> the <code>get</code> function itself. 
+JavaScript functions are first class values, so we can easily split
+the <code>get</code> definition to accept its two arguments <code>path</code> and <code>object</code> in <em>two calls</em>. The change
+is so small with fat arrows functions, I will only show before and after 😀</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">const get &#x3D; (path, object) &#x3D;&gt; &#x2F;&#x2F; before</span><br><span class="line">const get &#x3D; path &#x3D;&gt; object &#x3D;&gt; &#x2F;&#x2F; after</span><br></pre></td></tr></table></figure>
+<p>Tiny change, yet it makes the <em>user&#39;s</em> life so much simpler. </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> firstPostComments = get.bind(<span class="literal">null</span>, pathToComments) <span class="comment">// before</span></span><br><span class="line"><span class="keyword">const</span> firstPostComments = get(pathToComments) <span class="comment">// after</span></span><br></pre></td></tr></table></figure>
+<p>The savings in code length AND readability are now accruing <em>every time</em> someone calls <code>get</code>
+to create an intermediate deep access function, while there was no increase in complexity to 
+the <code>get</code> code. We could go one step further and curry <code>get</code> using <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#curry">Ramda.curry</a> function. </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123;curry&#125; = <span class="built_in">require</span>(<span class="string">&#x27;ramda&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> get = curry(<span class="function">(<span class="params">path, object</span>) =&gt;</span> ...) <span class="comment">// just wrap our &quot;get&quot; in &quot;curry&quot;</span></span><br><span class="line"><span class="keyword">const</span> pathToComments = [<span class="string">&#x27;user&#x27;</span>, <span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;comments&#x27;</span>]</span><br><span class="line"><span class="comment">// if we just know the path, give 1 argument</span></span><br><span class="line"><span class="keyword">const</span> firstPostComments = get(pathToComments)</span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(props)) <span class="comment">//&gt; [&quot;Good one!&quot;,&quot;Interesting...&quot;]</span></span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(&#123;&#125;)) <span class="comment">//&gt; null</span></span><br></pre></td></tr></table></figure>
+<p>The benefit of using 3rd party library to curry function, is that we can provide any number
+of arguments at once.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// provide both arguments together!</span></span><br><span class="line"><span class="built_in">console</span>.log(get(pathToComments, props)) <span class="comment">//&gt; [&quot;Good one!&quot;,&quot;Interesting...&quot;]</span></span><br></pre></td></tr></table></figure>
+<p>Nice!</p>
+<h2><span id="default-value">Default value</span></h2><p>If we have started designing a &quot;get&quot; function to be user-friendly,
+we can think about other common use cases. 
+For example, what happens if the value is not there? We just return <code>null</code>, which looks bad. 
+The user can specify an alternative using built-in JavaScript OR operator <code>||</code>, 
+but that again means it has to be done <em>at the caller site</em>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(firstPostComments(props) || <span class="string">&#x27;no comment&#x27;</span>) <span class="comment">//&gt; [&quot;Good one!&quot;,&quot;Interesting...&quot;]</span></span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(&#123;&#125;) || <span class="string">&#x27;no comment&#x27;</span>) <span class="comment">//&gt; &quot;no comment&quot;</span></span><br></pre></td></tr></table></figure>
+<p>We cannot partially apply the built-in OR operator, right? Otherwise we could write something
+like (well, if the partial application were done from the right)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ||NoComment = ||.bind(<span class="literal">null</span>, <span class="string">&#x27;no comment&#x27;</span>)</span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(props) ||NoComment) <span class="comment">//&gt; [&quot;Good one!&quot;,&quot;Interesting...&quot;]</span></span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(&#123;&#125;) ||NoComment) <span class="comment">//&gt; &quot;no comment&quot;</span></span><br></pre></td></tr></table></figure>
+<p>But we have to live within the standard JavaScript, so we have to find a way to specify the
+default value <em>inside the get</em> function. This is similar to how we added the partial
+application inside the function - we have noticed a common client use case and implemented 
+it in the function itself by using <code>curry</code>.</p>
+<p>We can go several ways about providing the default value. 
+The simplest is to let the user specify the default value
+right inside the <code>get</code> function. Again we have to think about the signature design. When are
+we likely to know the default value to return? Consider the choices derived from the use cases</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">get(<span class="string">&#x27;no comment&#x27;</span>, path, object) <span class="comment">// 1</span></span><br><span class="line">get(path, <span class="string">&#x27;no comment&#x27;</span>, object) <span class="comment">// 2</span></span><br><span class="line">get(path, object, <span class="string">&#x27;no comment&#x27;</span>) <span class="comment">// 3</span></span><br></pre></td></tr></table></figure>
+<p>If we go with approach <code>// 3</code>, we have to provide the default value <em>after the object</em>, which
+means specifying it every time. While flexible, it quickly becomes verbose, and there is no
+built-in way to partially apply the <em>right</em> argument (there are library functions we could use
+like <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#partialRight">Ramda.partialRight</a>)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(firstPostComments(props, <span class="string">&#x27;no comment&#x27;</span>)) <span class="comment">//&gt; [&quot;Good one!&quot;,&quot;Interesting...&quot;]</span></span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(&#123;&#125;, <span class="string">&#x27;no comment&#x27;</span>)) <span class="comment">//&gt; &quot;no comment&quot;</span></span><br></pre></td></tr></table></figure>
+<p>If we place the default value as the first or second argument in <code>get</code> signature, we can 
+easily apply it. To me these two positions seem equivalent. Let us place the default value 
+at first position, so the user has to think about &quot;unhappy path&quot; right away.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> get = curry(<span class="function">(<span class="params">defaultValue, path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">xs, x</span>) =&gt;</span></span><br><span class="line">    (xs &amp;&amp; xs[x]) ? xs[x] : defaultValue, object))</span><br><span class="line"><span class="keyword">const</span> pathToComments = [<span class="string">&#x27;user&#x27;</span>, <span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;comments&#x27;</span>]</span><br><span class="line"><span class="keyword">const</span> firstPostComments = get(<span class="string">&#x27;no comment&#x27;</span>, pathToComments)</span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(props)) <span class="comment">//&gt; [&quot;Good one!&quot;,&quot;Interesting...&quot;]</span></span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(&#123;&#125;)) <span class="comment">//&gt; &quot;no comment&quot;</span></span><br></pre></td></tr></table></figure>
+<p>Perfect. Yet we now have a question of what the function <code>get</code> does. On one hand it goes through
+the object to grab the deeply nested value. 
+On the other hand, it also returns the default value if the path does not exist, 
+or the resulting value is falsy. This breaks my heuristic for determining when a code fragment
+grows too large:</p>
+<blockquote>
+<p>You have to use words like &quot;AND / OR&quot; to describe what the code does</p>
+</blockquote>
+<p>In our case, the &quot;OR&quot; functionality can be thought as the second step that runs after the original
+<code>get</code> returns a value from an object. Let us write <code>or</code> and use it to return the default value
+if the original <code>get</code> (now renamed to <code>_get</code>) returns nothing.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> _get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">xs, x</span>) =&gt;</span></span><br><span class="line">    (xs &amp;&amp; xs[x]) ? xs[x] : <span class="literal">null</span>, object)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> or = <span class="function">(<span class="params">defaultValue, x</span>) =&gt;</span> x || defaultValue</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> get = curry(<span class="function">(<span class="params">defaultValue, path, object</span>) =&gt;</span> </span><br><span class="line">  or(defaultValue, _get(path, object)))</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> pathToComments = [<span class="string">&#x27;user&#x27;</span>, <span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;comments&#x27;</span>]</span><br><span class="line"><span class="keyword">const</span> firstPostComments = get(<span class="string">&#x27;no comment&#x27;</span>, pathToComments)</span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(props)) <span class="comment">//&gt; [&quot;Good one!&quot;,&quot;Interesting...&quot;]</span></span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(&#123;&#125;)) <span class="comment">//&gt; &quot;no comment&quot;</span></span><br></pre></td></tr></table></figure>
+<p>When designing <code>or</code> we should follow the same API design philosophy as designing <code>get</code> function.
+The typical use cases should determine the order of arguments, and if necessary, the built-in
+application. Notice how we place the default value on the left, because we are likely to know 
+it early. I am not going to completely rewrite the above <code>or</code>, but that is definitely possible
+and would be equivalent to <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#either">Ramda.either</a> (<a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#or">Ramda.or</a> is meant to cast values
+into Booleans).</p>
+<h2><span id="executing-code-based-on-returned-value">Executing code based on returned value</span></h2><p>So far, we have grabbed the nested property and printed it. We have even built-in a way to
+print default value if the nested property does not exist. What if we want to 
+<em>run multiple commands</em> but only if the value exists? Hmm, we now have two problems:</p>
+<ol>
+<li>It is harder to tell when the property is invalid. Used to be easier: if the returned value is 
+ <code>undefined</code> or <code>null</code> then it meant the property is invalid. Now we need to compare to the
+ default value, which is trickier.</li>
+<li>We have to use JavaScript <code>if (...) &#123; ... &#125;</code> construct, which is NOT composable.</li>
+</ol>
+<p>Here is an example the explains the point <strong># 2</strong>. Imagine we want to run <code>foo()</code> and <code>bar()</code>
+if the property is present. It is easy to do right after the property access.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> foo = <span class="function">() =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;in foo&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> bar = <span class="function">() =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;in bar&#x27;</span>)</span><br><span class="line"><span class="keyword">if</span> (firstPostComments(props) !== <span class="string">&#x27;no comment&#x27;</span>) &#123;</span><br><span class="line">  foo()</span><br><span class="line">  bar()</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// in foo</span></span><br><span class="line"><span class="comment">// in bar</span></span><br></pre></td></tr></table></figure>
+<p>What if we want to run more functions if there is a property? 
+We have to code them right there inside the
+<code>if (firstPostComments(props) !== &#39;no comment&#39;) &#123; ... &#125;</code> block. Alternative - return the fetched
+property from the code and have the check repeat outside.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> foo = <span class="function">() =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;in foo&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> bar = <span class="function">() =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;in bar&#x27;</span>)</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getComments</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> comments = firstPostComments(props)</span><br><span class="line">  <span class="keyword">if</span> (comments !== <span class="string">&#x27;no comment&#x27;</span>) &#123;</span><br><span class="line">    foo()</span><br><span class="line">    bar()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> comments</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// run another function if there is a comment</span></span><br><span class="line"><span class="keyword">const</span> baz = <span class="function">() =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;in baz&#x27;</span>)</span><br><span class="line"><span class="keyword">if</span> (getComments() !== <span class="string">&#x27;no comment&#x27;</span>) &#123;</span><br><span class="line">  baz()</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// in foo</span></span><br><span class="line"><span class="comment">// in bar</span></span><br><span class="line"><span class="comment">// in baz</span></span><br></pre></td></tr></table></figure>
+<p>This code is bad, and we need to solve both problems at once. We need a way to &quot;flag&quot; 
+the situation when the original property was invalid to avoid comparing it to 
+<code>no comment</code> value everywhere, and we need a way to &quot;queue up&quot; functions to execute 
+if the returned property is valid.</p>
+<h2><span id="enter-maybe">Enter Maybe</span></h2><p>Let us solve all problems by returning an object of <a target="_blank" rel="noopener" href="https://github.com/folktale/data.maybe">Maybe</a> type instead of
+a &quot;plain&quot; value. This object is like a box - it can keep anything inside; the box does not care.
+But what it can also do is &quot;know&quot; if the value inside is &quot;valid&quot; or &quot;bad&quot;. We will flag a
+value when creating the box (values that are <code>undefined</code> or <code>null</code> are called &quot;nullable&quot; and
+that tells the <code>Maybe</code> box that they are &quot;bad&quot; on creation)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Maybe = <span class="built_in">require</span>(<span class="string">&#x27;data.maybe&#x27;</span>)</span><br><span class="line"><span class="comment">// returns value or &quot;null&quot;</span></span><br><span class="line"><span class="keyword">const</span> _get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">xs, x</span>) =&gt;</span></span><br><span class="line">    (xs &amp;&amp; xs[x]) ? xs[x] : <span class="literal">null</span>, object)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> get = curry(<span class="function">(<span class="params">path, object</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> value = _get(path, object)</span><br><span class="line">  <span class="comment">// put the &quot;value&quot; into a Maybe box</span></span><br><span class="line">  <span class="keyword">return</span> Maybe.fromNullable(value)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The <code>get</code> definition just gets the value and then returns it wrapped in &quot;Maybe&quot; box. We can
+shorten this a little bit using equivalent code (or not) depending on the mood.</p>
+<p>One thing that we can notice right away is that the value we print are not &quot;simple&quot;.
+Instead they are objects that know if the value inside is bad (property <code>#type:Maybe.Nothing</code>) or 
+good (same property is <code>Maybe.Just</code>)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pathToComments = [<span class="string">&#x27;user&#x27;</span>, <span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;comments&#x27;</span>]</span><br><span class="line"><span class="keyword">const</span> firstPostComments = get(pathToComments)</span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(props)) </span><br><span class="line">    <span class="comment">//&gt; &#123;&quot;#type&quot;:&quot;folktale:Maybe.Just&quot;,&quot;value&quot;:[&quot;Good one!&quot;,&quot;Interesting...&quot;]&#125;</span></span><br><span class="line"><span class="built_in">console</span>.log(firstPostComments(&#123;&#125;)) </span><br><span class="line">    <span class="comment">//&gt; &#123;&quot;#type&quot;:&quot;folktale:Maybe.Nothing&quot;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>Cool things we can do now: we ca use the response &quot;box&quot; and run new functions 
+easily <em>if and only if</em> the value inside is good. 
+Printing a good value (and doing nothing for the bad one) is simply:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">firstPostComments(props).map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// [ &#x27;Good one!&#x27;, &#x27;Interesting...&#x27; ]</span></span><br><span class="line">firstPostComments(&#123;&#125;).map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// nothing happens, &quot;console.log&quot; is NOT triggered</span></span><br></pre></td></tr></table></figure>
+<p>If we get the comments deep somewhere inside our code, we can simply return the <code>Maybe</code> box
+and let the other code do something if the value is good.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getComments</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> firstPostComments(props).map(foo).map(bar)</span><br><span class="line">&#125;</span><br><span class="line">getComments().map(baz)</span><br><span class="line"><span class="comment">// in foo</span></span><br><span class="line"><span class="comment">// in bar</span></span><br><span class="line"><span class="comment">// in baz</span></span><br></pre></td></tr></table></figure>
+<p>This is why <a target="_blank" rel="noopener" href="https://medium.com/javascript-scene/functors-categories-61e031bac53f#.c4ezycz3n">people say</a>
+that wrapped values (like <code>Maybe</code> monad) are great for composability; because you can compose multiple functions easily using them.</p>
+<h2><span id="single-vs-multiple-null-checks">Single vs multiple null checks</span></h2><p>So far we have created a single <code>Maybe</code> after getting the deeply nested property. But if we
+look inside the <code>get</code> function we see the <em>same pattern</em> inside the <code>reduce</code> callback</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> _get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">xs, x</span>) =&gt;</span></span><br><span class="line">    (xs &amp;&amp; xs[x]) ? xs[x] : <span class="literal">null</span>, object)</span><br><span class="line"><span class="comment">// callback (xs, x):</span></span><br><span class="line"><span class="comment">//   if property and value is &quot;good&quot;</span></span><br><span class="line"><span class="comment">//     implicitly run &quot;callback&quot; with next part of the path</span></span><br><span class="line"><span class="comment">//     (implicitly because we are inside Array.reduce)</span></span><br></pre></td></tr></table></figure>
+<p>Hmm, this looks like our <code>Maybe</code> box! <code>Maybe.fromNullable</code> puts value in the <code>Maybe</code> box, 
+and then lets <code>Maybe</code> decide: if the value is good, calls a function, which constructs another box.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">box, property</span>) =&gt;</span></span><br><span class="line">    box.map(<span class="function"><span class="params">xs</span> =&gt;</span> Maybe.fromNullable(xs[property])),</span><br><span class="line">    Maybe.fromNullable(object))</span><br></pre></td></tr></table></figure>
+<p>Yet there is a tiny difference, which creates a problem and does not give us a valid result</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pathToComments = [<span class="string">&#x27;user&#x27;</span>, <span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;comments&#x27;</span>]</span><br><span class="line">get(pathToComments, props).map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// Maybe &#123;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>We have to pass a function to <code>Maybe.map</code> that returns 
+<em>not a simple</em> value, but another <code>Maybe</code> box. If we just use <code>map</code> we quickly get into a
+situation where boxes are nested inside other boxes, just like a Russian 
+<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Matryoshka_doll">Matryoshka</a> doll.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(Maybe.fromNullable(<span class="string">&#x27;foo&#x27;</span>)</span><br><span class="line">  .map(<span class="function">() =&gt;</span> Maybe.fromNullable(<span class="string">&#x27;bar&#x27;</span>))</span><br><span class="line">  .map(<span class="function">() =&gt;</span> Maybe.fromNullable(<span class="string">&#x27;baz&#x27;</span>)))</span><br><span class="line"><span class="comment">// Maybe &#123; value: Maybe &#123; value: &#x27;baz&#x27; &#125; &#125;</span></span><br></pre></td></tr></table></figure>
+<p>In our case, the first iteration of <code>get(..., props)</code> fetches &quot;user&quot; value, which returns 
+<code>Maybe&#123; Maybe &#123;...&#125; &#125;</code> and then it tries to fetch &quot;posts&quot;, which does not exist on the 
+<code>Maybe</code> itself. Thus it catches it and returns just nothing.</p>
+<p>We need to deal with this somehow. We cannot use <code>map</code> because we return an already wrapped
+value by checking inside <code>Maybe.fromNullable</code>. 
+The wrapped types like <code>Maybe</code> thus implement a <em>separate</em> method to call functions that return
+wrapped results. In <code>data.maybe</code> case it is <code>chain</code> - a wrapped value returned from the chained callback
+replaces the value in the current box.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(Maybe.fromNullable(<span class="string">&#x27;foo&#x27;</span>)</span><br><span class="line">  .chain(<span class="function">() =&gt;</span> Maybe.fromNullable(<span class="string">&#x27;bar&#x27;</span>))</span><br><span class="line">  .chain(<span class="function">() =&gt;</span> Maybe.fromNullable(<span class="string">&#x27;baz&#x27;</span>)))</span><br><span class="line"><span class="comment">// Maybe &#123; value: &#x27;baz&#x27; &#125;</span></span><br></pre></td></tr></table></figure>
+<p>Let us replace <code>map</code> with <code>chain</code> inside our <code>get</code> function and all should work out</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">box, property</span>) =&gt;</span></span><br><span class="line">    box.chain(<span class="function"><span class="params">xs</span> =&gt;</span> Maybe.fromNullable(xs[property])),</span><br><span class="line">    Maybe.fromNullable(object))</span><br><span class="line"><span class="keyword">const</span> pathToComments = [<span class="string">&#x27;user&#x27;</span>, <span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;0&#x27;</span>, <span class="string">&#x27;comments&#x27;</span>]</span><br><span class="line">get(pathToComments, props).map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// [ &#x27;Good one!&#x27;, &#x27;Interesting...&#x27; ]</span></span><br><span class="line">get(pathToComments, &#123;&#125;).map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// nothing happens, &quot;console.log&quot; is NOT called</span></span><br><span class="line">get(pathToComments).map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// nothing happens, &quot;console.log&quot; is NOT called</span></span><br></pre></td></tr></table></figure>
+<h2><span id="composing-chains">Composing chains</span></h2><p>Notice how we have replaced a ternary operator <code>(xs &amp;&amp; xs[x]) ? xs[x] : null</code> inside the <code>reduce</code>
+callback (and the outside <code>Maybe.fromNullable</code>) with a <code>Maybe.chain()</code> function? Nice!
+Having a function call instead of the built-in JavaScript ternary operator allows us to 
+simplify it (just like we simplified code when we replaced built-in <code>||</code> operator).</p>
+<p>I am going to simplify <code>get</code> in several steps for clarity. Let us first replace <code>box.chain</code> with
+<a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#chain">Ramda.chain</a> called on a <code>box</code>. It is a good idea to write a few unit tests before
+refactoring code like this.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// before</span></span><br><span class="line"><span class="keyword">const</span> get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">box, property</span>) =&gt;</span></span><br><span class="line">    box.chain(<span class="function"><span class="params">xs</span> =&gt;</span> Maybe.fromNullable(xs[property])),</span><br><span class="line">    Maybe.fromNullable(object))</span><br><span class="line"><span class="comment">// after</span></span><br><span class="line"><span class="keyword">const</span> get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">box, property</span>) =&gt;</span></span><br><span class="line">    R.chain(<span class="function"><span class="params">xs</span> =&gt;</span> Maybe.fromNullable(xs[property]), box),</span><br><span class="line">    Maybe.fromNullable(object))</span><br></pre></td></tr></table></figure>
+<p>Second, let us use a function call to get a property of an object, rather than using built-in
+<code>object[name]</code> syntax. In our case, we can use <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#prop">Ramda.prop</a> function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// use Ramda.prop instead of xs[property]</span></span><br><span class="line"><span class="keyword">const</span> get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">box, property</span>) =&gt;</span></span><br><span class="line">    R.chain(<span class="function"><span class="params">xs</span> =&gt;</span> Maybe.fromNullable(R.prop(property, xs)), box),</span><br><span class="line">    Maybe.fromNullable(object))</span><br></pre></td></tr></table></figure>
+<p>Then we can abstract nested function calls <code>Maybe.fromNullable(R.prop(property, xs)</code> 
+into its own function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// extract safe property access</span></span><br><span class="line"><span class="keyword">const</span> safeProp = R.curry(<span class="function">(<span class="params">property, xs</span>) =&gt;</span> </span><br><span class="line">  Maybe.fromNullable(R.prop(property, xs)))</span><br><span class="line"><span class="keyword">const</span> get = <span class="function">(<span class="params">path, object</span>) =&gt;</span></span><br><span class="line">  path.reduce(<span class="function">(<span class="params">box, property</span>) =&gt;</span></span><br><span class="line">    R.chain(safeProp(property), box),</span><br><span class="line">    Maybe.fromNullable(object))</span><br></pre></td></tr></table></figure>
+<p>Hmm, if we have <code>safeProp</code>, maybe we do not need to always use <code>get</code>. In a simple case, like
+grabbing a value a few levels deep, we can just chain it ourselves.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Maybe.fromNullable(props)</span><br><span class="line">  .chain(safeProp(<span class="string">&#x27;user&#x27;</span>))</span><br><span class="line">  .chain(safeProp(<span class="string">&#x27;posts&#x27;</span>))</span><br><span class="line">  .chain(safeProp(<span class="string">&#x27;0&#x27;</span>))</span><br><span class="line">  .chain(safeProp(<span class="string">&#x27;comments&#x27;</span>))</span><br><span class="line">  .map(<span class="built_in">console</span>.log)</span><br></pre></td></tr></table></figure>
+<p>Looks awful 🤔</p>
+<p>Luckily, there is utility methods for composing wrapped values that have chain interface.
+In Ramda it is <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#composeK">composeK</a> and <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#pipeK">pipeK</a> functions. </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> getComments = R.pipeK(</span><br><span class="line">  safeProp(<span class="string">&#x27;user&#x27;</span>),</span><br><span class="line">  safeProp(<span class="string">&#x27;posts&#x27;</span>),</span><br><span class="line">  safeProp(<span class="string">&#x27;0&#x27;</span>),</span><br><span class="line">  safeProp(<span class="string">&#x27;comments&#x27;</span>)</span><br><span class="line">)</span><br><span class="line">getComments(props).map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// [ &#x27;Good one!&#x27;, &#x27;Interesting...&#x27; ]</span></span><br><span class="line">getComments(&#123;&#125;).map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// nothing is done, &quot;console.log&quot; is NOT triggered</span></span><br><span class="line">getComments().map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// crashes and burns, because we are not protecting </span></span><br><span class="line"><span class="comment">// against the very FIRST access</span></span><br></pre></td></tr></table></figure>
+<p>In order to protect against the missing or undefined first value, just put the protection
+function first. It is that easy with functional programming.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> getComments = R.pipeK(</span><br><span class="line">  Maybe.fromNullable,</span><br><span class="line">  safeProp(<span class="string">&#x27;user&#x27;</span>),</span><br><span class="line">  safeProp(<span class="string">&#x27;posts&#x27;</span>),</span><br><span class="line">  safeProp(<span class="string">&#x27;0&#x27;</span>),</span><br><span class="line">  safeProp(<span class="string">&#x27;comments&#x27;</span>)</span><br><span class="line">)</span><br><span class="line">getComments().map(<span class="built_in">console</span>.log)</span><br><span class="line"><span class="comment">// nothing is done, &quot;console.log&quot; is NOT triggered</span></span><br></pre></td></tr></table></figure>
+<p>Safe and sound.</p>
+<h2><span id="extra-info">Extra info</span></h2><ul>
+<li><a href="../user-friendly-api/">User friendly API</a></li>
+<li><a href="../if-else-vs-either-monad-vs-frp/">If Else vs Either Monad vs FRP</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/xgrommx/awesome-functional-programming">List of awesome functional resources</a></li>
+<li><a href="../put-callback-first-for-elegance/">Put callback first for elegance</a></li>
+</ul>
+<p>if there is another resource that might be helpful, leave a comment.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/call-me-maybe/" data-id="ckpyeu4bf01p46zvge2dv4260" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/call-me-maybe/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/functional/" rel="tag">functional</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../web-packing-the-internet/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Web Packing the Internet
+        
+      </div>
+    </a>
+  
+  
+    <a href="../asking-coworkers/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Asking coworkers to decide my career</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/call-me-maybe/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

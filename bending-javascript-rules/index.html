@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Bending JavaScript rules | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="This blog post has the content from the presentation I delivered at ManhattanJS. There are a couple of slides and a repo to go with it. I will show how to reach into a live Angular application and ove">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bending JavaScript rules">
+<meta property="og:url" content="https://glebbahmutov.com/blog/bending-javascript-rules/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="This blog post has the content from the presentation I delivered at ManhattanJS. There are a couple of slides and a repo to go with it. I will show how to reach into a live Angular application and ove">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/hello-static.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/adding-names-from-console.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/name-stays.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/extend-scope-method.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/debug-scope-method.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/ajax-error.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/mock-http.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/load-app-from-node.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/use-private-function.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/mocha-run.png">
+<meta property="article:published_time" content="2015-09-10T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.236Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="javascript">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="nodejs">
+<meta property="article:tag" content="angularjs">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/hello-static.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-bending-javascript-rules" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2015-09-10T04:00:00.000Z" itemprop="datePublished">Sep 10 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Bending JavaScript rules
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Change live Angular application plus unit test private code from Node.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>This blog post has the content from the presentation I delivered at ManhattanJS.
+There are a <a target="_blank" rel="noopener" href="http://slides.com/bahmutov/bend-the-rules">couple of slides</a> and
+a <a target="_blank" rel="noopener" href="https://github.com/bahmutov/bending-angular-rules">repo</a> to go with it.</p>
+<p>I will show how to reach into a live Angular application and overwrite features on the fly.
+I will also show how to load the application from the Node environment and
+how to unit test private code without source modifications. You can try the steps yourself
+by cloning the repo and stepping through the tagged commits <code>step-1</code>, <code>step-2</code>, etc.</p>
+<h2><span id="start">Start</span></h2><p>Create a static page with HTML5 boilerplate code that shows a list of names
+to greet, something like this (saved as <code>index.html</code>)</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;hello world&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h2&gt;Hello&lt;/h2&gt;
+  &lt;ul&gt;
+    &lt;li&gt;John&lt;/li&gt;
+    &lt;li&gt;Mary&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>You can view this page by opening the file in any browser (I used Chrome in this demo)
+directly from the command line</p>
+<pre><code>open index.html
+</code></pre><p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/hello-static.png" alt="static list of names"></p>
+<h2><span id="showing-list-of-names-step-1">Showing list of names: step-1</span></h2><p>Let us allow the user to enter new names to be greeted. We will need to add an input text field
+and a button. We can add them to our static markup for now</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;hello world&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h2&gt;Hello&lt;/h2&gt;
+  &lt;ul&gt;
+    &lt;li&gt;John&lt;/li&gt;
+    &lt;li&gt;Mary&lt;/li&gt;
+  &lt;/ul&gt;
+  Enter a name &lt;input type=&quot;text&quot; /&gt;&lt;button&gt;Add&lt;/button&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>Let us make this application live by adding a dash of Angular framework</p>
+<pre><code>npm install angular
+</code></pre><p>Add Angular controller to the page, it will be injected a special object <code>$scope</code> to hold
+the list of names</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;hello world&lt;/title&gt;
+  &lt;script src=&quot;node_modules/angular/angular.js&quot;&gt;&lt;/script&gt;
+  &lt;script&gt;
+  angular.module(&apos;HelloApp&apos;, [])
+    .controller(&apos;HelloController&apos;, function ($scope) &#123;
+      $scope.names = [&apos;John&apos;, &apos;Mary&apos;];
+    &#125;);
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body ng-app=&quot;HelloApp&quot; ng-controller=&quot;HelloController&quot;&gt;
+  &lt;h2&gt;Hello&lt;/h2&gt;
+  &lt;ul&gt;
+    &lt;li ng-repeat=&quot;name in names track by $index&quot;&gt;&#123;&#123; name &#125;&#125;&lt;/li&gt;
+  &lt;/ul&gt;
+  Enter a name &lt;input type=&quot;text&quot; /&gt;&lt;button&gt;Add&lt;/button&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre><p>You need <code>track by $index</code> if you want to allow duplicate names in the list.
+We can control the list of names to be shown from the outside. From the browser&#39;s console type</p>
+<pre><code>angular.element(document.body).scope().names
+// [&quot;John&quot;, &quot;Mary&quot;]
+angular.element(document.body).scope().names.push(&apos;Dave&apos;)
+angular.element(document.body).scope().$apply();
+// the list is reflected in the DOM
+</code></pre><p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/adding-names-from-console.png" alt="adding names from console"></p>
+<p>We can access the scope of any DOM element (or surrounding it) via <code>element.scope()</code> method.
+Since the <code>$scope</code> is simply a plain object, to let Angular know we have modified it and would
+like to see the changes, we need to call <code>scope.$apply()</code> method.</p>
+<h2><span id="add-entered-name-to-the-list-step-2">Add entered name to the list: step-2</span></h2><p>Let us connect our static input field and the button to the list of names.
+We can change the HTML markup to bind the input value to the property <code>newName</code> on the <code>$scope</code></p>
+<pre><code>Enter a name &lt;input type=&quot;text&quot; ng-model=&quot;newName&quot; /&gt;
+</code></pre><p>And we can call a method on the <code>$scope</code> (see the pattern) whenever the user clicks the button</p>
+<pre><code>&lt;button ng-click=&quot;addName()&quot;&gt;Add&lt;/button&gt;
+</code></pre><p>We need to write the <code>addName()</code> method, otherwise nothing is happening.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">.controller(<span class="string">&#x27;HelloController&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">$scope</span>) </span>&#123;</span><br><span class="line">  $scope.names = [<span class="string">&#x27;John&#x27;</span>, <span class="string">&#x27;Mary&#x27;</span>];</span><br><span class="line">  $scope.addName = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    $scope.names.push($scope.newName);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>Nice! The <code>newName</code> property was created implicitly by the input field bound to the model property <code>newName</code>.
+Since we are using built-in click handler <code>ng-click</code>, we did not have to call <code>$scope.$apply()</code> - it is done
+automatically for us.</p>
+<h2><span id="clear-the-entered-value-step-3">Clear the entered value: step-3</span></h2><p>We notice that the added name is NOT cleared from the input field.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/name-stays.png" alt="input value stays"></p>
+<p>We never set the scope
+property to the <code>undefined</code> or an empty string, thus it just stayed in the DOM. While it would be simple
+to write the following code, we want to experiment first</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$scope.addName = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  $scope.names.push($scope.newName);</span><br><span class="line">  <span class="keyword">delete</span> $scope.newName;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>Can we <em>add</em> the missing delete line to the scope method dynamically?
+Yes we can, right from the browser&#39;s console</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> scope = angular.element(<span class="built_in">document</span>.body).scope();</span><br><span class="line"><span class="keyword">var</span> _addName = scope.addName; <span class="comment">// save reference to the true method</span></span><br><span class="line">scope.addName = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; _addName(); <span class="keyword">delete</span> scope.newName; &#125;;</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/extend-scope-method.png" alt="extending scope method"></p>
+<p>BOOM! We dynamically extended an Angular application! This is a very useful approach:
+accessing methods from the <code>$scope</code> to wrap them on the fly. For example, we can monitor
+the method&#39;s execution. From the Chrome console:</p>
+<pre><code>monitor(scope.addName);
+// Click &quot;Add&quot; button
+// VM946:1 function scope.addName called
+</code></pre><p>We can even find where the code is without knowing it. Let us say, we want to stop when the
+button is clicked and we get into the <code>addName</code> method</p>
+<pre><code>debug(angular.element(document.body).scope().addName)
+// Click &quot;Add&quot; button
+// Debugger pauses at the first line in `addName`
+</code></pre><p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/debug-scope-method.png" alt="debug scope method"></p>
+<p>We can even profile long-running methods using Chrome&#39;s DevTools by &quot;wrapping&quot; the method
+in <code>console.profile()</code> and <code>console.profileEnd()</code> commands.
+See <a href="https://glebbahmutov.com/blog/improving-angular-web-app-performance-example/">Improving Angular web app performance example</a> for details.</p>
+<h2><span id="calling-the-server-to-get-the-new-name-step-4">Calling the server to get the new name: step-4</span></h2><p>Let us show how we can bend JavaScript closure rules a little. We can get a reference to the
+<code>$scope</code> object and the $scope.addName`, thus we can override the method completely at run-time</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> scope = angular.element(<span class="built_in">document</span>.body).scope();</span><br><span class="line">scope.addName = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; alert(<span class="string">&#x27;Not adding &#x27;</span> + scope.newName); &#125;;</span><br></pre></td></tr></table></figure>
+<p>This is a complete replacement. What if we wanted to do something else - like partial replacement?
+Here is a good example. Let us say, <code>$scope.addName</code> grabbed the name not from the input field, but
+from a server.</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">ng-click</span>=<span class="string">&quot;addName()&quot;</span>&gt;</span>Add<span class="tag">&lt;/<span class="name">button</span>&gt;</span> from the server</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">.controller(<span class="string">&#x27;HelloController&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">$scope, $http</span>) </span>&#123;</span><br><span class="line">  $scope.names = [<span class="string">&#x27;John&#x27;</span>, <span class="string">&#x27;Mary&#x27;</span>];</span><br><span class="line">  $scope.addName = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    $http.get(<span class="string">&#x27;/new/name&#x27;</span>).then(<span class="function"><span class="keyword">function</span> (<span class="params">newName</span>) </span>&#123;</span><br><span class="line">      $scope.names.push(newName);</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>Well, we are running straight from the file system using <code>open index.html</code>. When we click &quot;Add&quot;
+button we get an Ajax error</p>
+<pre><code>Error: Failed to execute &apos;send&apos; on &apos;XMLHttpRequest&apos;: Failed to load &apos;file:///new/name&apos;
+</code></pre><p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/ajax-error.png" alt="Ajax error"></p>
+<p>Duh! We don&#39;t have a server to respond.</p>
+<h2><span id="bending-the-rules-to-mock-the-server-response-step-5">Bending the rules to mock the server response: step-5</span></h2><p>Let us bend the JavaScript closure rules to mock the server. Here is how we are going to
+overwrite the <code>addName</code> method at runtime from the browser&#39;s console <em>to fake</em> the <code>$http</code> service.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> $http = &#123;</span><br><span class="line">    get: <span class="function"><span class="keyword">function</span> (<span class="params">url</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> (<span class="params">resolve</span>) </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> resolve(<span class="string">&#x27;Mock name&#x27;</span>);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">var</span> $scope = angular.element(<span class="built_in">document</span>.body).scope();</span><br><span class="line"><span class="keyword">var</span> _addName = $scope.addName;</span><br><span class="line">$scope.addName = <span class="built_in">eval</span>(<span class="string">&#x27;(&#x27;</span> + _addName.toString() + <span class="string">&#x27;)&#x27;</span>);</span><br></pre></td></tr></table></figure>
+<p>Click the &quot;Add&quot; button.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/mock-http.png" alt="mock http"></p>
+<p>BOOM! The mock promise-returning function from the browser&#39;s console
+<em>overwrote a variable inside the parent&#39;s closure of a $scope method</em>.
+We knew that <code>addName</code> is using <code>$http</code> and <code>$scope</code> variables. Thus we replaced
+the function by evaluating the <code>$scope.addName</code> method <em>as is</em>, but with <em>our defined</em>
+variables; <code>$scope</code> was the same, but <code>$http</code> was a fake one. The JavaScript <code>eval</code>
+takes the <em>current</em> scope as the parent scope, thus we can substitute new functionality
+into the existing application dynamically.</p>
+<p>Really useful library based on this principle is <a target="_blank" rel="noopener" href="https://github.com/bahmutov/ng-wedge">ng-wedge</a>, it is a
+mock response utility for a live application.</p>
+<h2><span id="why-can39t-we-load-angular-app-directly-from-nodejs-step-6">Why can&#39;t we load Angular app directly from NodeJS? step-6</span></h2><p>We have installed the AngularJS library using <em>Node Package Manager</em></p>
+<pre><code>npm install angular
+</code></pre><p>Yet, if we move the application&#39;s code into a separate javascript file, we
+cannot load it directly. Try moving the JavaScript into a separate file</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// app.js</span></span><br><span class="line">angular.module(<span class="string">&#x27;HelloApp&#x27;</span>, [])</span><br><span class="line">  .controller(<span class="string">&#x27;HelloController&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">$scope, $http</span>) </span>&#123;</span><br><span class="line">    $scope.names = [<span class="string">&#x27;John&#x27;</span>, <span class="string">&#x27;Mary&#x27;</span>];</span><br><span class="line">    $scope.addName = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      $http.get(<span class="string">&#x27;/new/name&#x27;</span>).then(<span class="function"><span class="keyword">function</span> (<span class="params">newName</span>) </span>&#123;</span><br><span class="line">        $scope.names.push(newName);</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;;</span><br><span class="line">  &#125;);</span><br></pre></td></tr></table></figure>
+<pre><code>$ node app.js
+/git/bending-angular-rules/app.js:1
+(function (exports, require, module, __filename, __dirname) &#123; angular.module(&apos;
+                                                              ^
+ReferenceError: angular is not defined
+</code></pre><p>Of course, we loaded Angular framework first in our HTML page, before loading the <code>app.js</code> file.</p>
+<pre><code>// index.html
+&lt;script src=&quot;node_modules/angular/angular.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;app.js&quot;&gt;&lt;/script&gt;
+</code></pre><p>Can we load AngularJS framework itself directly from Node? Not directly</p>
+<pre><code>$ node node_modules/angular/angular.js
+/git/bending-angular-rules/node_modules/angular/angular.js:28686
+&#125;)(window, document);
+   ^
+ReferenceError: window is not defined
+</code></pre><p>It would be very cool if we could load Angular without <code>window</code>.
+While this is <a href="https://glebbahmutov.com/blog/run-angular-in-web-worker/">possible</a>, I prefer a different approach to this problem.
+We will <em>simulate the full browser environment (window, document)</em>
+under NodeJS. We can do this using <a target="_blank" rel="noopener" href="https://npmjs.org/package/benv">benv</a> module that puts a very simple API on top of
+<a target="_blank" rel="noopener" href="https://npmjs.org/package/jsdom">jsdom</a>.</p>
+<pre><code>npm install benv
+</code></pre><p>Let us create a file that shows loading AngularJS framework and <code>app.js</code> from Node</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// load.js</span></span><br><span class="line"><span class="keyword">var</span> benv = <span class="built_in">require</span>(<span class="string">&#x27;benv&#x27;</span>);</span><br><span class="line">benv.setup(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  benv.expose(&#123;</span><br><span class="line">    angular: benv.require(<span class="string">&#x27;node_modules/angular/angular.js&#x27;</span>, <span class="string">&#x27;angular&#x27;</span>)</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;window is&#x27;</span>, <span class="keyword">typeof</span> <span class="built_in">window</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;document is&#x27;</span>, <span class="keyword">typeof</span> <span class="built_in">document</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;angular is&#x27;</span>, <span class="keyword">typeof</span> angular);</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;window.angular === angular&#x27;</span>, <span class="built_in">window</span>.angular === angular);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>You can now execute this file <code>load.js</code> from Node to verify that the synthetic environment has been
+setup and the Angular framework has been loaded.</p>
+<pre><code>$ node load.js
+window is object
+document is object
+angular is object
+window.angular === angular true
+</code></pre><p>Instead of printing diagnostic messages, let us load our Angular application. We can now use
+simple CommonJS require included with Node for this</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// load.js</span></span><br><span class="line"><span class="keyword">var</span> benv = <span class="built_in">require</span>(<span class="string">&#x27;benv&#x27;</span>);</span><br><span class="line">benv.setup(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  benv.expose(&#123;</span><br><span class="line">    angular: benv.require(<span class="string">&#x27;node_modules/angular/angular.js&#x27;</span>, <span class="string">&#x27;angular&#x27;</span>)</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="built_in">require</span>(<span class="string">&#x27;./app&#x27;</span>);</span><br><span class="line">  <span class="comment">// confirm that module HelloApp has controller HelloController</span></span><br><span class="line">  <span class="keyword">var</span> $controller = angular.injector([<span class="string">&#x27;ng&#x27;</span>, <span class="string">&#x27;HelloApp&#x27;</span>]).get(<span class="string">&#x27;$controller&#x27;</span>);</span><br><span class="line">  <span class="keyword">var</span> scope = &#123;&#125;;</span><br><span class="line">  $controller(<span class="string">&#x27;HelloController&#x27;</span>, &#123; <span class="attr">$scope</span>: scope &#125;);</span><br><span class="line">  <span class="built_in">console</span>.log(scope.names);</span><br><span class="line">  <span class="comment">// prints [ &#x27;John&#x27;, &#x27;Mary&#x27; ]</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/load-app-from-node.png" alt="loading app from Node"></p>
+<p>Nice, we are instantiating parts of Angular app directly from the command line using Node without
+using any browsers.</p>
+<h2><span id="why-nodejs-require-matters-step-7">Why NodeJS require matters: step-7</span></h2><p>Why did we spend time loading the Angular code under Node? Why is Node&#39;s built-in <code>require</code>
+anything but the ordinary implementation of the CommonJS standard? Turns out it has nifty features
+we can exploit.</p>
+<ul>
+<li>It has a <em>preprocessor hook</em> that can run the loaded source through user-supplied callback function
+before evaluating it.</li>
+<li>The built-in <code>require</code> method can be <em>overwritten completely</em> using the same closure trick we have
+seen before, see <a href="https://glebbahmutov.com/blog/hacking-node-require/">Hacking Node require</a></li>
+</ul>
+<p>Both of these features were used to implement <a target="_blank" rel="noopener" href="https://npmjs.org/package/really-need">really-need</a> - a replacement for NodeJS <code>require</code>
+method. Some of the cool features it can do: rewrite the loaded source, bust module cache, rebuild the compiled
+exported values, pass arguments to the module and mock <code>__dirname</code> and <code>__filename</code>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span> = <span class="built_in">require</span>(<span class="string">&#x27;really-need&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> foo = <span class="built_in">require</span>(<span class="string">&#x27;./foo&#x27;</span>, &#123;</span><br><span class="line">    <span class="comment">// remove previously loaded foo module</span></span><br><span class="line">    bustCache: <span class="literal">true</span>,</span><br><span class="line">    <span class="comment">// remove from cache AFTER loading</span></span><br><span class="line">    keep: <span class="literal">false</span>,</span><br><span class="line">    pre: <span class="function"><span class="keyword">function</span> (<span class="params">source, filename</span>) </span>&#123;</span><br><span class="line">        <span class="comment">// transform the source before compiling it</span></span><br><span class="line">        <span class="keyword">return</span> source;</span><br><span class="line">    &#125;,</span><br><span class="line">    post: <span class="function"><span class="keyword">function</span> (<span class="params">exported, filename</span>) </span>&#123;</span><br><span class="line">        <span class="comment">// transform the exported object / value from the file</span></span><br><span class="line">        <span class="keyword">return</span> exported;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// inject additional values into foo.js</span></span><br><span class="line">    args: &#123;</span><br><span class="line">        a: <span class="number">10</span>,</span><br><span class="line">        b: <span class="number">5</span>,</span><br><span class="line">        __dirname: <span class="string">&#x27;/some/path&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>The <code>pre</code> hook is especially useful for source rewriting.
+We could use it to instrument the source code with code coverage statements.
+Or we could use it to &quot;grab&quot; references to private functions. Why would one need to do this?
+To enable quick unit testing of <em>private functions, expressions and variables</em>. For example
+if we had file <code>foo.js</code> that exports nothing, we could run the source through a preprocessor
+whenever someone required it.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// foo.js</span></span><br><span class="line"><span class="keyword">var</span> foo = <span class="string">&#x27;foo&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>and the evaluated source code would be something like</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// transformed code from foo.js</span></span><br><span class="line"><span class="keyword">var</span> foo = <span class="string">&#x27;foo&#x27;</span>;</span><br><span class="line"><span class="built_in">global</span>.__references[<span class="string">&#x27;foo&#x27;</span>] = foo;</span><br></pre></td></tr></table></figure>
+<p>Imagine the new name to be added to the list comes from a private function inside the file <code>app.js</code>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// app.js</span></span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">nextName</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&#x27;World&#x27;</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  angular.module(<span class="string">&#x27;HelloApp&#x27;</span>, [])</span><br><span class="line">    .controller(<span class="string">&#x27;HelloController&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">$scope</span>) </span>&#123;</span><br><span class="line">      $scope.names = [<span class="string">&#x27;John&#x27;</span>, <span class="string">&#x27;Mary&#x27;</span>];</span><br><span class="line">      $scope.addName = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        $scope.names.push(nextName());</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;());</span><br></pre></td></tr></table></figure>
+<p>It certainly works - we can see the effect even from the command line</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/use-private-function.png" alt="private function works"></p>
+<p>Can we unit test the function <code>nextName</code> to see how it behaves? Only indirectly by constructing a controller,
+adding a mock scope object, calling <code>addName</code>, etc. Such a long process. Or we could use a hook into NodeJS
+loader using <code>really-need</code> that can grab a reference to any function for us. All we need to tell the loader
+is the signature of the function we need. We have implemented the Angular initialization (using <code>benv</code>
+and NodeJS hook) in a single helper module <a target="_blank" rel="noopener" href="https://npmjs.org/package/ng-dice">ng-dice</a></p>
+<pre><code>npm install ng-dice
+</code></pre><p><code>ng-dice</code> stands for A<strong>ng</strong>ular <strong>D</strong>ependency <strong>I</strong>njection and <strong>C</strong>ode <strong>E</strong>xtraction library.</p>
+<p>Create a simple BDD unit test for Mocha or Jasmine test framework</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// next-name-spec.js</span></span><br><span class="line"><span class="keyword">var</span> ngDice = <span class="built_in">require</span>(<span class="string">&#x27;ng-dice&#x27;</span>);</span><br><span class="line">ngDice(&#123;</span><br><span class="line">  name: <span class="string">&#x27;app&#x27;</span>,</span><br><span class="line">  file: __dirname + <span class="string">&#x27;/app.js&#x27;</span>,</span><br><span class="line">  extract: <span class="string">&#x27;nextName()&#x27;</span>,</span><br><span class="line">  tests: <span class="function"><span class="keyword">function</span> (<span class="params">codeExtract</span>) </span>&#123;</span><br><span class="line">    it(<span class="string">&#x27;returns next name&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">var</span> nextName = codeExtract();</span><br><span class="line">      <span class="built_in">console</span>.assert(nextName() === <span class="string">&#x27;World&#x27;</span>);</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>We can confirm that the unit test passes</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/bending-angular-rules/master/images/mocha-run.png" alt="unit test"></p>
+<p>Here is what the unit test has accomplished</p>
+<ul>
+<li>Loaded the CommonJS module <code>next-name-spec.js</code></li>
+<li>The <code>ngDice</code> function has loaded the AngularJS library from <code>node_modules</code> path</li>
+<li>It then loaded using a patched NodeJS <code>require</code> method file <code>app.js</code>, rewriting the source
+to insert code to grab the reference to a function with the signature <code>nextName()</code></li>
+<li>The Angular application code loaded fine using the synthetic browser environment</li>
+<li>When we called the <code>codeExtract()</code> function passed back to our user code, we got the
+reference to the actual <code>function nextName()</code> from <code>app.js</code></li>
+<li>We called <code>nextName()</code> directly and confirmed its output.</li>
+</ul>
+<p>One can argue that unit testing private functions and variables goes against the principles
+of black box testing. Yes, but it pays to bend the rules a little.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/bending-javascript-rules/" data-id="ckpyeu4be01p16zvg721yc6s0" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/bending-javascript-rules/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/javascript/" rel="tag">javascript</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../avoid-this-common-angular-refactoring-mistake/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Avoid this common Angular refactoring mistake
+        
+      </div>
+    </a>
+  
+  
+    <a href="../unit-testing-angular-from-node-like-a-boss/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Unit testing Angular from Node like a boss</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/bending-javascript-rules/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Publish release notes to Slack | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The semantic release notesI love modular development using semantic-release and NPM. Using a pre-git hook, every commit has a well-formatted message like this 1type(scope): short message, maybe even g">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Publish release notes to Slack">
+<meta property="og:url" content="https://glebbahmutov.com/blog/publish-release-notes-to-slack/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="The semantic release notesI love modular development using semantic-release and NPM. Using a pre-git hook, every commit has a well-formatted message like this 1type(scope): short message, maybe even g">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bahmutov.github.io/master/images/slack-release-notes.png">
+<meta property="article:published_time" content="2016-06-15T04:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T13:13:30.327Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="modular development">
+<meta property="article:tag" content="vercel">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/bahmutov/bahmutov.github.io/master/images/slack-release-notes.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-publish-release-notes-to-slack" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-06-15T04:00:00.000Z" itemprop="datePublished">Jun 15 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Publish release notes to Slack
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Using NPM hooks and Zeit to send the semantic release notes to Slack.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2><span id="the-semantic-release-notes">The semantic release notes</span></h2><p>I love modular development using <a target="_blank" rel="noopener" href="https://github.com/semantic-release/semantic-release">semantic-release</a> and NPM.
+Using a <a target="_blank" rel="noopener" href="https://github.com/bahmutov/pre-git#validating-commit-message">pre-git</a> hook, every commit has a well-formatted message
+like this</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">type(scope): short message, maybe even github issue close #n</span><br></pre></td></tr></table></figure>
+<p>When the commits are pushed to GitHub, the CI runs and after passing the tests
+it triggers the following <code>npm run semantic-release</code> script run.</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;semantic-release&quot;</span>: <span class="string">&quot;semantic-release pre &amp;&amp; npm publish &amp;&amp; semantic-release post&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The <code>semantic-release pre</code> inspects the list of commits since the last
+published release, and if there are new features or fixes in the commit list,
+increments the package version, publishes the package to NPM and
+creates a new release tag on GitHub.
+The best part about these automatic release notes is their usefulness.
+All the non-essential commits are hidden; only the new features and fixes are
+listed. For example, <a target="_blank" rel="noopener" href="https://github.com/bahmutov/little-store/releases/tag/v1.0.0">little-store@1.0.0</a>
+lists the following features</p>
+<h2><span id="100-2016-03-29">1.0.0 (2016-03-29)</span></h2><hr>
+<h3><span id="features">Features</span></h3><ul>
+<li><strong>ci:</strong> added semantic release (<a target="_blank" rel="noopener" href="https://github.com/bahmutov/little-store/commit/05cdc999">05cdc999</a>)</li>
+<li><strong>code:</strong> initial code and tests (<a target="_blank" rel="noopener" href="https://github.com/bahmutov/little-store/commit/95ac7e19">95ac7e19</a>)</li>
+<li><strong>doc:</strong> described use case (<a target="_blank" rel="noopener" href="https://github.com/bahmutov/little-store/commit/731e3d4d">731e3d4d</a>)</li>
+</ul>
+<p>Again, all this happens automatically.</p>
+<h2><span id="waiting-for-the-publish">Waiting for the publish</span></h2><p>There is a small problem when using semantic release. Since I no longer
+execute <code>npm publish</code> locally (the CI server does this after the build),
+there is a delay between the time I push the commits to the remote origin
+and the time the new version gets published. Usually I check the github
+interface to see when the tag appears. The browser page reload and waiting
+is very annoying.</p>
+<blockquote>
+<p>I want a way to be notified when the new version has been published,
+and the message should include the beautiful release notes too!</p>
+</blockquote>
+<h2><span id="npm-hooks">NPM hooks</span></h2><p>Recently NPM registry has introduced <a target="_blank" rel="noopener" href="https://github.com/npm/registry/tree/master/docs/hooks">hooks</a> for paying customers.
+You can register up to 100 hooks and be notified about different events:
+new packages published, starred or deprecated. You can listen for events
+related to an individual package, a single user, or an entire organization
+(using the scope name). Let us create a simple server that:</p>
+<ul>
+<li>receive the &quot;publish&quot; message from the NPM registry</li>
+<li>grabs the release notes from GitHub</li>
+<li>publishes a message to a Slack channel.</li>
+</ul>
+<p>There three API to connect, plus we need to run the server somewhere.</p>
+<h2><span id="where-to-deploy">Where to deploy?</span></h2><p>Long time ago, I deployed a simple server like this to Heroku. I used
+a free dyno, which was great for simple demos. Yet for this project a free dyno
+does not work very well - the free dyno can go to sleep, ignoring the
+incoming message. Plus, there is a little bit too much overhead in setting
+a simple application like this on Heroku.</p>
+<p>Recently, I <a href="../running-multiple-applications-in-dokku/">have tried</a> using <a target="_blank" rel="noopener" href="https://github.com/dokku/dokku">Dokku</a> on a
+single <a target="_blank" rel="noopener" href="https://www.digitalocean.com/">DigitalOcean</a> droplet.
+I love Dokku - I can host multiple Docker images on a single box,
+there are plugins for different databases, things just work. It also
+makes perfect financial sense - a single $10 droplet can run 10-20 apps,
+and as long as none is very CPU expensive, the apps keep chugging along.</p>
+<p>Yet, even the Dokku requires manual setup. Is there something simpler?</p>
+<p>Enter <a target="_blank" rel="noopener" href="https://zeit.co/">Zeit</a>. Advertised as
+<a target="_blank" rel="noopener" href="https://zeit.co/about">making cloud computing as simple as possible</a>, it has certainly
+provoked a lot of interest among the web development crowd. This project
+was my opportunity to try it out.</p>
+<p>Before we proceed, I must say that I will be using a paid Zeit account -
+it allows me to hide the <em>source</em> folder from my deploys, supports custom
+domains and costs very little. 1000 of deploys per month
+(every deploy gets a new uniq URL) for $14 is much much cheaper than
+buying droplets from DigitalOcean, or suffering through the AWS API
+(compared to the beautiful <code>zeit now</code> command)</p>
+<h2><span id="security">Security</span></h2><p>We are going to need a couple of tokens to get the data from NPM and GitHub
+and post it to Slack. First, let us grab the Slack access token and
+channel ID (NOT the channel&#39;s name!) The simplest way to grab these two
+pieces was</p>
+<ul>
+<li>Test access token from <a target="_blank" rel="noopener" href="https://api.slack.com/docs/oauth-test-tokens">https://api.slack.com/docs/oauth-test-tokens</a></li>
+<li>Slack channel ID by inspecting the Ajax calls the Slack web application is
+making when changing channels :)</li>
+</ul>
+<p>I had to go through these hoops because the <a target="_blank" rel="noopener" href="https://github.com/npm/npm-hook-slack">NPM Slack example</a>
+uses Web API to post messages (via <a target="_blank" rel="noopener" href="https://github.com/slackhq/node-slack-sdk#readme">@slack/client</a> package).
+I would prefer using a Webhook instead via <a target="_blank" rel="noopener" href="https://github.com/clonn/slack-node-sdk#readme">slack-node</a> package.
+Maybe in the future I will make the switch.</p>
+<p>To grab the GitHub release notes from public repos, we do not need much - just
+your GitHub user name. In order to get release information from private repos
+you need to make a <a target="_blank" rel="noopener" href="https://github.com/settings/tokens">personal access token</a> with &quot;repo&quot; scope.</p>
+<p>Finally, in order to subscribe to NPM events, you need to be a paying customer,
+install &quot;wombat&quot; CLI app using <code>npm i -g wombat</code> and login. To ensure
+secure delivery, you need to set a secret pass phrase when making each hook.
+For example <code>no one knows what it&#39;s like...</code> is a good shared secret for this
+experiment.</p>
+<p>All together, here are the environment variables we need to set
+before running the server code</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SLACK_API_TOKEN=xoxp-...</span><br><span class="line">SLACK_CHANNEL=C1...</span><br><span class="line">SHARED_SECRET=no one knows what it&#x27;s like...</span><br><span class="line">GITHUB_USERNAME=bahmutov</span><br><span class="line">GITHUB_TOKEN=bb45...</span><br></pre></td></tr></table></figure>
+<p>We can export these variables before running the server. In the future, I
+will show a better way to handle the environment variables using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/as-a#readme">as-a</a>.</p>
+<h2><span id="server">Server</span></h2><p>The incoming messages from NPM need to reach our server. I just grabbed the
+single <a target="_blank" rel="noopener" href="https://github.com/npm/npm-hook-slack/blob/master/index.js">index.js</a> from the <code>npm-hook-slack</code> repo - this will be
+the base for the future code modifications. Code just makes a Slack client,
+and a server using <a target="_blank" rel="noopener" href="https://www.npmjs.com/package/npm-hook-receiver">npm-hook-receiver</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> makeReceiver = <span class="built_in">require</span>(<span class="string">&#x27;npm-hook-receiver&#x27;</span>)</span><br><span class="line"><span class="keyword">var</span> slack = <span class="built_in">require</span>(<span class="string">&#x27;@slack/client&#x27;</span>)</span><br><span class="line"><span class="keyword">var</span> web = <span class="keyword">new</span> slack.WebClient(process.env.SLACK_API_TOKEN)</span><br><span class="line"><span class="keyword">var</span> server = makeReceiver(&#123;</span><br><span class="line">  secret: process.env.SHARED_SECRET,</span><br><span class="line">  mount: <span class="string">&#x27;/incoming&#x27;</span></span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// All hook events, with special handling for some.</span></span><br><span class="line">server.on(<span class="string">&#x27;hook&#x27;</span>, <span class="function"><span class="keyword">function</span> <span class="title">onIncomingHook</span>(<span class="params">hook</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">var</span> pkg = hook.name.replace(<span class="string">&#x27;/&#x27;</span>, <span class="string">&#x27;%2F&#x27;</span>);</span><br><span class="line">  <span class="keyword">var</span> type = hook.type;</span><br><span class="line">  <span class="keyword">var</span> change = hook.event.replace(type + <span class="string">&#x27;:&#x27;</span>, <span class="string">&#x27;&#x27;</span>);</span><br><span class="line">  <span class="keyword">var</span> message;</span><br><span class="line">  <span class="keyword">var</span> user = hook.change ? hook.change.user : <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">  <span class="keyword">switch</span> (hook.event)</span><br><span class="line">  &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="string">&#x27;package:star&#x27;</span>:</span><br><span class="line">    message = <span class="string">`★ \&lt;https://www.npmjs.com/~<span class="subst">$&#123;user&#125;</span>|<span class="subst">$&#123;user&#125;</span>\&gt;</span></span><br><span class="line"><span class="string">    starred :package: \&lt;https://www.npmjs.com/package/<span class="subst">$&#123;pkg&#125;</span>|<span class="subst">$&#123;hook.name&#125;</span>\&gt;`</span>;</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// more event handlers</span></span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">// finally send the formatted message</span></span><br><span class="line">  web.chat.postMessage(process.env.SLACK_CHANNEL, message);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>We can refactor the code, and even remove the unnecessary event handles,
+since we are only interested in <code>package:publish</code> event, etc.
+For now, let us connect the local server to the NPM registry hook.
+After receiving the <code>package:publish</code> event, the code fetches the latest
+GitHub release notes and sends them as a message to a Slack channel.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">server.on(<span class="string">&#x27;hook&#x27;</span>, <span class="function"><span class="keyword">function</span> <span class="title">onIncomingHook</span>(<span class="params">hook</span>)</span></span><br><span class="line"><span class="function">  <span class="title">switch</span> (<span class="params">hook.event</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="string">&#x27;package:publish&#x27;</span>:</span><br><span class="line">      web.chat.postMessage(process.env.SLACK_CHANNEL, <span class="string">&#x27;package published&#x27;</span>)</span><br><span class="line">      getReleaseNotes()</span><br><span class="line">        .then(<span class="function"><span class="keyword">function</span> (<span class="params">notes</span>) </span>&#123;</span><br><span class="line">          web.chat.postMessage(process.env.SLACK_CHANNEL, notes)</span><br><span class="line">        &#125;)</span><br><span class="line">    <span class="keyword">break</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Let us start by running the server locally.</p>
+<h2><span id="local-development">Local development</span></h2><p>Before we deploy this code, let us start by testing the server code locally.
+Of course, in this case we get the server running at <code>http://localhost:6666</code>,
+which is not reachable from external clients.
+Let us tunnel to the local server using <a target="_blank" rel="noopener" href="https://ngrok.com/download">ngrok</a>.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ npm start</span><br><span class="line">listening on 6666</span><br><span class="line">$ ngrok http 6666</span><br><span class="line">ngrok by @inconshreveable</span><br><span class="line">Tunnel Status                 online</span><br><span class="line">Version                       2.0.25/2.1.1</span><br><span class="line">Region                        United States (us)</span><br><span class="line">Web Interface                 http://127.0.0.1:4040</span><br><span class="line">Forwarding                    http://743e560f.ngrok.io -&gt; localhost:6666</span><br><span class="line">Forwarding                    https://743e560f.ngrok.io -&gt; localhost:6666</span><br></pre></td></tr></table></figure>
+<p>Notice we are getting both <code>http</code> and <code>https</code> forwarding. Let us register
+the NPM hook. I will observe a repo of mine <a target="_blank" rel="noopener" href="https://github.com/bahmutov/little-store/releases/tag/v1.0.0">little-store</a>.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ wombat hook add little-store https://743e560f.ngrok.io/incoming &quot;no one knows what it&#x27;s like...&quot;</span><br><span class="line">+ little-store ➜ https://743e560f.ngrok.io/incoming</span><br></pre></td></tr></table></figure>
+<p>You can see all your registered hooks at any time</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ wombat hook ls</span><br><span class="line">hooks you have 1 hook</span><br><span class="line">┌──────────┬──────────────┬──────────────┬─────────────────────────────────────┐</span><br><span class="line">│ id       │ type         │ target       │ endpoint                            │</span><br><span class="line">├──────────┼──────────────┼──────────────┼─────────────────────────────────────┤</span><br><span class="line">│ dwvydv16 │ package      │ little-store │ https://743e560f.ngrok.io/incoming  │</span><br><span class="line">│          ├──────────────┴──────────────┴─────────────────────────────────────┤</span><br><span class="line">│          │ never triggered                                                   │</span><br><span class="line">└──────────┴───────────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+<p>To trigger the release, let us push a few dummy commits to the repo
+<code>bahmutov/little-store</code>. Even dummy commits would do, as long as we follow
+the semantic version commit format.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ git commit --allow-empty -m <span class="string">&quot;feat(dummy): this is new feature&quot;</span></span><br><span class="line">$ git commit --allow-empty -m <span class="string">&quot;feat(dummy): this is another new feature&quot;</span></span><br><span class="line">$ git commit --allow-empty -m <span class="string">&quot;fix(test): just fixed a bad bug&quot;</span></span><br><span class="line">$ git push origin master</span><br></pre></td></tr></table></figure>
+<p>The Travis CI <a target="_blank" rel="noopener" href="https://travis-ci.org/bahmutov/little-store/builds/137978855">build has finished</a> and has determined the new
+published version <code>1.2.0</code>, generating the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/little-store/releases/tag/v1.2.0">release notes</a>.</p>
+<h2><span id="120-2016-06-16">1.2.0 (2016-06-16)</span></h2><h3><span id="bug-fixes">Bug Fixes</span></h3><ul>
+<li><strong>test:</strong> just fixed a bad bug (<a target="_blank" rel="noopener" href="https://github.com/bahmutov/little-store/commit/8569c079">8569c079</a>)</li>
+</ul>
+<h3><span id="features">Features</span></h3><ul>
+<li><strong>dummy:</strong><ul>
+<li>this is another new feature (<a target="_blank" rel="noopener" href="https://github.com/bahmutov/little-store/commit/6ff27bea">6ff27bea</a>)</li>
+<li>this is new feature (<a target="_blank" rel="noopener" href="https://github.com/bahmutov/little-store/commit/60802b67">60802b67</a>)</li>
+</ul>
+</li>
+</ul>
+<p>The NPM message has arrived (you can see this in ngrok terminal output or
+in its web interface running at <code>127.0.0.1:4040</code>)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">POST &#x2F;incoming 200 OK</span><br></pre></td></tr></table></figure>
+<p>The request body has the event and the package information.</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;event&quot;</span>:<span class="string">&quot;package:publish&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;name&quot;</span>:<span class="string">&quot;little-store&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;...&quot;</span>: <span class="string">&quot;lots more&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>From the payload we can grab the repo, and if it is hosted on GitHub,
+make a request to grab the latest release notes.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">githubReleaseUrl</span>(<span class="params">payload</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> url = payload.repository.url</span><br><span class="line">  <span class="keyword">const</span> parsed = gh(url)</span><br><span class="line">  <span class="keyword">const</span> me = process.env.GITHUB_USERNAME</span><br><span class="line">  <span class="keyword">const</span> ghToken = process.env.GITHUB_TOKEN</span><br><span class="line">  <span class="keyword">return</span> <span class="string">`https://<span class="subst">$&#123;me&#125;</span>:<span class="subst">$&#123;ghToken&#125;</span>@api.github.com/repos/<span class="subst">$&#123;parsed.repo&#125;</span>/releases/latest`</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> releaseUrl = githubReleaseUrl(payload)</span><br><span class="line"><span class="keyword">const</span> options = &#123;</span><br><span class="line">  uri: releaseUrl,</span><br><span class="line">  headers: &#123;</span><br><span class="line">    <span class="string">&#x27;User-Agent&#x27;</span>: process.env.GITHUB_USERNAME</span><br><span class="line">  &#125;,</span><br><span class="line">  json: <span class="literal">true</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> rp = <span class="built_in">require</span>(<span class="string">&#x27;request-promise&#x27;</span>)</span><br><span class="line">rp(options)</span><br><span class="line">  .then(<span class="function">(<span class="params">response</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// response.body is the release in Markdown format</span></span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>Since Slack <a target="_blank" rel="noopener" href="https://get.slack.help/hc/en-us/articles/202288908-Formatting-your-messages">does not follow Markdown</a>, we need to convert the
+incoming message to the Slack format. I just do 2-step transformation
+<code>Markdown -&gt; HTML -&gt; Slack</code> format using <a target="_blank" rel="noopener" href="https://github.com/chjj/marked">marked</a> and
+<a target="_blank" rel="noopener" href="https://github.com/mrq-cz/slackify-html">slackify-html</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> marked = <span class="built_in">require</span>(<span class="string">&#x27;marked&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> slackify = <span class="built_in">require</span>(<span class="string">&#x27;slackify-html&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> slackMessage = slackify(marked(response.body))</span><br><span class="line">web.chat.postMessage(process.env.SLACK_CHANNEL, slackMessage)</span><br></pre></td></tr></table></figure>
+<p>The local server posts this message to the test channel</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/bahmutov.github.io/master/images/slack-release-notes.png" alt="Slack message"></p>
+<p>Mission accomplished!</p>
+<p>Now we can remove the NPM hook used for the local environment and deploy
+the permanent external server.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ wombat hook rm dwvydv16</span><br><span class="line">– little-store ✘ https://743e560f.ngrok.io/incoming</span><br></pre></td></tr></table></figure>
+<h2><span id="deployment-with-now">Deployment with <code>now</code></span></h2><p>The two best features about deploying using <a target="_blank" rel="noopener" href="https://zeit.co/now">zeit now</a> are
+simplicity and speed. You also get a unique url for each deployment -
+you can test the deploy, and only if it works switch a <em>domain alias</em>
+to point at the unique url.</p>
+<p>First, start by installing the tool <code>now</code> and logging in.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm install -g now</span><br><span class="line">$ now</span><br></pre></td></tr></table></figure>
+<p>Hmm, the server throws an exception when trying to start. Seems it cannot
+find the environment variables we are using! Currently the <code>now</code> tool does
+not support the environment variables, thus we need to pass them
+<em>inside the npm start script</em>.</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;start&quot;</span>: <span class="string">&quot;SLACK_API_TOKEN=xoxp-... SLACK_CHANNEL=C1... ... node index.js&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>This is quickly becoming a very long and unwieldy command.
+As a work around, I use <a target="_blank" rel="noopener" href="https://github.com/bahmutov/as-a#readme">as-a</a> to pass the variables.
+I just placed all variables into a local file
+<code>.as-a.ini</code> and run the <code>node index.js</code> by executing <code>as-a</code>.
+I like to keep the variables grouped in the <code>.as-a.ini</code> file</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[slack]</span></span><br><span class="line"><span class="attr">SLACK_API_TOKEN</span>=xoxp-...</span><br><span class="line"><span class="attr">SLACK_CHANNEL</span>=C1...</span><br><span class="line"><span class="section">[npm]</span></span><br><span class="line"><span class="attr">SHARED_SECRET</span>=<span class="literal">no</span> <span class="literal">on</span>e knows what it<span class="string">&#x27;s like...</span></span><br><span class="line"><span class="string">[gitub]</span></span><br><span class="line"><span class="string">GITHUB_USERNAME=bahmutov</span></span><br><span class="line"><span class="string">GITHUB_TOKEN=bb45...</span></span><br></pre></td></tr></table></figure>
+<p>The server &quot;start&quot; command is now much cleaner</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;start&quot;</span>: <span class="string">&quot;as-a slack,npm,github node index.js&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>We can deploy the server using <code>now</code> and it will give us a unique URL.
+I will use <code>-f</code> option to force a clean install.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">$ time now -f</span><br><span class="line">&gt; Deploying <span class="string">&quot;/git/npm-hook-test&quot;</span></span><br><span class="line">&gt; Using Node.js 6.2.1 (default)</span><br><span class="line">&gt; Ready! https://release-to-slack-fcwdzcxyev.now.sh (copied to clipboard) [1s]</span><br><span class="line">&gt; Initializing…</span><br><span class="line">&gt; Building</span><br><span class="line">&gt; ▲ npm install</span><br><span class="line">&gt; Installing package async@~1.0.0</span><br><span class="line">&gt; Installing package colors@1.0.x</span><br><span class="line">&gt; Installing package cycle@1.0.x</span><br><span class="line">&gt; Installing package eyes@0.1.x</span><br><span class="line">&gt; Installing package isstream@0.1.x</span><br><span class="line">&gt; Installing package pkginfo@0.3.x</span><br><span class="line">&gt; Installing package stack-trace@0.0.x</span><br><span class="line">&gt; Installing package brace-expansion@^1.0.0</span><br><span class="line">&gt; Installing package balanced-match@^0.4.1</span><br><span class="line">&gt; Installing package concat-map@0.0.1</span><br><span class="line">&gt; ▲ npm start</span><br><span class="line">&gt; &#123;<span class="string">&quot;listening on 6666&quot;</span>&#125;</span><br><span class="line">&gt; Deployment complete!</span><br><span class="line"></span><br><span class="line">real  0m17.839s</span><br><span class="line">user  0m0.978s</span><br><span class="line">sys   0m0.138s</span><br></pre></td></tr></table></figure>
+<p>18 seconds for a clean install, but if there are no dependency changes,
+or even code changes, the install takes a lot shorter.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ time now</span><br><span class="line">&gt; Deploying <span class="string">&quot;/git/npm-hook-test&quot;</span></span><br><span class="line">&gt; Using Node.js undefined (default)</span><br><span class="line">&gt; Ready! https://release-to-slack-fcwdzcxyev.now.sh (copied to clipboard) [3s]</span><br><span class="line">&gt; Initializing…</span><br><span class="line">&gt; Deployment complete!</span><br><span class="line"></span><br><span class="line">real  0m4.872s</span><br><span class="line">user  0m0.694s</span><br><span class="line">sys   0m0.102s</span><br></pre></td></tr></table></figure>
+<p>Nice! We can register an NPM hook with the given url, test it out, and then
+remove any unnecessary deployments.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ wombat hook add little-store https://release-to-slack-fcwdzcxyev.now.sh/incoming <span class="string">&quot;no one knows what it&#x27;s like...&quot;</span></span><br><span class="line"></span><br><span class="line">$ now ls</span><br><span class="line"></span><br><span class="line">release-to-slack</span><br><span class="line"></span><br><span class="line">  75bUJhvsoS3NDCA7wPrTxihN      https://release-to-slack-fcwdzcxyev.now.sh      3m ago</span><br><span class="line">  dFDDV9Da9lWeVpCitEj1znMY      https://release-to-slack-tylnttnrfy.now.sh      4m ago</span><br></pre></td></tr></table></figure>
+<p>Let us remove the older deploy <code>dFDDV9Da9lWeVpCitEj1znMY</code>.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ now rm dFDDV9Da9lWeVpCitEj1znMY</span><br><span class="line">&gt; The following deployment will be removed permanently</span><br><span class="line">  dFDDV9Da9lWeVpCitEj1znMY      https://release-to-slack-tylnttnrfy.now.sh      5m ago</span><br><span class="line">&gt; Are you sure? [yN] y</span><br><span class="line">&gt; Success! Deployment dFDDV9Da9lWeVpCitEj1znMY removed [771ms]</span><br></pre></td></tr></table></figure>
+<p>That is it. Zeit truly delivers on its premise of simple cloud computing,
+and there is even an <a target="_blank" rel="noopener" href="https://zeit.co/api">API</a> to automate the deployments.</p>
+<h2><span id="open-source-it">Open source it!</span></h2><p>Finally, I have open sourced the server at
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/publish-release-notes">bahmutov/publish-release-notes</a>. Because <em>the deploy</em> needs the
+environment variables to be present, I have created a separate private
+repo that keeps just <code>.as-a.ini</code> file and defines the start command.</p>
+<figure class="highlight json"><figcaption><span>private project package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;release-to-slack&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;version&quot;</span>: <span class="string">&quot;1.0.0&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;description&quot;</span>: <span class="string">&quot;Wraps release notes publish with private token variables&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;start&quot;</span>: <span class="string">&quot;as-a slack,npm,gitub publish-release-notes&quot;</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">&quot;dependencies&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;as-a&quot;</span>: <span class="string">&quot;^1.3.1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;publish-release-notes&quot;</span>: <span class="string">&quot;^1.0.1&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>This way I can keep my tokens private for deploy, but the 99% of the code
+is open source. Once <code>zeit</code> supports external environment variables, this
+wrapper project will become unnecessary.</p>
+<h2><span id="conclusion">Conclusion</span></h2><p>Creating personal &quot;API to API&quot; bridges has never been easier. Webhooks,
+notification messages, well documented APIs and one-click immutable
+deployments are breaking down the barriers to incremental software development.
+Instead of waiting for a large number of changes to be ready to deploy and
+test, I commit, test and deploy each tiny change - because the entire
+code deployment pipeline is simple to setup and use. Instead of manual sitting
+and waiting, each step notifies whoever is listening that it is done,
+allowing the quick propagation. In a sense, we now can build a <em>reactive</em>
+pipeline for code, removing the manual <code>pull</code> steps.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+  see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+  watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+  browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/publish-release-notes-to-slack/" data-id="ckpyeu4cb01r26zvg2vkgf5on" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/publish-release-notes-to-slack/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/vercel/" rel="tag">vercel</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../immutable-deploys-with-data-and-testing/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Immutable deploys with data and testing
+        
+      </div>
+    </a>
+  
+  
+    <a href="../manual-semantic-release-setup/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Manual semantic release setup</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">147</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">389</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">115</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">68</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16px;">ci</a> <a href="../tags/circle/" style="font-size: 12px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 13.6px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.2px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.4px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 14.8px;">github</a> <a href="../tags/graphql/" style="font-size: 11.2px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 10.8px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.6px;">react</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.6px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 12.4px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../joining-mercari/">I Am Joining Mercari US</a>
+          </li>
+        
+          <li>
+            <a href="../run-two-cypress-runners/">Run Two Cypress Test Runners At The Same Time</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-vs-other-test-runners/">Cypress vs Other Test Runners</a>
+          </li>
+        
+          <li>
+            <a href="../test-socketio-chat-using-cypress/">Test a Socket.io Chat App using Cypress</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-automation/">Cypress Automation</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/publish-release-notes-to-slack/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>
