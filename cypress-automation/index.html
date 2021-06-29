@@ -15,8 +15,9 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/automation/set-permission.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/automation/page-screenshot.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/automation/test-smile.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/automation/wrong-log.jpeg">
 <meta property="article:published_time" content="2021-06-02T04:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-15T13:13:30.256Z">
+<meta property="article:modified_time" content="2021-06-29T12:36:38.584Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="cypress">
 <meta name="twitter:card" content="summary">
@@ -127,6 +128,7 @@ ga('send', 'pageview');
 <li><a href="#saving-native-screenshots">Saving native screenshots</a></li>
 <li><a href="#printing-pdf-of-the-page">Printing PDF of the page</a></li>
 <li><a href="#limitation">Limitation</a></li>
+<li><a href="#update-1-printing-the-current-permission">Update 1: printing the current permission</a></li>
 </ul>
 <!-- tocstop -->
 <h2><span id="set-the-browser-permission">Set the browser permission</span></h2><p>This code example comes from the recipe in the <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress-example-recipes">cypress-example-recipes</a> repo.</p>
@@ -161,6 +163,15 @@ This example comes from the [bahmutov/cypress-grep-example](https://github.com/b
 -->
 <h2><span id="limitation">Limitation</span></h2><p>As of Cypress v7, you can only execute a CDP automation command, not to subscribe to the browser events. If you need to subscribe, you would need to open your own remote interface connection, just like <a target="_blank" rel="noopener" href="https://github.com/flotwig/cypress-log-to-output">cypress-log-to-output</a> does.</p>
 <p>Yet, despite of this limitation right now, think what having an automation command in Cypress means - everyone that Puppeteer can do, Cypress can do too - it is the same Chrome Debugger Protocol connection after all! You want real click events? You want hover? You want a tab? No problem, see <a target="_blank" rel="noopener" href="https://github.com/dmtrKovalenko/cypress-real-events">cypress-real-events</a> for example.</p>
+<h2><span id="update-1-printing-the-current-permission">Update 1: printing the current permission</span></h2><p>Recently a user asked me why the browser permission stays unchanged even after <code>Cypress.automation</code> call. Here is the picture of the problem from the <a target="_blank" rel="noopener" href="https://twitter.com/chinchang457/status/1409849412524777479">tweet</a>:</p>
+<p><img src="../images/automation/wrong-log.jpeg" alt="The printed updated permission ... is the same as the old one"></p>
+<p>Do you see the problem? The <code>cy.wrap(...)</code> will correctly set the permission <em>asynchronously</em>. Meanwhile before and after we have <code>cy.log(Notification.permission)</code> calls that are passing their <em>current</em> argument by value. Imagine the permission value is <code>prompt</code> at the start. Then after the test runs through the commands and schedules them to run, the arguments to the <code>cy.log</code> calls in <em>both cases</em> will be <code>prompt</code></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># Cypress commands scheduled to execute</span><br><span class="line"># with their parameters</span><br><span class="line">CY.LOG &quot;prompt&quot;</span><br><span class="line">CY.WRAP Promise from Cypress.automation</span><br><span class="line"># Promise has started running, since they are eager</span><br><span class="line">CY.LOG &quot;prompt&quot;</span><br></pre></td></tr></table></figure>
+<p>Thus to correctly print the updated permission, we need to call <code>cy.log</code> <em>after</em> the <code>Cypress.automation</code> has finished its execution and the <code>Notification.permission</code> has a new value.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">cy.visit(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">cy.log(Notification.permission)</span><br><span class="line">cy.wrap(</span><br><span class="line">  Cypress.automation(<span class="string">&#x27;remote:debugger:protocol&#x27;</span>, &#123;</span><br><span class="line">    command: <span class="string">&#x27;Browser.grantPermission&#x27;</span>,</span><br><span class="line">    ...</span><br><span class="line">  &#125;)</span><br><span class="line">).then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// the permission has been changed</span></span><br><span class="line">  cy.log(Notification.permission)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>In fact, the above code has a race condition in the first <code>cy.log</code> vs <code>Cypress.automation</code> promise. The promise to grant the browser permission starts running <em>as soon as</em> it is created. Thus commands before <code>cy.wrap</code> could get the updated permission! I would rewrite the above code to be safer and to call <code>Cypress.automation</code> only <em>after</em> the first <code>cy.log</code> command.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">cy.visit(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">cy.log(Notification.permission)</span><br><span class="line">  .then(</span><br><span class="line">    Cypress.automation(<span class="string">&#x27;remote:debugger:protocol&#x27;</span>, &#123;</span><br><span class="line">      command: <span class="string">&#x27;Browser.grantPermission&#x27;</span>,</span><br><span class="line">      ...</span><br><span class="line">    &#125;)</span><br><span class="line">  )</span><br><span class="line">  ).then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// the permission has been changed</span></span><br><span class="line">    cy.log(Notification.permission)</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>Since the <a target="_blank" rel="noopener" href="https://on.cypress.io/then">cy.then</a> command is chained after the <code>cy.log</code> command, the <code>.then</code> creates the Promise and waits for the returned promise from <code>Cypress.automation</code> to complete. This even eliminates the need for <code>cy.wrap</code> command.</p>
 
       
     </div>
@@ -189,7 +200,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/cypress-automation/" data-id="ckqgj18l6009242vgdb92anai" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/cypress-automation/" data-id="ckqi1bjaw009297vgfv5d5qsm" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/cypress-automation/#disqus_thread" class="article-comment-link">Comments</a>
       
