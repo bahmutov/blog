@@ -5,19 +5,19 @@
   
   <title>Writing a Custom Cypress Command | Better world by better software</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Let&#39;s take a page with a form. There are a couple of input fields. Every input field has a label. 123456&lt;form&gt;  &lt;label for&#x3D;&quot;fname&quot;&gt;First name:&lt;&#x2F;label&gt;&lt;br &#x2F;&gt;  &lt;">
+  <meta name="description" content="This blog post teaches you how to write a reusable Cypress Custom Command.   Simple custom command Simple command limitation Custom command with retry-ability Final thoughts Update 1: publish command">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Writing a Custom Cypress Command">
 <meta property="og:url" content="https://glebbahmutov.com/blog/writing-custom-cypress-command/index.html">
 <meta property="og:site_name" content="Better world by better software">
-<meta property="og:description" content="Let&#39;s take a page with a form. There are a couple of input fields. Every input field has a label. 123456&lt;form&gt;  &lt;label for&#x3D;&quot;fname&quot;&gt;First name:&lt;&#x2F;label&gt;&lt;br &#x2F;&gt;  &lt;">
+<meta property="og:description" content="This blog post teaches you how to write a reusable Cypress Custom Command.   Simple custom command Simple command limitation Custom command with retry-ability Final thoughts Update 1: publish command">
 <meta property="og:locale">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/custom-command/simple-command.gif">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/custom-command/times-out.gif">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/custom-command/get-by-label2.gif">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/custom-command/yielded.png">
 <meta property="article:published_time" content="2020-12-27T05:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-15T13:13:30.393Z">
+<meta property="article:modified_time" content="2021-06-30T13:25:45.134Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="cypress">
 <meta name="twitter:card" content="summary">
@@ -121,7 +121,18 @@ ga('send', 'pageview');
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>Let&#39;s take a page with a form. There are a couple of input fields. Every input field has a label.</p>
+        <p>This blog post teaches you how to write a reusable Cypress <a target="_blank" rel="noopener" href="https://on.cypress.io/custom-commands">Custom Command</a>.</p>
+<!-- toc -->
+<ul>
+<li><a href="#simple-custom-command">Simple custom command</a></li>
+<li><a href="#simple-command-limitation">Simple command limitation</a></li>
+<li><a href="#custom-command-with-retry-ability">Custom command with retry-ability</a></li>
+<li><a href="#final-thoughts">Final thoughts</a></li>
+<li><a href="#update-1-publish-command-to-npm">Update 1: publish command to NPM</a></li>
+<li><a href="#update-2-add-local-types">Update 2: add local types</a></li>
+</ul>
+<!-- tocstop -->
+<p>Let&#39;s take a page with a form. There are a couple of input fields. Every input field has a label.</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">&quot;fname&quot;</span>&gt;</span>First name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">id</span>=<span class="string">&quot;fname&quot;</span> <span class="attr">name</span>=<span class="string">&quot;fname&quot;</span> /&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">&quot;lname&quot;</span>&gt;</span>Last name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span><span class="tag">&lt;<span class="name">br</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">id</span>=<span class="string">&quot;lname&quot;</span> <span class="attr">name</span>=<span class="string">&quot;lname&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <blockquote class="pullquote"><p>🔎 You can find the source code for this blog post in the &quot;Recipes&quot; section of <a href="https://glebbahmutov.com/cypress-examples">glebbahmutov.com/cypress-examples</a>.</p>
 </blockquote>
@@ -166,8 +177,8 @@ ga('send', 'pageview');
 </ul>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> resolveValue = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> Cypress.Promise.try(getValue).then(<span class="function">(<span class="params">$el</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// important: pass a jQuery object to cy.verifyUpcomingAssertions</span></span><br><span class="line">    <span class="keyword">if</span> (!Cypress.dom.isJquery($el)) &#123;</span><br><span class="line">      $el = Cypress.$($el)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> cy.verifyUpcomingAssertions($el, options, &#123;</span><br><span class="line">      onRetry: resolveValue,</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>Happy testing!</p>
-<h2><span id="update-1">Update 1</span></h2><p>Read <a href="/blog/publishing-cypress-command/" title="How to Publish Custom Cypress Command on NPM">How to Publish Custom Cypress Command on NPM</a> where I describe how to correctly publish the custom command via NPM registry, including loading with custom command type.</p>
-<h2><span id="update-2-local-types">Update 2: local types</span></h2><p>To provide intelligent code completion for our new custom command, I wrote <code>src/index.d.ts</code> file</p>
+<h2><span id="update-1-publish-command-to-npm">Update 1: publish command to NPM</span></h2><p>Read <a href="/blog/publishing-cypress-command/" title="How to Publish Custom Cypress Command on NPM">How to Publish Custom Cypress Command on NPM</a> where I describe how to correctly publish the custom command via NPM registry, including loading with custom command type.</p>
+<h2><span id="update-2-add-local-types">Update 2: add local types</span></h2><p>To provide intelligent code completion for our new custom command, I wrote <code>src/index.d.ts</code> file</p>
 <figure class="highlight ts"><figcaption><span>src/index.d.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// load type definitions that come with Cypress module</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> Cypress &#123;</span><br><span class="line">  <span class="keyword">interface</span> Chainable &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Finds a form element using the label&#x27;s text</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param </span>label string</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@example</span></span></span><br><span class="line"><span class="comment">     *  cy.getByLabel(&#x27;First name:&#x27;).type(&#x27;Joe&#x27;)</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    getByLabel(label: <span class="built_in">string</span>): Chainable&lt;Element&gt;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>Typically in a JavaScript project, every spec file includes the following line to load global Cypress definitions</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot;&gt;</span></span><br></pre></td></tr></table></figure>
@@ -202,7 +213,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/writing-custom-cypress-command/" data-id="ckqifbkkq01a2ydvg0o785d8v" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/writing-custom-cypress-command/" data-id="ckqk8n3z101a2w7vghynw0awo" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/writing-custom-cypress-command/#disqus_thread" class="article-comment-link">Comments</a>
       
