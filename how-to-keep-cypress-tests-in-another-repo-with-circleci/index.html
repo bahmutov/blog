@@ -23,7 +23,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/deployment.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/unique.png">
 <meta property="article:published_time" content="2021-07-03T04:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-04T19:22:13.186Z">
+<meta property="article:modified_time" content="2021-07-09T21:07:08.000Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="cypress">
 <meta property="article:tag" content="circle">
@@ -144,7 +144,10 @@ ga('send', 'pageview');
 <li><a href="#trigger-the-tests-on-the-different-branch">Trigger the tests on the different branch</a></li>
 <li><a href="#shortcomings">Shortcomings</a></li>
 <li><a href="#the-deployment-event">The deployment event</a></li>
-<li><a href="#the-remaining-problem">The remaining problem</a></li>
+<li><a href="#the-remaining-problem">The remaining problem</a><ul>
+<li><a href="#workaround">Workaround</a></li>
+</ul>
+</li>
 <li><a href="#see-also">See also</a></li>
 </ul>
 <!-- tocstop -->
@@ -264,6 +267,10 @@ ga('send', 'pageview');
 <p><img src="../images/separate-circleci/unique.png" alt="The deployment preview URL"></p>
 <h2><span id="the-remaining-problem">The remaining problem</span></h2><p>Our implementation is <em>almost</em> perfect. The tests are triggered correctly, the deployment URLs are unique - but we cannot pass the branch to the CircleCI pipeline! The <code>TEST_BRANCH</code> parameter is empty because the <code>deployment_status</code> event has no &quot;memory&quot; of the branch that has triggered the deployment, and the GitHub environment has no <code>GITHUB_HEAD_REF</code> set - because GH does not &quot;know&quot; which branch you are testing or deploying.</p>
 <p>I wish Vercel included this information in the event details, since their system knows which branch has been deployed. We could use this information to checkout or trigger the right branch in the test repository. Then we could modify the application in branch <code>feature-X</code> while updating the tests in the separate repo using the same branch name <code>feature-X</code>. When the preview URL has been deployed we would run the tests from branch <code>feature-X</code>.</p>
+<h3><span id="workaround">Workaround</span></h3><p>The Vercel deployment event has the commit SHA. If you dump the GitHub event object, check the <code>sha</code> property:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;token&quot;: &quot;***&quot;,</span><br><span class="line">  &quot;job&quot;: &quot;show-event&quot;,</span><br><span class="line">  &quot;ref&quot;: &quot;&quot;,</span><br><span class="line">  &quot;sha&quot;: &quot;7202eca208589fabacb2f35ac5d8dd46fcb8a12f&quot;,</span><br><span class="line">  &quot;repository&quot;: &quot;bahmutov/todomvc-no-tests-vercel&quot;,</span><br><span class="line">  &quot;repository_owner&quot;: &quot;bahmutov&quot;,</span><br><span class="line">  &quot;repositoryUrl&quot;: &quot;git://github.com/bahmutov/todomvc-no-tests-vercel.git&quot;,</span><br><span class="line">  &quot;run_id&quot;: &quot;1004603109&quot;,</span><br><span class="line">  &quot;run_number&quot;: &quot;24&quot;,</span><br><span class="line">  &quot;retention_days&quot;: &quot;90&quot;,</span><br><span class="line">  &quot;actor&quot;: &quot;vercel[bot]&quot;,</span><br><span class="line">  &quot;workflow&quot;: &quot;info&quot;,</span><br><span class="line">  &quot;head_ref&quot;: &quot;&quot;,</span><br><span class="line">  &quot;base_ref&quot;: &quot;&quot;,</span><br><span class="line">  &quot;event_name&quot;: &quot;deployment_status&quot;,</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>We can check out the full repository and find the branch name the commit belongs to (assuming the pull request commit really belongs to one branch)</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">echo &quot;Deployed commit $&#123;&#123; github.sha &#125;&#125;&quot;</span><br><span class="line">export BRANCH_NAME=$(git show -s --pretty=%D HEAD | tr -s &#x27;,&#x27; &#x27;\n&#x27; | sed &#x27;s/^ //&#x27; | grep -e &#x27;origin/&#x27; | head -1 | sed &#x27;s/\origin\///g&#x27;)</span><br><span class="line">echo &quot;Deployed branch $&#123;BRANCH_NAME&#125;&quot;</span><br></pre></td></tr></table></figure>
 <h2><span id="see-also">See also</span></h2><ul>
 <li><a href="/blog/how-to-keep-cypress-tests-in-another-repo/" title="How to Keep Cypress Tests in Another Repo While Using GitHub Actions">How to Keep Cypress Tests in Another Repo While Using GitHub Actions</a></li>
 <li><a href="/blog/tested-ecommerce/" title="Deploy E-Commerce Site to Netlify and Test Using GitHub Actions">Deploy E-Commerce Site to Netlify and Test Using GitHub Actions</a></li>
@@ -297,7 +304,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/" data-id="ckqpl4bw101qujnvg09f9g1sa" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/" data-id="ckqwtydzv01qwgkvg05s1cqsz" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/#disqus_thread" class="article-comment-link">Comments</a>
       
