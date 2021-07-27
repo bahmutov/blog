@@ -50,7 +50,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-tips-and-tricks/save-card-prompt.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-tips-and-tricks/payment.png">
 <meta property="article:published_time" content="2016-12-30T05:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-27T02:14:47.176Z">
+<meta property="article:modified_time" content="2021-07-27T12:25:14.663Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="testing">
 <meta property="article:tag" content="cypress">
@@ -206,6 +206,7 @@ ga('send', 'pageview');
 <li><a href="#turning-the-credit-card-save-prompt-off-by-using-autocomplete-off">Turning the credit card save prompt off by using autocomplete off</a></li>
 </ul>
 </li>
+<li><a href="#print-timestamp-with-the-error-message">Print timestamp with the error message</a></li>
 <li><a href="#see-also">See also</a></li>
 <li><a href="#related-posts">Related posts</a></li>
 </ul>
@@ -711,6 +712,12 @@ the proxied jQuery function
 <h3><span id="turning-the-credit-card-save-prompt-off-by-using-autocomplete-off">Turning the credit card save prompt off by using autocomplete off</span></h3><p>In another credit card form example, I was able to successfully turn off the credit card save prompt by adding an attribute <code>autocomplete=off</code> on the form element itself.</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// get to the form that surrounds the credit card</span></span><br><span class="line"><span class="comment">// and set the autocomplete=off attribute</span></span><br><span class="line">cy.get(<span class="string">&#x27;form&#x27;</span>)</span><br><span class="line">  .invoke(<span class="string">&#x27;attr&#x27;</span>, <span class="string">&#x27;autocomplete&#x27;</span>, <span class="string">&#x27;off&#x27;</span>)</span><br></pre></td></tr></table></figure>
 <p>Try it - it might work for you.</p>
+<h2><span id="print-timestamp-with-the-error-message">Print timestamp with the error message</span></h2><p>By default a failed test just prints the error message. You might want to have the timestamp to better debug the failure. The way to do this is to modify the error message in the <a target="_blank" rel="noopener" href="https://on.cypress.io/catalog-of-events">failure event handler</a>. This is what I have done in Cypress v8:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// register error handler to catch any errors thrown during tests</span></span><br><span class="line"><span class="comment">// https://on.cypress.io/catalog-of-events</span></span><br><span class="line">Cypress.on(<span class="string">&#x27;fail&#x27;</span>, <span class="function">(<span class="params">error, runnable</span>) =&gt;</span> &#123;</span><br><span class="line">  error.message = <span class="keyword">new</span> <span class="built_in">Date</span>().toUTCString() + <span class="string">&#x27;\n&#x27;</span> + error.message</span><br><span class="line">  <span class="keyword">throw</span> error <span class="comment">// throw error to have test still fail</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>I am using the <code>Cypress.on</code> method instead of <code>cy.on</code> to make the handler apply to every test. Here is the failing test</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> f = &#123;</span><br><span class="line">  <span class="function"><span class="title">failme</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&#x27;I am out!&#x27;</span>)</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">it(<span class="string">&#x27;prints error with timestamp&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// this test fails on purpose</span></span><br><span class="line">  cy.wait(<span class="number">2000</span>)</span><br><span class="line">  cy.wrap(f).invoke(<span class="string">&#x27;failme&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Here is the terminal output</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">  1) prints error with timestamp:</span><br><span class="line">     Error: Tue, 27 Jul 2021 12:10:24 GMT</span><br><span class="line">Timed out retrying after 4000ms: I am out!</span><br><span class="line">  Error: Timed out retrying after 4000ms: I am out!</span><br></pre></td></tr></table></figure>
 <h2><span id="see-also">See also</span></h2><ul>
 <li>my website <a target="_blank" rel="noopener" href="https://cypress.tips/">cypress.tips</a></li>
 <li><a href="/blog/writing-custom-cypress-command/" title="Writing a Custom Cypress Command">Writing a Custom Cypress Command</a> and <a href="/blog/publishing-cypress-command/" title="How to Publish Custom Cypress Command on NPM">How to Publish Custom Cypress Command on NPM</a></li>
@@ -756,7 +763,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/cypress-tips-and-tricks/" data-id="ckrlfgdfg01y4fjvgbawz60ag" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/cypress-tips-and-tricks/" data-id="ckrm18oqg01y5jrvgeirrd5rh" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/cypress-tips-and-tricks/#disqus_thread" class="article-comment-link">Comments</a>
       
