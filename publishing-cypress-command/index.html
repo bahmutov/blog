@@ -21,7 +21,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/any.gif">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/visible-types.gif">
 <meta property="article:published_time" content="2021-01-22T05:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-15T13:13:30.327Z">
+<meta property="article:modified_time" content="2021-09-22T15:51:14.028Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="cypress">
 <meta name="twitter:card" content="summary">
@@ -134,7 +134,11 @@ ga('send', 'pageview');
 <li><a href="#publishing-to-npm">Publishing to NPM</a></li>
 <li><a href="#better-registration">Better registration</a></li>
 <li><a href="#using-an-example">Using an example</a></li>
-<li><a href="#types">Types</a></li>
+<li><a href="#types">Types</a><ul>
+<li><a href="#types-in-the-project">Types in the project</a></li>
+<li><a href="#types-for-other-projects">Types for other projects</a></li>
+</ul>
+</li>
 <li><a href="#es6-import-and-export">ES6 import and export</a></li>
 </ul>
 <!-- tocstop -->
@@ -210,11 +214,14 @@ Then use the command `cy.getByLabel` (default) or the custom name
 <p>I then link the new repo from the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-get-by-label/blob/main/README.md">cypress-get-by-label README file</a></p>
 <h2><span id="types">Types</span></h2><p>When the user uses the <code>cy.getByLabel</code> command, there is no IntelliSense information, unlike <code>cy.visit</code> and other built-in Cypress commands.</p>
 <p><img src="/blog/images/publish-custom-command/any.gif" alt="cy.getByLabel method has no type information"></p>
-<p>In order to describe the types for the default <code>cy.getByLabel</code> command we need to include types file with our NPM package.</p>
 <p><strong>Note:</strong> we are only going to provide type for the default <code>cy.getByLabel</code> command, and we also assume command has been registered by the user&#39;s test code. If the user uses a different command name, they could write a similar typescript file locally.</p>
 <p>Let&#39;s follow <a target="_blank" rel="noopener" href="https://on.cypress.io/typescript">Cypress TypeScript guide</a> and add <code>src/index.d.ts</code> file</p>
-<figure class="highlight ts"><figcaption><span>src/index.d.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// load type definitions that come with Cypress module</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> Cypress &#123;</span><br><span class="line">  <span class="keyword">interface</span> Chainable &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Finds a form element using the label&#x27;s text</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param </span>label string</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@example</span></span></span><br><span class="line"><span class="comment">     *  cy.getByLabel(&#x27;First name:&#x27;).type(&#x27;Joe&#x27;)</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    getByLabel(label: <span class="built_in">string</span>): Chainable&lt;Element&gt;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>In the <code>package.json</code> file add the &quot;types&quot; field pointing at the <code>src/index.d.ts</code> file</p>
+<figure class="highlight ts"><figcaption><span>src/index.d.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// load type definitions that come with Cypress module</span></span><br><span class="line"><span class="comment">// and then add our new commands to the &quot;cy&quot; object</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> Cypress &#123;</span><br><span class="line">  <span class="keyword">interface</span> Chainable &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Finds a form element using the label&#x27;s text</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param </span>label string</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@example</span></span></span><br><span class="line"><span class="comment">     *  cy.getByLabel(&#x27;First name:&#x27;).type(&#x27;Joe&#x27;)</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    getByLabel(label: <span class="built_in">string</span>): Chainable&lt;Element&gt;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Now we need to point at this types file from other specs and distribute this file with the source code.</p>
+<h3><span id="types-in-the-project">Types in the project</span></h3><p>To tell your specs about your new custom command, instead of loading the <code>reference types=&quot;cypress&quot;</code> from the spec file.</p>
+<figure class="highlight diff"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="deletion">- /// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"><span class="addition">+ /// &lt;reference path=&quot;../../src/index.d.ts&quot; /&gt;</span></span><br></pre></td></tr></table></figure>
+<p>Notice how we switched from loading types from <code>node_modules/cypress</code> folder to a relative path using <code>reference path=...</code>.</p>
+<h3><span id="types-for-other-projects">Types for other projects</span></h3><p>In order to describe the types for the default <code>cy.getByLabel</code> command we need to include types file with our NPM package. In the <code>package.json</code> file add the &quot;types&quot; field pointing at the <code>src/index.d.ts</code> file</p>
 <figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;types&quot;</span>: <span class="string">&quot;src&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>Publish the new version of the package - it is a new feature, so it becomes v2.1.0, and the example project should use the types by loading them like this:</p>
 <p><img src="/blog/images/publish-custom-command/visible-types.gif" alt="cy.getByLabel method has the right types"></p>
@@ -257,7 +264,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/publishing-cypress-command/" data-id="cktk5saee00ufa1vg7f54e2pr" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/publishing-cypress-command/" data-id="cktvop2yu00ui3ovg88lj82du" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/publishing-cypress-command/#disqus_thread" class="article-comment-link">Comments</a>
       
