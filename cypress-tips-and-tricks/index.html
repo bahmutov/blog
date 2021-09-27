@@ -51,7 +51,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-tips-and-tricks/payment.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cypress-tips-and-tricks/eslint-cy.png">
 <meta property="article:published_time" content="2016-12-30T05:00:00.000Z">
-<meta property="article:modified_time" content="2021-09-14T16:17:50.121Z">
+<meta property="article:modified_time" content="2021-09-27T14:18:19.623Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="testing">
 <meta property="article:tag" content="cypress">
@@ -221,6 +221,8 @@ ga('send', 'pageview');
 <li><a href="#access-a-mysql-database">Access a MySQL database</a></li>
 <li><a href="#fix-create-react-app-eslint-warnings">Fix Create-React-App ESLint warnings</a></li>
 <li><a href="#use-lodash">Use Lodash</a></li>
+<li><a href="#detect-when-the-document-reloads">Detect when the document reloads</a></li>
+<li><a href="#time-part-of-the-test">Time part of the test</a></li>
 <li><a href="#see-also">See also</a></li>
 <li><a href="#related-posts">Related posts</a></li>
 </ul>
@@ -756,6 +758,21 @@ the proxied jQuery function
 <h2><span id="use-lodash">Use Lodash</span></h2><p>The super useful <a target="_blank" rel="noopener" href="https://lodash.com/docs">Lodash library</a> is bundled with Cypress under <code>Cypress._</code> property. Thus you do not need to install it or even import it from the spec file.</p>
 <figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="deletion">- import _ from &#x27;lodash&#x27;</span></span><br><span class="line"><span class="addition">+ const &#123; _ &#125; = Cypress</span></span><br></pre></td></tr></table></figure>
 <p>If you need Lodash methods in your plugin file, you will need to install and require it, though.</p>
+<h2><span id="detect-when-the-document-reloads">Detect when the document reloads</span></h2><p>If the page submits a form, or navigates, sometimes the test needs to wait for the new document to load. To accomplish this, we can compare the <code>document</code> reference before the navigation and after.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// detect the form update by waiting for the new document</span></span><br><span class="line">cy.document().then(<span class="function">(<span class="params">doc</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// an event causing the reload</span></span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;create&#x27;</span>).click()</span><br><span class="line">  cy.document().should(<span class="string">&#x27;not.equal&#x27;</span>, doc)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The above code works, but the assertion dumps the <code>document</code> object into the Cypress Command Log, which takes up a lot of space there. Improved version without a very long assertion in the Command Log can use <code>assert</code> function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// detect the form update by waiting for the new document</span></span><br><span class="line">cy.document().then(<span class="function">(<span class="params">doc</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// an event causing the reload</span></span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;create&#x27;</span>).click()</span><br><span class="line">  cy.document().should(<span class="function">(<span class="params">d</span>) =&gt;</span> assert(d !== doc, <span class="string">&#x27;document changed&#x27;</span>))</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/f2n6cZVMS34" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</center>
+
+<h2><span id="time-part-of-the-test">Time part of the test</span></h2><p>You can time how long part of a test takes, or even an individual Cypress command. Then you can add an explicit assertion about the elapsed duration. For example, let&#39;s time how long the loading element in the application is visible. We can assert the loading element goes away in less than two seconds:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> started</span><br><span class="line">cy.get(<span class="string">&#x27;.loading&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line">  .then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// take a timestamp after the loading indicator is visible</span></span><br><span class="line">    started = +<span class="keyword">new</span> <span class="built_in">Date</span>()</span><br><span class="line">  &#125;)</span><br><span class="line"><span class="comment">// how to check if the loading element goes away in less than 2 seconds?</span></span><br><span class="line">cy.get(<span class="string">&#x27;.loading&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;not.be.visible&#x27;</span>)</span><br><span class="line">  .then(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// take another timestamp when the indicator goes away.</span></span><br><span class="line">    <span class="comment">// compute the elapsed time</span></span><br><span class="line">    <span class="comment">// assert the elapsed time is less than 2 seconds</span></span><br><span class="line">    <span class="keyword">const</span> finished = +<span class="keyword">new</span> <span class="built_in">Date</span>()</span><br><span class="line">    <span class="keyword">const</span> elapsed = finished - started</span><br><span class="line">    expect(elapsed, <span class="string">&#x27;loading takes less than 2 seconds&#x27;</span>).to.be.lessThan(</span><br><span class="line">      <span class="number">2000</span></span><br><span class="line">    )</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>See the full explanation in the video below:</p>
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/tjK_FCYikzI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</center>
+
 <h2><span id="see-also">See also</span></h2><ul>
 <li>my website <a target="_blank" rel="noopener" href="https://cypress.tips/">cypress.tips</a></li>
 <li><a href="/blog/writing-custom-cypress-command/" title="Writing a Custom Cypress Command">Writing a Custom Cypress Command</a> and <a href="/blog/publishing-cypress-command/" title="How to Publish Custom Cypress Command on NPM">How to Publish Custom Cypress Command on NPM</a></li>
@@ -806,7 +823,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/cypress-tips-and-tricks/" data-id="cktvop37e01zt3ovgfquj3ujp" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/cypress-tips-and-tricks/" data-id="cku2qli9j01zojvvg7d2k7x1e" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/cypress-tips-and-tricks/#disqus_thread" class="article-comment-link">Comments</a>
       
