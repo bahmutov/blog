@@ -13,7 +13,7 @@
 <meta property="og:description" content="I have read an excellent gentle introduction to reactive programming using RxJS library. The blog post is Getting Started With Rx.js: A Gentle Introduction by Jaime González García and the example is">
 <meta property="og:locale">
 <meta property="article:published_time" content="2016-04-14T04:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-15T13:13:30.276Z">
+<meta property="article:modified_time" content="2021-11-19T17:00:17.045Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="functional">
 <meta property="article:tag" content="reactive">
@@ -120,20 +120,20 @@ ga('send', 'pageview');
         <p>I have read an excellent gentle introduction to reactive programming using RxJS library.
 The blog post is <a target="_blank" rel="noopener" href="http://www.barbarianmeetscoding.com/blog/2016/04/11/getting-started-with-rx-dot-js/">Getting Started With Rx.js: A Gentle Introduction</a> by
 <a target="_blank" rel="noopener" href="https://plus.google.com/+JaimeGonz%C3%A1lezGarc%C3%ADa/posts">Jaime González García</a> and
-the example is posted on <a target="_blank" rel="noopener" href="https://jsfiddle.net/vintharas/atq1Lpk2/">jsFiddle</a> for playing around with. 
-It is embedded below; click on &quot;Result&quot; tab and click the &quot;load more&quot; button. 
+the example is posted on <a target="_blank" rel="noopener" href="https://jsfiddle.net/vintharas/atq1Lpk2/">jsFiddle</a> for playing around with.
+It is embedded below; click on &quot;Result&quot; tab and click the &quot;load more&quot; button.
 It should load a new random twitter account on each click.</p>
 <iframe width="100%" height="300" src="//jsfiddle.net/vintharas/atq1Lpk2/embedded/js,html,result/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
-<p>I liked this article and the example, 
+<p>I liked this article and the example,
 it clearly shows the event processing steps; from clicking on the button to showing
-the result (even if I would prefer using something like 
+the result (even if I would prefer using something like
 <a target="_blank" rel="noopener" href="https://github.com/Matt-Esch/virtual-dom">virtual-dom</a> to update the page efficiently).</p>
 <p>Let us look at the example&#39;s code and see if we can &quot;improve&quot; it a little bit.</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> randomPlayer$ = Rx.Observable</span><br><span class="line">  .fromEvent(btnLoadMore, <span class="string">&#x27;click&#x27;</span>)</span><br><span class="line">  .map( <span class="function"><span class="params">_</span> =&gt;</span> <span class="string">&#x27;https://api.github.com/users&#x27;</span>)</span><br><span class="line">  .startWith(<span class="string">&#x27;https://api.github.com/users&#x27;</span>)</span><br><span class="line">  .flatMap(<span class="function"><span class="params">url</span> =&gt;</span> Rx.Observable.fromPromise(fetch(url)))</span><br><span class="line">  .flatMap(<span class="function"><span class="params">r</span> =&gt;</span> Rx.Observable.fromPromise(r.json()))</span><br><span class="line">  .map(pickRandomItem)</span><br></pre></td></tr></table></figure>
-<p>The refactorings I am going to do should serve as learning exercises, and might not be 
-needed in this particular case. Yet they fight the whatever little boilerplate code exists 
-even in this short program. 
+<p>The refactorings I am going to do should serve as learning exercises, and might not be
+needed in this particular case. Yet they fight the whatever little boilerplate code exists
+even in this short program.
 I hate <a target="_blank" rel="noopener" href="https://slides.com/bahmutov/remove-the-boilerplate-boscc25">boilerplate</a>
 and always look for ways to shorten and clarify every piece of software I write.</p>
 <h2><span id="functions-instead-of-data">Functions instead of data</span></h2><p>First, let us eliminate the duplicate GitHub API urls. We map every button click to the user
@@ -148,7 +148,7 @@ does nothing but returns the original value when called. If you do not feel comf
 expressing the meaning of <code>always</code> as a one liner (I often feel lost in one liners), write it
 down explicitly.</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> always = <span class="function"><span class="params">x</span> =&gt;</span> <span class="function"><span class="params">_</span> =&gt;</span> x</span><br><span class="line"><span class="comment">// same as</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">always</span>(<span class="params">x</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> x</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Using helper <code>always</code> we can replace hardcoded <code>url</code> with clear code - we always map a click to 
+<p>Using helper <code>always</code> we can replace hardcoded <code>url</code> with clear code - we always map a click to
 the <code>url</code>. We can even refactor <code>always</code> use and &quot;hide&quot; the url inside.</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> always = <span class="function"><span class="params">x</span> =&gt;</span> <span class="function"><span class="params">_</span> =&gt;</span> x</span><br><span class="line"><span class="keyword">const</span> toUrl = always(<span class="string">&#x27;https://api.github.com/users&#x27;</span>)</span><br><span class="line"><span class="keyword">let</span> randomPlayer$ = Rx.Observable</span><br><span class="line">  .fromEvent(btnLoadMore, <span class="string">&#x27;click&#x27;</span>)</span><br><span class="line">  .map(toUrl)</span><br><span class="line">  .startWith(toUrl())</span><br><span class="line">  .flatMap(<span class="function"><span class="params">url</span> =&gt;</span> Rx.Observable.fromPromise(fetch(url)))</span><br><span class="line">  .flatMap(<span class="function"><span class="params">r</span> =&gt;</span> Rx.Observable.fromPromise(r.json()))</span><br><span class="line">  .map(pickRandomItem)</span><br></pre></td></tr></table></figure>
 <p><code>.map(...)</code> requires a function, thus we give it <code>toUrl</code>, while <code>.startWith(...)</code> needs an
@@ -157,7 +157,7 @@ actual value, thus we give it <code>toUrl()</code>.</p>
 <iframe width="100%" height="300" src="//jsfiddle.net/52mwv7gn/1/embedded/js,result/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>I often return a function to access the data rather than the data in my code. This helps
-hide the implementation details as well as protects the data from mutations. For example 
+hide the implementation details as well as protects the data from mutations. For example
 instead of returning a user object and letting the outside code read its properties (and thus
 being able to modify the user object) I can return a function that allows reading a particular
 property but not setting it.</p>
@@ -170,17 +170,17 @@ from the response.</p>
 clarity. Thus in reality this code has a very strong boilerplate smell. If we replace the argument
 with letter &quot;x&quot; then 45 characters out of 50 in the two lines are the same!</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">.flatMap(<span class="function"><span class="params">x</span> =&gt;</span> Rx.Observable.fromPromise(fetch(x)))</span><br><span class="line">.flatMap(<span class="function"><span class="params">x</span> =&gt;</span> Rx.Observable.fromPromise(x.json()))</span><br></pre></td></tr></table></figure>
-<p>Let us look at the first call&#39;s callback. 
+<p>Let us look at the first call&#39;s callback.
 This is the (almost) the simplest function composition example one can find:</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">x =&gt; Rx.Observable.fromPromise(fetch(x))</span><br><span class="line">     ------------------------- ----- </span><br><span class="line">          f                      g  (x)      </span><br></pre></td></tr></table></figure>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">x =&gt; Rx.Observable.fromPromise(fetch(x))</span><br><span class="line">     ------------------------- -----</span><br><span class="line">          f                      g  (x)</span><br></pre></td></tr></table></figure>
 <p>Every time we see function <code>f</code> applied to the result of calling another function <code>g</code> to
 argument <code>x</code> we can replace <code>f(g(...))</code> with equivalent <em>composed</em> function</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// assume we have &quot;compose&quot; helper function</span></span><br><span class="line"><span class="keyword">var</span> composed = compose(f, g)</span><br><span class="line">composed(x) <span class="comment">// is same as (f(g(x)))</span></span><br></pre></td></tr></table></figure>
 <p>Writing the &quot;compose&quot; helper fuction in this case is very simple - we are ignoring context
 and only assume a single argument</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">compose</span>(<span class="params">f, g</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params">x</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> f(g(x))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// same as </span></span><br><span class="line"><span class="keyword">const</span> compose = <span class="function">(<span class="params">f, g</span>) =&gt;</span> <span class="function"><span class="params">x</span> =&gt;</span> f(g(x))</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">compose</span>(<span class="params">f, g</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params">x</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> f(g(x))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// same as</span></span><br><span class="line"><span class="keyword">const</span> compose = <span class="function">(<span class="params">f, g</span>) =&gt;</span> <span class="function"><span class="params">x</span> =&gt;</span> f(g(x))</span><br></pre></td></tr></table></figure>
 <p>Now let us replace first <code>.flatMap</code> with shorter equivalent code. We can even just provide
-the callback without explicit <code>url</code> parameter, achieving 
+the callback without explicit <code>url</code> parameter, achieving
 the <a href="../point-free-programming-is-not-pointless/">pointfree</a> programming style</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ajax = compose(Rx.Observable.fromPromise, fetch)</span><br><span class="line">...</span><br><span class="line">  .startWith(toUrl())</span><br><span class="line">  .flatMap(ajax)</span><br><span class="line">  .flatMap(<span class="function"><span class="params">x</span> =&gt;</span> Rx.Observable.fromPromise(x.json()))</span><br></pre></td></tr></table></figure>
 <p>You can try the code at <a target="_blank" rel="noopener" href="https://jsfiddle.net/h75k3y8z/1/">jsfiddle.net/h75k3y8z/1/</a> or below</p>
@@ -192,7 +192,7 @@ on a object. We first know the name of the method <code>json</code> but no the o
 will be passed to the callback. Let us write simple helper function to invoke a method given
 just its name on an object passed later.</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">method</span>(<span class="params">name</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">object</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> object[name]()</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// same as</span></span><br><span class="line"><span class="keyword">const</span> method = <span class="function"><span class="params">name</span> =&gt;</span> <span class="function"><span class="params">object</span> =&gt;</span> object[name]()</span><br><span class="line"><span class="comment">// use like this</span></span><br><span class="line"><span class="keyword">var</span> user = &#123;</span><br><span class="line">  email: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123; <span class="keyword">return</span> <span class="string">&#x27;user@company.com&#x27;</span> &#125;</span><br><span class="line">&#125;</span><br><span class="line">user.email()   <span class="comment">// &#x27;user@company.com&#x27;</span></span><br><span class="line"><span class="keyword">var</span> getEmail = method(<span class="string">&#x27;email&#x27;</span>)</span><br><span class="line">getEmail(user) <span class="comment">// &#x27;user@company.com&#x27;</span></span><br></pre></td></tr></table></figure>
-<p><code>method(&#39;email&#39;)</code> just creates a function that is waiting for an actual object. In our RxJS 
+<p><code>method(&#39;email&#39;)</code> just creates a function that is waiting for an actual object. In our RxJS
 example we need a function that will invoke <code>json()</code> on the given response object.</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">.flatMap(<span class="function"><span class="params">x</span> =&gt;</span> Rx.Observable.fromPromise(x.json()))</span><br><span class="line"><span class="comment">// same as</span></span><br><span class="line">.flatMap(<span class="function"><span class="params">x</span> =&gt;</span> Rx.Observable.fromPromise(method(<span class="string">&#x27;json&#x27;</span>)(x)))</span><br><span class="line"><span class="comment">// same as</span></span><br><span class="line"><span class="keyword">const</span> json = method(<span class="string">&#x27;json&#x27;</span>)</span><br><span class="line">.flatMap(<span class="function"><span class="params">x</span> =&gt;</span> Rx.Observable.fromPromise(json(x)))</span><br></pre></td></tr></table></figure>
 <p>Now we have simple function composition again with first function being <code>Rx.Observable.fromPromise</code>
@@ -207,8 +207,8 @@ and the second function being <code>json</code> function. Applying compose again
 helper functions like these you immediately will want more of them. You will want more helpers
 for different situations (like grabbing the property of an object instead of calling a method),
 and more power in each helper (like composing more than two functions or passing arguments
-to the method call). Writing these helpers and testing them inside each function quickly 
-becomes a chore. Luckily there are entire libraries of these functions, 
+to the method call). Writing these helpers and testing them inside each function quickly
+becomes a chore. Luckily there are entire libraries of these functions,
 <a target="_blank" rel="noopener" href="https://lodash.com/docs">lodash</a> and <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/">Ramda</a> being my favorite.</p>
 <p>For the example above, Ramda has everything we need right out of the &quot;box&quot;. Let us add the library
 to the fiddle (using CDN) and replace our custom code with Ramda&#39;s functions. The syntax almost
@@ -224,14 +224,14 @@ are passed to <code>fetch</code> (which is the new built-in HTML5 API function) 
 <p>Run the code again and see in the browser console the following</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[&quot;https://api.github.com/users&quot;, 1, FlatMapObservable]</span><br></pre></td></tr></table></figure>
 <p>Just like <code>Array.map</code>, <code>Observable.flatMap</code> passes to each callback the item, the index and
-the &quot;list&quot; (in this case Observable instance) itself. When using arrays, this leads to 
-some <a target="_blank" rel="noopener" href="http://raganwald.com/2013/01/02/madness.html">madness</a> 
-(and an excellent <a href="../functional-js-interview-question/">interview question</a>).</p>
+the &quot;list&quot; (in this case Observable instance) itself. When using arrays, this leads to
+some <a target="_blank" rel="noopener" href="http://raganwald.com/2013/01/02/madness.html">madness</a>
+(and an excellent <a href="/blog/functional-js-interview-question/" title="interview question">interview question</a>).</p>
 <p>In our case, <code>fetch</code> gets extra arguments and breaks. But does not <code>fetch</code> only expect a single
-argument? After all, if we print <code>fetch.length</code> we get 1! Not really, the 
+argument? After all, if we print <code>fetch.length</code> we get 1! Not really, the
 <a target="_blank" rel="noopener" href="https://developers.google.com/web/updates/2015/03/introduction-to-fetch?hl=en">fetch API</a>
 allows additional options object as the second argument</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fetch(url, &#123;  </span><br><span class="line">  credentials: <span class="string">&#x27;include&#x27;</span>  </span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fetch(url, &#123;</span><br><span class="line">  credentials: <span class="string">&#x27;include&#x27;</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
 <p>Thus <code>fetch</code> is not ignoring the second argument and breaks if the argument is an iteration
 index for example. We should really tell <code>fetch</code> to ignore everything but the first argument -
 we should make <code>fetch</code> <em>unary</em>. We can write a little helper ourselves easily or use Ramda&#39;s
@@ -240,8 +240,8 @@ function</p>
 <p>Now the code works as expected!</p>
 <iframe width="100%" height="300" src="//jsfiddle.net/95ppktb0/1/embedded/js,result/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
-<p>We often have to do this function signature &quot;massaging&quot; when 
-<a href="../adapted-point-free-callbacks/">adapting</a> the expected arguments 
+<p>We often have to do this function signature &quot;massaging&quot; when
+<a href="../adapted-point-free-callbacks/">adapting</a> the expected arguments
 to what is really passed into the function.</p>
 <h2><span id="compose-promises-instead-of-flap-mapping">Compose promises instead of flap mapping</span></h2><p>We have two chained steps to <code>.flatMap</code> in our stream, and they deal with a single request:
 making an ajax request (returns a promise) and then extracting JSON result (also returns a
@@ -253,9 +253,9 @@ Observable first</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ajaxP = R.unary(fetch)</span><br><span class="line"><span class="keyword">const</span> jsonP = R.invoker(<span class="number">0</span>, <span class="string">&#x27;json&#x27;</span>)</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">users</span>(<span class="params">url</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> ajaxP(url).then(jsonP)</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">  .startWith(toUrl())</span><br><span class="line">  .flatMap(users)</span><br><span class="line">  .map(pickRandomItem)</span><br></pre></td></tr></table></figure>
 <p>Finally, we have a promise-returning function <code>ajaxP</code> chained to <code>jsonP</code>. The result
 of <code>ajaxP</code> is passed to <code>jsonP</code> and then the result is returned (inside the resolved promise).
-This is very similar to the function composition, only the passing the result along is 
-different. Instad of simplifying <code>f(g(x))</code> into <code>compose(f, g)(x)</code> 
-<em>promise composition</em> combines the promise-returning functions using <code>.then</code> method like 
+This is very similar to the function composition, only the passing the result along is
+different. Instad of simplifying <code>f(g(x))</code> into <code>compose(f, g)(x)</code>
+<em>promise composition</em> combines the promise-returning functions using <code>.then</code> method like
 this <code>f(x).then(g) = composeP(f, g)(x)</code></p>
 <p>Ramda has promise composition under <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#composeP">R.composeP</a></p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ajaxP = R.unary(fetch)</span><br><span class="line"><span class="keyword">const</span> jsonP = R.invoker(<span class="number">0</span>, <span class="string">&#x27;json&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> users = R.composeP(jsonP, ajaxP)</span><br><span class="line">...</span><br><span class="line">  .startWith(toUrl())</span><br><span class="line">  .flatMap(users)</span><br><span class="line">  .map(pickRandomItem)</span><br></pre></td></tr></table></figure>
@@ -303,7 +303,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/extra-fp-for-rx/" data-id="ckw3lw5ro00fgf3vg1u3r4s2i" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/extra-fp-for-rx/" data-id="ckw6mznxn00fbokvgd4fgcwal" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/extra-fp-for-rx/#disqus_thread" class="article-comment-link">Comments</a>
       
