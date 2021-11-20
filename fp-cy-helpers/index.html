@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Functional Helpers For Cypress Tests | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="This blog post will teach you how to write short and expressive Cypress tests using a library of tiny functional utilities cypress-should-really. Using this library you will be able to also write sing">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Functional Helpers For Cypress Tests">
+<meta property="og:url" content="https://glebbahmutov.com/blog/fp-cy-helpers/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="This blog post will teach you how to write short and expressive Cypress tests using a library of tiny functional utilities cypress-should-really. Using this library you will be able to also write sing">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/table.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/date-cells.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/last-assertion.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/not-sorted.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/problem.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/sorted-after-wait.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/single-callback.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/arguments.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/sort-twice.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/using-disabled.gif">
+<meta property="article:published_time" content="2021-11-20T05:00:00.000Z">
+<meta property="article:modified_time" content="2021-11-20T22:26:00.028Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="functional">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/fp-cy-helpers/table.gif">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-fp-cy-helpers" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2021-11-20T05:00:00.000Z" itemprop="datePublished">Nov 20 2021</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Functional Helpers For Cypress Tests
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Using functional programming to write retry-able assertion callbacks.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>This blog post will teach you how to write short and expressive Cypress tests using a library of tiny functional utilities <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-should-really">cypress-should-really</a>. Using this library you will be able to also write single functional callbacks to take advantage of Cypress built-in <a target="_blank" rel="noopener" href="https://on.cypress.io/retry-ability">command retry-ability</a>.</p>
+<!-- toc -->
+<ul>
+<li><a href="#the-sorted-table">The sorted table</a></li>
+<li><a href="#the-first-test">The first test</a></li>
+<li><a href="#chai-sorted">chai-sorted</a></li>
+<li><a href="#the-problem">The problem</a></li>
+<li><a href="#callback-function-as-assertion">Callback function as assertion</a></li>
+<li><a href="#mapping-and-invoking">Mapping and invoking</a></li>
+<li><a href="#assertion-function">Assertion function</a></li>
+<li><a href="#reusing-pipes">Reusing pipes</a></li>
+<li><a href="#aside-a-better-solution">Aside: a better solution</a></li>
+<li><a href="#see-also">See also</a></li>
+</ul>
+<!-- tocstop -->
+<h2><span id="the-sorted-table">The sorted table</span></h2><p>Imagine you have a table that can be sorted by a column. You can find such application (which is really just a static HTML file) at <a target="_blank" rel="noopener" href="https://github.com/bahmutov/sorted-table-example">bahmutov/sorted-table-example</a>. The table gets sorted when you click a button, but there is a slight delay between the click and the page update as the application is &quot;crunching some numbers&quot;.</p>
+<p><img src="../images/fp-cy-helpers/table.gif" alt="Sorting the table by clicking the buttons"></p>
+<h2><span id="the-first-test">The first test</span></h2><p>How would you confirm the table is really sorted using a Cypress test? First, let&#39;s confirm it is NOT sorted. Let&#39;s get all date cells using CSS <code>nth-child</code> selector.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">beforeEach(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.visit(<span class="string">&#x27;app/table.html&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">it(<span class="string">&#x27;is not sorted at first&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>We can confirm the test picks the right cells by hovering over the command in the Cypress Command Log.</p>
+<p><img src="../images/fp-cy-helpers/date-cells.png" alt="We got the right page elements"></p>
+<p>We need to extract the text from each cell, convert the <code>YYYY-MM-DD</code> strings into Date objects, then to timestamps, then check if the timestamp numbers are not sorted. Each step can be done using a separate <a target="_blank" rel="noopener" href="https://on.cypress.io/then">cy.then</a> command.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">  .then(<span class="function">(<span class="params">$cells</span>) =&gt;</span> Cypress._.map($cells, <span class="string">&#x27;innerText&#x27;</span>))</span><br><span class="line">  .then(<span class="function">(<span class="params">strings</span>) =&gt;</span> Cypress._.map(strings, <span class="function">(<span class="params">s</span>) =&gt;</span> <span class="keyword">new</span> <span class="built_in">Date</span>(s)))</span><br><span class="line">  .then(<span class="function">(<span class="params">dates</span>) =&gt;</span> Cypress._.map(dates, <span class="function">(<span class="params">d</span>) =&gt;</span> d.getTime()))</span><br><span class="line">  .then(<span class="function">(<span class="params">timestamps</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// check if the numbers are sorted by comparing to the sorted array</span></span><br><span class="line">    <span class="keyword">const</span> sorted = Cypress._.sortBy(timestamps)</span><br><span class="line">    expect(timestamps).to.not.deep.equal(sorted)</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>Ughh, ok. Does it work? Yes - it confirms the timestamps are not sorted on the initial page. Just in case, let&#39;s look at the last assertion in the DevTools console.</p>
+<p><img src="../images/fp-cy-helpers/last-assertion.png" alt="Last assertion prints the arrays when we click it"></p>
+<h2><span id="chai-sorted">chai-sorted</span></h2><p>I believe readable tests are better than unreadable tests. Thus I love using additional Chai plugins to make the assertions clearly express what the test is trying to confirm. Thus I will use <a target="_blank" rel="noopener" href="https://www.chaijs.com/plugins/chai-sorted/">chai-sorted</a> plugin in this test.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D chai-sorted</span><br><span class="line">+ chai-sorted@0.2.0</span><br></pre></td></tr></table></figure>
+<p>I will change the last assertion to <code>should(&#39;not.be.sorted&#39;)</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">  .then(<span class="function">(<span class="params">$cells</span>) =&gt;</span> Cypress._.map($cells, <span class="string">&#x27;innerText&#x27;</span>))</span><br><span class="line">  .then(<span class="function">(<span class="params">strings</span>) =&gt;</span> Cypress._.map(strings, <span class="function">(<span class="params">s</span>) =&gt;</span> <span class="keyword">new</span> <span class="built_in">Date</span>(s)))</span><br><span class="line">  .then(<span class="function">(<span class="params">dates</span>) =&gt;</span> Cypress._.map(dates, <span class="function">(<span class="params">d</span>) =&gt;</span> d.getTime()))</span><br><span class="line">  .should(<span class="string">&#x27;not.be.sorted&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p><img src="../images/fp-cy-helpers/not-sorted.png" alt="Using chai-sorted assertion"></p>
+<h2><span id="the-problem">The problem</span></h2><p>Let&#39;s click on the &quot;Sort by date&quot; button and check if the table gets sorted. We can copy the above commands into the new test.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;gets sorted by date&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click()</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">    .then(<span class="function">(<span class="params">$cells</span>) =&gt;</span> Cypress._.map($cells, <span class="string">&#x27;innerText&#x27;</span>))</span><br><span class="line">    .then(<span class="function">(<span class="params">strings</span>) =&gt;</span> Cypress._.map(strings, <span class="function">(<span class="params">s</span>) =&gt;</span> <span class="keyword">new</span> <span class="built_in">Date</span>(s)))</span><br><span class="line">    .then(<span class="function">(<span class="params">dates</span>) =&gt;</span> Cypress._.map(dates, <span class="function">(<span class="params">d</span>) =&gt;</span> d.getTime()))</span><br><span class="line">    .should(<span class="string">&#x27;be.ascending&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Ughh, the test fails</p>
+<p><img src="../images/fp-cy-helpers/problem.png" alt="The sorted by date test fails"></p>
+<p>Our test fails miserably - it does not even wait for the table to be sorted after the click. If we add a three second delay between the click and the check, the test passes.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click().wait(<span class="number">3000</span>)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p><img src="../images/fp-cy-helpers/sorted-after-wait.gif" alt="Adding 3 second wait fixes the test"></p>
+<p>Of course, we do not want to use a hard-coded wait, we want the test to retry getting the DOM elements, convert them into timestamps, and check if the suddenly are sorted. Why isn&#39;t this happening?</p>
+<p>Cypress only retries certain commands, like querying ones <code>cy.get</code>, <code>cy.contains</code>, <code>cy.its</code>. It does not retry the commands that generally have side-effects, like <code>cy.click</code>, <code>cy.task</code>, or <code>cy.then</code>. Cypress also retries only <em>the current command</em> with its assertions. It does not go &quot;back&quot; along the chain of commands, even if those commands are safe to retry normally. This is why the <a target="_blank" rel="noopener" href="https://on.cypress.io/retry-ability">retry-ability</a> guide suggests merging multiple <code>cy.get</code> commands into one, or mixing commands and assertions.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// might be flaky, only the last command</span></span><br><span class="line"><span class="comment">// &quot;.find(&#x27;td:nth-child(2)&#x27;)&quot; is going to be retried</span></span><br><span class="line">cy.get(<span class="string">&#x27;table&#x27;</span>)</span><br><span class="line">  .find(<span class="string">&#x27;tbody&#x27;</span>)</span><br><span class="line">  .find(<span class="string">&#x27;td:nth-child(2)&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line"><span class="comment">// BEST PRACTICE 👍</span></span><br><span class="line"><span class="comment">// use a single query with an assertion</span></span><br><span class="line">cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>)</span><br><span class="line">  .should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br></pre></td></tr></table></figure>
+<p>In our case, the assertion is at the end of the long of chain of <code>cy.then</code> commands, and the execution never tries to get the table cells again. If we want to retry querying the page using the <code>cy.get(&#39;tbody td:nth-child(2)&#39;)</code> command, we need to somehow add the <code>should(&#39;be.ascending&#39;)</code> assertion to the <code>cy.get</code> command. Hmm, how can we do this?</p>
+<h2><span id="callback-function-as-assertion">Callback function as assertion</span></h2><p>By passing a callback function to the <code>should(callback)</code> assertion. Inside the callback function we can use code to transform the elements returned by the <code>cy.get</code> command before checking if they are sorted. Here is the test where I moved all individual steps into the <code>should(callback)</code>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;gets sorted by date&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click()</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">    <span class="comment">// use a callback function as an assertion</span></span><br><span class="line">    .and(<span class="function">(<span class="params">$cells</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">const</span> strings = Cypress._.map($cells, <span class="string">&#x27;innerText&#x27;</span>)</span><br><span class="line">      <span class="keyword">const</span> dates = Cypress._.map(strings, <span class="function">(<span class="params">s</span>) =&gt;</span> <span class="keyword">new</span> <span class="built_in">Date</span>(s))</span><br><span class="line">      <span class="keyword">const</span> timestamps = Cypress._.map(dates, <span class="function">(<span class="params">d</span>) =&gt;</span> d.getTime())</span><br><span class="line">      expect(timestamps).to.be.ascending</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The above code retries calling the <code>cy.get</code> command while the callback callback throws an error in the <code>expect(timestamps).to.be.ascending</code> line.</p>
+<p><img src="../images/fp-cy-helpers/single-callback.gif" alt="The test retries getting the table cells"></p>
+<p>Nice - yet the test is less readable than before :( Luckily, we can rewrite the code in the callback function to be much clearer using a few helpers from <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-should-really">cypress-should-really</a> NPM module.</p>
+<h2><span id="mapping-and-invoking">Mapping and invoking</span></h2><p>If you look at the <code>.and($cells)</code> function, it does the same common things again and again: mapping a list of values into another list, constructing Date objects, and invoking methods on each object. Right now we are using <a target="_blank" rel="noopener" href="https://lodash.com/docs">Lodash</a> library that is bundled with Cypress to map jQuery object, etc. While Lodash is good, other libraries do a much better job of allowing you to compose common data transformations. We could use <a target="_blank" rel="noopener" href="https://ramdajs.com/">Ramda</a> but even that excellent library can have rough edges while working with a mixture of plain and jQuery objects. This is why I wrote <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-should-really">cypress-should-really</a> and plan to expand it in the future if I find I need some other little utility to make the tests simpler to write. Let&#39;s see it in action.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D cypress-should-really</span><br><span class="line">+ cypress-should-really@1.0.0</span><br></pre></td></tr></table></figure>
+<p>First, let&#39;s rewrite our initial test using <code>map</code> helper.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// BEFORE</span></span><br><span class="line">it(<span class="string">&#x27;is not sorted at first&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">    .then(<span class="function">(<span class="params">$cells</span>) =&gt;</span> Cypress._.map($cells, <span class="string">&#x27;innerText&#x27;</span>))</span><br><span class="line">    .then(<span class="function">(<span class="params">strings</span>) =&gt;</span> Cypress._.map(strings, <span class="function">(<span class="params">s</span>) =&gt;</span> <span class="keyword">new</span> <span class="built_in">Date</span>(s)))</span><br><span class="line">    .then(<span class="function">(<span class="params">dates</span>) =&gt;</span> Cypress._.map(dates, <span class="function">(<span class="params">d</span>) =&gt;</span> d.getTime()))</span><br><span class="line">    .should(<span class="string">&#x27;not.be.sorted&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// AFTER</span></span><br><span class="line"><span class="keyword">import</span> &#123; invoke, map, toDate &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-should-really&#x27;</span></span><br><span class="line">it(<span class="string">&#x27;is not sorted at first&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">    .then(map(<span class="string">&#x27;innerText&#x27;</span>))</span><br><span class="line">    .then(map(toDate))</span><br><span class="line">    .then(invoke(<span class="string">&#x27;getTime&#x27;</span>))</span><br><span class="line">    .should(<span class="string">&#x27;not.be.sorted&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Utilities like <code>map</code> and <code>invoke</code> are optimized for <a href="/blog/point-free-programming-is-not-pointless/" title="point-free programming">point-free programming</a>, they return a function that is waiting for the data to be yielded by the Cypress command; the data is typically a jQuery object yielded by <code>cy.get</code> command, or an Array yielded by the previous <code>cy.then</code> command. I hope the test is readable:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">.then(map(<span class="string">&#x27;innerText&#x27;</span>))   <span class="comment">// extract property &quot;innerText&quot; from each object</span></span><br><span class="line">.then(map(toDate))        <span class="comment">// call function &quot;toDate&quot; with each item</span></span><br><span class="line">.then(invoke(<span class="string">&#x27;getTime&#x27;</span>))  <span class="comment">// invoke method &quot;getTime&quot; on each object</span></span><br></pre></td></tr></table></figure>
+<p>But using individual steps inside <code>cy.then</code> is going to cause the problem, because they are not retried. We need to use the helpers inside the assertion callback function. Luckily <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-should-really">cypress-should-really</a> has a few trick to help with constructing the single assertion callback too!</p>
+<h2><span id="assertion-function">Assertion function</span></h2><p>Let&#39;s rewrite our retry-able assertion function using the helpers.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">it(<span class="string">&#x27;gets sorted by date&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click()</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>)</span><br><span class="line">    .should(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">    <span class="comment">// use a callback function as an assertion</span></span><br><span class="line">    .and(<span class="function">(<span class="params">$cells</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">const</span> strings = map(<span class="string">&#x27;innerText&#x27;</span>)($cells)</span><br><span class="line">      <span class="keyword">const</span> dates = map(toDate)(strings)</span><br><span class="line">      <span class="keyword">const</span> timestamps = invoke(<span class="string">&#x27;getTime&#x27;</span>)(dates)</span><br><span class="line">      expect(timestamps).to.be.ascending</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>The test passes like before. Let&#39;s eliminate all temporary variables like <code>strings</code>, <code>dates</code>, and <code>timestamps</code> - after all, they are used <em>once</em> just to pass the result to the next line.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click()</span><br><span class="line">cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>).should(<span class="function">(<span class="params">$cells</span>) =&gt;</span> &#123;</span><br><span class="line">  expect(</span><br><span class="line">    invoke(<span class="string">&#x27;getTime&#x27;</span>)(</span><br><span class="line">      map(toDate)(</span><br><span class="line">        map(<span class="string">&#x27;innerText&#x27;</span>)(</span><br><span class="line">          $cells</span><br><span class="line">        )</span><br><span class="line">      )</span><br><span class="line">    )</span><br><span class="line">  ).to.be.ascending</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Notice the interesting thing: inside the <code>expect</code> we have a function calling another function, that calls another function, with the argument <code>$cells</code>. Each function is pure, just takes the input and produces output value. Thus these 3 functions can be combined into an equivalent single function to be called with <code>$cells</code> argument. We have a little helper to do just that in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-should-really">cypress-should-really</a> called <code>pipe</code>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; invoke, map, toDate, pipe &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-should-really&#x27;</span></span><br><span class="line">cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click()</span><br><span class="line">cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>).should(<span class="function">(<span class="params">$cells</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// pipe: the data will first go through the &quot;map(&#x27;innerText&#x27;)&quot; step,</span></span><br><span class="line">  <span class="comment">// then through &quot;map(toDate)&quot; step, finally through the &quot;invoke(&#x27;getTime&#x27;)&quot;</span></span><br><span class="line">  <span class="keyword">const</span> fn = pipe(map(<span class="string">&#x27;innerText&#x27;</span>), map(toDate), invoke(<span class="string">&#x27;getTime&#x27;</span>))</span><br><span class="line">  expect(fn($cells)).to.be.ascending</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<blockquote class="pullquote"><p>🎓 I have made a few presentations about the above functional way of writing JavaScript, find the slide decks at <a target="_blank" rel="noopener" href="https://slides.com/bahmutov/decks/functional">slides.com/bahmutov/decks/functional</a>.</p>
+</blockquote>
+<p>The function <code>fn</code> constructed above is sitting, waiting for data. Once the data is passed in, the <code>fn($cells)</code> is computed and passed to the assertion <code>expect(...).to ...</code> for evaluation.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> fn = pipe(map(<span class="string">&#x27;innerText&#x27;</span>), map(toDate), invoke(<span class="string">&#x27;getTime&#x27;</span>))</span><br><span class="line">expect(fn($cells)).to.be.ascending</span><br></pre></td></tr></table></figure>
+<p>Piping the data through a series of functions to be fed to the assertion <code>expect(...).to Chai chainer</code> is so common, that <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-should-really">cypress-should-really</a> has a ... helper for this. If you want to transform the data and run it through a Chai assertion use <code>really</code> function. It construct a <code>should(callback)</code> for you:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; invoke, map, toDate, pipe, really &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-should-really&#x27;</span></span><br><span class="line">it(<span class="string">&#x27;gets sorted by date: really&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click()</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>).should(</span><br><span class="line">    really(map(<span class="string">&#x27;innerText&#x27;</span>), map(toDate), invoke(<span class="string">&#x27;getTime&#x27;</span>), <span class="string">&#x27;be.ascending&#x27;</span>),</span><br><span class="line">  )</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>If you have any arguments for the assertion, place it after the chainer string. The same test can be written as</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click()</span><br><span class="line">cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>).should(</span><br><span class="line">  really(</span><br><span class="line">    map(<span class="string">&#x27;innerText&#x27;</span>), map(toDate), invoke(<span class="string">&#x27;getTime&#x27;</span>), <span class="string">&#x27;be.sorted&#x27;</span>, &#123; <span class="attr">descending</span>: <span class="literal">false</span>, &#125;</span><br><span class="line">  ),</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p><img src="../images/fp-cy-helpers/arguments.gif" alt="The tests asserts the column is really sorted"></p>
+<h2><span id="reusing-pipes">Reusing pipes</span></h2><p>The application can sort the table in ascending and descending order. To avoid code duplication, just store the <code>pipe(step1, step2, ...)</code> function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// use functional utilities from this NPM library</span></span><br><span class="line"><span class="comment">// https://github.com/bahmutov/cypress-should-really</span></span><br><span class="line"><span class="keyword">import</span> &#123; invoke, map, toDate, pipe, really &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-should-really&#x27;</span></span><br><span class="line">it(<span class="string">&#x27;sorts twice&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// reusable data transformation function</span></span><br><span class="line">  <span class="keyword">const</span> fn = pipe(map(<span class="string">&#x27;innerText&#x27;</span>), map(toDate), invoke(<span class="string">&#x27;getTime&#x27;</span>))</span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click()</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>).should(really(fn, <span class="string">&#x27;be.ascending&#x27;</span>))</span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Reverse sort&#x27;</span>).click()</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>).should(really(fn, <span class="string">&#x27;be.descending&#x27;</span>))</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p><img src="../images/fp-cy-helpers/sort-twice.gif" alt="Checking the sorted order twice using the same data transformation pipe"></p>
+<h2><span id="aside-a-better-solution">Aside: a better solution</span></h2><p>In my opinion, the application should indicate somehow that it has received the user click and it is doing something with the table. For example, the application can disable the buttons and only enable them after the table has finished sorting.</p>
+<figure class="highlight js"><figcaption><span>app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">disableButtons</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">document</span>.getElementById(<span class="string">&#x27;sort-by-date&#x27;</span>).setAttribute(<span class="string">&#x27;disabled&#x27;</span>, <span class="string">&#x27;disabled&#x27;</span>)</span><br><span class="line">  <span class="built_in">document</span>.getElementById(<span class="string">&#x27;sort-reverse&#x27;</span>).setAttribute(<span class="string">&#x27;disabled&#x27;</span>, <span class="string">&#x27;disabled&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">enableButtons</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">document</span>.getElementById(<span class="string">&#x27;sort-by-date&#x27;</span>).removeAttribute(<span class="string">&#x27;disabled&#x27;</span>)</span><br><span class="line">  <span class="built_in">document</span>.getElementById(<span class="string">&#x27;sort-reverse&#x27;</span>).removeAttribute(<span class="string">&#x27;disabled&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">document</span>.getElementById(<span class="string">&#x27;sort-by-date&#x27;</span>).addEventListener(<span class="string">&#x27;click&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  disableButtons()</span><br><span class="line">  <span class="comment">// sort the table after some random interval</span></span><br><span class="line">  ...</span><br><span class="line">  enableButtons()</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>This would make the tests <em>much</em> simpler to write without accidental flake.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// use functional utilities from this NPM library</span></span><br><span class="line"><span class="comment">// https://github.com/bahmutov/cypress-should-really</span></span><br><span class="line"><span class="keyword">import</span> &#123; invoke, map, toDate, pipe, really &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-should-really&#x27;</span></span><br><span class="line">it(<span class="string">&#x27;uses disabled attribute&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// reusable data transformation function</span></span><br><span class="line">  <span class="keyword">const</span> fn = pipe(map(<span class="string">&#x27;innerText&#x27;</span>), map(toDate), invoke(<span class="string">&#x27;getTime&#x27;</span>))</span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click().should(<span class="string">&#x27;not.be.disabled&#x27;</span>)</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>).then(really(fn, <span class="string">&#x27;be.ascending&#x27;</span>))</span><br><span class="line">  cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Reverse sort&#x27;</span>).click().should(<span class="string">&#x27;not.be.disabled&#x27;</span>)</span><br><span class="line">  cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>).then(really(fn, <span class="string">&#x27;be.descending&#x27;</span>))</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>Notice the above test is using built-in retry via <code>.should(&#39;not.be.disabled&#39;)</code> which applies to the button yielded by the previous command. Once the button is enabled, we can simply check once if the table has been sorted already. We do not even need the <code>.should(callback)</code> and instead we apply our pipe transformation using <code>.then(callback)</code> that only is executed once.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cy.contains(<span class="string">&#x27;button&#x27;</span>, <span class="string">&#x27;Sort by date&#x27;</span>).click().should(<span class="string">&#x27;not.be.disabled&#x27;</span>)</span><br><span class="line">cy.get(<span class="string">&#x27;tbody td:nth-child(2)&#x27;</span>).then(really(fn, <span class="string">&#x27;be.ascending&#x27;</span>))</span><br></pre></td></tr></table></figure>
+<p>It all works beautifully</p>
+<p><img src="../images/fp-cy-helpers/using-disabled.gif" alt="Relying on the disabled attribute to signal when the table is ready to be checked"></p>
+<p>Nice!</p>
+<blockquote class="pullquote"><p>🎁 Find the example application and the shown tests at [bahmutov/sorted-table-example][example]</p>
+</blockquote>
+<h2><span id="see-also">See also</span></h2><ul>
+<li>video <a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=y5ujNKkmgI8">Cypress.io Testing a Paginated Table Example</a></li>
+<li>video <a target="_blank" rel="noopener" href="https://youtu.be/Ke5Pf6IISn8">Use cypress-recurse Plugin To Confirm The Table Gets Sorted Eventually</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/fp-cy-helpers/" data-id="ckw8dsb5r00gth2vgh0796qxj" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/fp-cy-helpers/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/functional/" rel="tag">functional</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="../custom-assertions/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Create Custom Assertions For Test Readability</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">21</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">138</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">432</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">109</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">26</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">158</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">69</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">17</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">165</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">133</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">18</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.38px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.54px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.77px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.85px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.38px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.69px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.08px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.69px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.77px;">browser</a> <a href="../tags/ci/" style="font-size: 16.54px;">ci</a> <a href="../tags/circle/" style="font-size: 13.46px;">circle</a> <a href="../tags/climate/" style="font-size: 14.62px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 14.62px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.31px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 19.62px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 13.85px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.77px;">d3</a> <a href="../tags/db/" style="font-size: 14.62px;">db</a> <a href="../tags/docker/" style="font-size: 14.23px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.92px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.62px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.08px;">functional</a> <a href="../tags/generators/" style="font-size: 11.54px;">generators</a> <a href="../tags/git/" style="font-size: 15px;">git</a> <a href="../tags/github/" style="font-size: 15.38px;">github</a> <a href="../tags/graphql/" style="font-size: 11.54px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.31px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.77px;">gulp</a> <a href="../tags/hiring/" style="font-size: 10.77px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.31px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.54px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.77px;">interview</a> <a href="../tags/jade/" style="font-size: 11.15px;">jade</a> <a href="../tags/javascript/" style="font-size: 20px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.77px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.85px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.92px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.15px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.46px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.15px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.31px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.31px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.38px;">proposal</a> <a href="../tags/ramda/" style="font-size: 10px;">ramda</a> <a href="../tags/react/" style="font-size: 11.54px;">react</a> <a href="../tags/react-native/" style="font-size: 11.15px;">react native</a> <a href="../tags/reactive/" style="font-size: 14.23px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.15px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.54px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.08px;">security</a> <a href="../tags/sentry/" style="font-size: 13.85px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.92px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.23px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.77px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.31px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.38px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.08px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.15px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.54px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.92px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.77px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="">Functional Helpers For Cypress Tests</a>
+          </li>
+        
+          <li>
+            <a href="../custom-assertions/">Create Custom Assertions For Test Readability</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-cy-type/">Solve Flake In Cypress Typing Into An Input Element</a>
+          </li>
+        
+          <li>
+            <a href="../parallelism-parameter/">CircleCI Parallelism As A Parameter</a>
+          </li>
+        
+          <li>
+            <a href="../test-sitemap/">Test your sitemap using Cypress</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/fp-cy-helpers/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>
