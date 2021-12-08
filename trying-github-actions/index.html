@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/badges.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/github-actions/commit-status.png">
 <meta property="article:published_time" content="2019-11-15T05:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-20T13:48:00.751Z">
+<meta property="article:modified_time" content="2021-12-07T19:41:04.833Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="tutorial">
 <meta property="article:tag" content="github">
@@ -146,7 +146,8 @@ ga('send', 'pageview');
 <li><a href="#set-commit-status">Set commit status</a></li>
 <li><a href="#deploying-github-pages">Deploying GitHub Pages</a></li>
 <li><a href="#running-command-step-only-on-specific-branch">Running command step only on specific branch</a></li>
-<li><a href="#running-period-jobs">Running period jobs</a></li>
+<li><a href="#running-periodic-jobs">Running periodic jobs</a></li>
+<li><a href="#reusable-workflows">Reusable workflows</a></li>
 <li><a href="#more-examples">More examples</a></li>
 </ul>
 <!-- tocstop -->
@@ -217,8 +218,10 @@ ga('send', 'pageview');
 <figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">deploy:</span></span><br><span class="line">  <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">  <span class="attr">if:</span> <span class="string">github.ref</span> <span class="string">==</span> <span class="string">&#x27;refs/heads/master&#x27;</span></span><br><span class="line">  <span class="attr">steps:</span></span><br><span class="line">    <span class="string">...</span></span><br></pre></td></tr></table></figure>
 <p>If the same approach works for individual steps:</p>
 <figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Publish</span> <span class="string">Image</span></span><br><span class="line">  <span class="comment"># Develop branch only</span></span><br><span class="line">  <span class="attr">if:</span> <span class="string">github.ref</span> <span class="string">==</span> <span class="string">&#x27;refs/heads/develop&#x27;</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line">    <span class="string">...</span> <span class="string">publish</span> <span class="string">commands</span> <span class="string">...</span></span><br></pre></td></tr></table></figure>
-<h2><span id="running-period-jobs">Running period jobs</span></h2><p>You can use cron syntax to run the workflow periodically. For example, to run the tests every night use the following workflow trigger syntax:</p>
+<h2><span id="running-periodic-jobs">Running periodic jobs</span></h2><p>You can use cron syntax to run the workflow periodically. For example, to run the tests every night use the following workflow trigger syntax:</p>
 <figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">schedule:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">cron:</span> <span class="string">&#x27;0 3 * * *&#x27;</span></span><br></pre></td></tr></table></figure>
+<h2><span id="reusable-workflows">Reusable workflows</span></h2><p>A really powerful new feature from GH - <a target="_blank" rel="noopener" href="https://docs.github.com/en/actions/learn-github-actions/reusing-workflows">reusable workflows</a>. See the blog post <a href="/blog/gh-reusable-workflows/" title="The Simplest CI Setup For Running Cypress Tests">The Simplest CI Setup For Running Cypress Tests</a> for details, but here is how to use a public workflow from <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-workflows">bahmutov/cypress-workflows</a> repo:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">ci</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">test:</span></span><br><span class="line">    <span class="comment"># https://github.com/bahmutov/cypress-workflows</span></span><br><span class="line">    <span class="attr">uses:</span> <span class="string">bahmutov/cypress-workflows/.github/workflows/parallel.yml@v1</span></span><br><span class="line">    <span class="attr">with:</span></span><br><span class="line">      <span class="attr">n:</span> <span class="number">3</span></span><br><span class="line">      <span class="attr">group:</span> <span class="string">parallel</span> <span class="string">tests</span></span><br><span class="line">      <span class="attr">tag:</span> <span class="string">parallel</span></span><br><span class="line">    <span class="attr">secrets:</span></span><br><span class="line">      <span class="attr">recordKey:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.CYPRESS_RECORD_KEY</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
 <h2><span id="more-examples">More examples</span></h2><ul>
 <li><a href="/blog/versioned-doc-pages/" title="Versioned Docs Pages">Versioned Docs Pages</a></li>
 <li><a href="/blog/develop-preview-test/" title="Test the Preview Vercel Deploys">Test the Preview Vercel Deploys</a></li>
@@ -260,7 +263,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/trying-github-actions/" data-id="ckwv0n3mf01d1oivg8f3s2vpq" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/trying-github-actions/" data-id="ckwxourh101czs2vg1sqf7lmr" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/trying-github-actions/#disqus_thread" class="article-comment-link">Comments</a>
       
