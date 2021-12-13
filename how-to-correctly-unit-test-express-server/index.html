@@ -5,15 +5,15 @@
   
   <title>How to correctly unit test Express server | Better world by better software</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Let us take a simple ExpressJS server and see how to correctly unit test it. The server could be the very basic one given as an introductory  &quot;Hello World&quot; example. server.js12345678910var e">
+  <meta name="description" content="Let us take a simple ExpressJS server and see how to correctly unit test it. The server could be the very basic one given as an introductory &quot;Hello World&quot; example. server.js12345678910var ex">
 <meta property="og:type" content="article">
 <meta property="og:title" content="How to correctly unit test Express server">
 <meta property="og:url" content="https://glebbahmutov.com/blog/how-to-correctly-unit-test-express-server/index.html">
 <meta property="og:site_name" content="Better world by better software">
-<meta property="og:description" content="Let us take a simple ExpressJS server and see how to correctly unit test it. The server could be the very basic one given as an introductory  &quot;Hello World&quot; example. server.js12345678910var e">
+<meta property="og:description" content="Let us take a simple ExpressJS server and see how to correctly unit test it. The server could be the very basic one given as an introductory &quot;Hello World&quot; example. server.js12345678910var ex">
 <meta property="og:locale">
 <meta property="article:published_time" content="2015-04-27T04:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-15T13:13:30.289Z">
+<meta property="article:modified_time" content="2021-12-12T20:20:53.941Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="javascript">
 <meta property="article:tag" content="testing">
@@ -118,34 +118,34 @@ ga('send', 'pageview');
     <div class="article-entry" itemprop="articleBody">
       
         <p>Let us take a simple <a target="_blank" rel="noopener" href="http://expressjs.com/">ExpressJS</a> server and see how to correctly unit test it.
-The server could be the very basic one given as an introductory 
+The server could be the very basic one given as an introductory
 <a target="_blank" rel="noopener" href="http://expressjs.com/starter/hello-world.html">&quot;Hello World&quot;</a> example.</p>
 <figure class="highlight js"><figcaption><span>server.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> app = express();</span><br><span class="line">app.get(<span class="string">&#x27;/&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  res.status(<span class="number">200</span>).send(<span class="string">&#x27;ok&#x27;</span>);</span><br><span class="line">&#125;);</span><br><span class="line"><span class="keyword">var</span> server = app.listen(<span class="number">3000</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> port = server.address().port;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;Example app listening at port %s&#x27;</span>, port);</span><br><span class="line">&#125;);</span><br><span class="line"><span class="built_in">module</span>.exports = server;</span><br></pre></td></tr></table></figure>
 <p>We can verify the server responds to a HTTP request from the command line</p>
 <pre><code>$ node server.js
 Example app listening at port 3000
-# from another terminal window execute 
-curl http://localhost:3000/ 
+# from another terminal window execute
+curl http://localhost:3000/
 &quot;ok&quot;
 </code></pre><p>Let us write a couple of unit tests to verify the server is working correctly.
 I will use <a target="_blank" rel="noopener" href="http://mochajs.org/">mocha</a> and <a target="_blank" rel="noopener" href="https://www.npmjs.com/package/supertest">supertest</a>
 to execute http requests against the server.</p>
 <figure class="highlight js"><figcaption><span>spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> request = <span class="built_in">require</span>(<span class="string">&#x27;supertest&#x27;</span>);</span><br><span class="line">describe(<span class="string">&#x27;loading express&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> server;</span><br><span class="line">  beforeEach(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    server = <span class="built_in">require</span>(<span class="string">&#x27;./server&#x27;</span>);</span><br><span class="line">  &#125;);</span><br><span class="line">  afterEach(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    server.close();</span><br><span class="line">  &#125;);</span><br><span class="line">  it(<span class="string">&#x27;responds to /&#x27;</span>, <span class="function"><span class="keyword">function</span> <span class="title">testSlash</span>(<span class="params">done</span>) </span>&#123;</span><br><span class="line">  request(server)</span><br><span class="line">    .get(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">    .expect(<span class="number">200</span>, done);</span><br><span class="line">  &#125;);</span><br><span class="line">  it(<span class="string">&#x27;404 everything else&#x27;</span>, <span class="function"><span class="keyword">function</span> <span class="title">testPath</span>(<span class="params">done</span>) </span>&#123;</span><br><span class="line">    request(server)</span><br><span class="line">      .get(<span class="string">&#x27;/foo/bar&#x27;</span>)</span><br><span class="line">      .expect(<span class="number">404</span>, done);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
 <p>Run the unit tests and they pass</p>
-<pre><code>$ mocha -R spec spec.js 
+<pre><code>$ mocha -R spec spec.js
   loading express
 Example app listening at port 3000
-    ✓ responds to / 
-    ✓ 404 everything else 
+    ✓ responds to /
+    ✓ 404 everything else
   2 passing (109ms)
 </code></pre><p>Notice a subtle problem - we create a new server before each unit test (in <code>beforeEach</code> callback).
 We assume this is working because we close the server in the <code>afterEach</code> callback. Thus we expect the following
 sequence of actions to happen</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">--- test 1</span><br><span class="line">server starts</span><br><span class="line">request to / is made and answered</span><br><span class="line">server is closed</span><br><span class="line">--- test 2</span><br><span class="line">server starts</span><br><span class="line">request to /foo/bar is made and answered with 404</span><br><span class="line">server is closed</span><br></pre></td></tr></table></figure>
 <p>Yet, looking at the console we see only a single &quot;Example app listening at port 3000&quot; message. Something is not right!</p>
-<p>First, why do we want to start and stop the server for each unit test? Aside from testing a complex scenario, 
-we want to always test a clean server without any residue from the previous unit tests. 
-Otherwise our tests will pass or fail depending on the order, 
+<p>First, why do we want to start and stop the server for each unit test? Aside from testing a complex scenario,
+we want to always test a clean server without any residue from the previous unit tests.
+Otherwise our tests will pass or fail depending on the order,
 which is an extremely undesirable and flaky testing approach.
 Starting and stopping the server for each unit test makes them order-independent.</p>
 <p>Second, is the server closed after the first unit test finishes? Turns out, no. To properly close the expressjs
@@ -155,11 +155,11 @@ continue. Even if we introduce a timeout, the server is NOT closed</p>
 <p>Instead we need to pass the Mocha&#39;s <code>done</code> callback to the <code>server.close()</code> call. Only then the server is going
 to be closed and the tests continue correctly.</p>
 <figure class="highlight js"><figcaption><span>properly closing the server after each unit test</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">afterEach(<span class="function"><span class="keyword">function</span> (<span class="params">done</span>) </span>&#123;</span><br><span class="line">  server.close(done);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>We immediately hit a snag: the test framework reports that the server is <em>not running</em> when it tries to 
+<p>We immediately hit a snag: the test framework reports that the server is <em>not running</em> when it tries to
 close the server after the second unit test.</p>
 <pre><code>Example app listening at port 3000
-    ✓ responds to / 
-    ✓ 404 everything else 
+    ✓ responds to /
+    ✓ 404 everything else
     1) &quot;after each&quot; hook
 1) loading express &quot;after each&quot; hook:
      Error: Not running
@@ -170,8 +170,8 @@ reference to the server + supertest side effect. What is interesting here is tha
 first and <em>second</em> unit tests.</p>
 <p>Let us look again how we create the server before each unit test</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">beforeEach(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  server = <span class="built_in">require</span>(<span class="string">&#x27;./server&#x27;</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>Node module system <em>caches</em> the evaluated result of each module to avoid loading and compiling the same 
-javascript file multiple times. Thus the server instance from <code>server.js</code> is only created <em>once</em>. 
+<p>Node module system <em>caches</em> the evaluated result of each module to avoid loading and compiling the same
+javascript file multiple times. Thus the server instance from <code>server.js</code> is only created <em>once</em>.
 The sequence of events is the following</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">--- test 1</span><br><span class="line">server starts</span><br><span class="line">request to / is made and answered</span><br><span class="line">server is closed</span><br><span class="line">--- test 2</span><br><span class="line">cached instance of server (now closed) is returned from `require`</span><br><span class="line">request to /foo/bar is made and answered with 404 (why?!)</span><br><span class="line">afterEach tries to close the server, but it is already closed</span><br><span class="line">exception is thrown</span><br></pre></td></tr></table></figure>
 <p>We have two ways to avoid caching the server.</p>
@@ -180,12 +180,12 @@ The sequence of events is the following</p>
 <p>We can create the server inside <code>beforeEach</code> callback</p>
 <figure class="highlight js"><figcaption><span>tests</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">beforeEach(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  server = <span class="built_in">require</span>(<span class="string">&#x27;./server&#x27;</span>)();</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
 <p>Now we get the correct messages and tests</p>
-<pre><code>$ mocha -R spec spec.js 
+<pre><code>$ mocha -R spec spec.js
 Example app listening at port 3000
-    ✓ responds to / 
+    ✓ responds to /
 test 404
 Example app listening at port 3000
-    ✓ 404 everything else 
+    ✓ 404 everything else
   2 passing (124ms)
 </code></pre><p>The server has been created and destroyed for each unit test.
 While this is correct, I would like to preserve the returning on the server instance instead
@@ -195,7 +195,7 @@ original <code>server.js</code> and use an alternative method to make sure we ge
 and not just the cached reference.</p>
 <p><strong>Solution 2:</strong> bust require cache to force the full &#39;server.js&#39; reload</p>
 <p>Node.js require call keeps an internal cache of loaded and evaluated code, stored as values in
-a plain object. The keys in the cache object are the resolved file paths to the source files. 
+a plain object. The keys in the cache object are the resolved file paths to the source files.
 We can get the resolved path ourselves and delete the instance from the cache before calling the <code>require</code></p>
 <figure class="highlight js"><figcaption><span>tests</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">beforeEach(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">delete</span> <span class="built_in">require</span>.cache[<span class="built_in">require</span>.resolve(<span class="string">&#x27;./server&#x27;</span>)];</span><br><span class="line">  server = <span class="built_in">require</span>(<span class="string">&#x27;./server&#x27;</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
 <p>While this is simple enough, I have a better utility for busting cache (and doing other things),
@@ -207,9 +207,9 @@ before loading a module.</p>
 <p>The complete unit testing code</p>
 <figure class="highlight js"><figcaption><span>spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> request = <span class="built_in">require</span>(<span class="string">&#x27;supertest&#x27;</span>);</span><br><span class="line"><span class="built_in">require</span> = <span class="built_in">require</span>(<span class="string">&#x27;really-need&#x27;</span>);</span><br><span class="line">describe(<span class="string">&#x27;loading express&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> server;</span><br><span class="line">  beforeEach(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    server = <span class="built_in">require</span>(<span class="string">&#x27;./server&#x27;</span>, &#123; <span class="attr">bustCache</span>: <span class="literal">true</span> &#125;);</span><br><span class="line">  &#125;);</span><br><span class="line">  afterEach(<span class="function"><span class="keyword">function</span> (<span class="params">done</span>) </span>&#123;</span><br><span class="line">    server.close(done);</span><br><span class="line">  &#125;);</span><br><span class="line">  it(<span class="string">&#x27;responds to /&#x27;</span>, <span class="function"><span class="keyword">function</span> <span class="title">testSlash</span>(<span class="params">done</span>) </span>&#123;</span><br><span class="line">    request(server)</span><br><span class="line">      .get(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">      .expect(<span class="number">200</span>, done);</span><br><span class="line">  &#125;);</span><br><span class="line">  it(<span class="string">&#x27;404 everything else&#x27;</span>, <span class="function"><span class="keyword">function</span> <span class="title">testPath</span>(<span class="params">done</span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;test 404&#x27;</span>)</span><br><span class="line">    request(server)</span><br><span class="line">      .get(<span class="string">&#x27;/foo/bar&#x27;</span>)</span><br><span class="line">      .expect(<span class="number">404</span>, done);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
 <p>the run output</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ mocha -R spec spec.js </span><br><span class="line">  loading express</span><br><span class="line">Example app listening at port 3000</span><br><span class="line">    ✓ responds to &#x2F; </span><br><span class="line">Example app listening at port 3000</span><br><span class="line">    ✓ 404 everything else </span><br><span class="line">  2 passing (121ms)</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ mocha -R spec spec.js</span><br><span class="line">  loading express</span><br><span class="line">Example app listening at port 3000</span><br><span class="line">    ✓ responds to &#x2F;</span><br><span class="line">Example app listening at port 3000</span><br><span class="line">    ✓ 404 everything else</span><br><span class="line">  2 passing (121ms)</span><br></pre></td></tr></table></figure>
 <p>Everything is running nicely.</p>
-<p>Related: <a href="../testing-connect-middleware/">Testing Connect middleware</a></p>
+<p>Related: blog posts <a href="/blog/testing-connect-middleware/" title="Testing Connect middleware">Testing Connect middleware</a> and <a href="/blog/restart-server/" title="Server Running Inside Cypress Plugin Process">Server Running Inside Cypress Plugin Process</a>.</p>
 
       
     </div>
@@ -243,7 +243,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/how-to-correctly-unit-test-express-server/" data-id="ckx2j5sje00l7a3vgadh0f2p0" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/how-to-correctly-unit-test-express-server/" data-id="ckx5aej2k00jtdrvg3k1qazty" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/how-to-correctly-unit-test-express-server/#disqus_thread" class="article-comment-link">Comments</a>
       
