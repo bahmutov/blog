@@ -21,7 +21,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-now-and-state/cy-state-docs.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-now-and-state/cy-state.png">
 <meta property="article:published_time" content="2021-12-17T05:00:00.000Z">
-<meta property="article:modified_time" content="2021-12-17T15:12:12.598Z">
+<meta property="article:modified_time" content="2021-12-17T15:37:54.159Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="cypress">
 <meta name="twitter:card" content="summary">
@@ -154,7 +154,7 @@ ga('send', 'pageview');
 <p><img src="../images/cy-now-and-state/cy-state-docs.png" alt="Cypress documentation mentions cy.state as a way to get the test retries counter"></p>
 <p>The best way to understand what <code>cy.state</code> has is to look at it in the console. It is a grab bag of everything Cypress Test Runner uses internally.</p>
 <p><img src="../images/cy-now-and-state/cy-state.png" alt="cy.state returns an object referencing all Test Runner internals"></p>
-<p>There are a lot of things. But <code>cy.state(&#39;ctx&#39;)._runnable</code> looks like it might do the trick. If there is a test running, it returns an object. After the tests have finished, it returns undefined. Thus we can we use it to determine if we can call <code>cy.task</code> or must use <code>cy.now</code> to call get the info from the plugin process.</p>
+<p>There are a lot of things. Often Cypress public commands like <code>cy.get</code> use <code>cy.state(&#39;document&#39;)</code> and <code>cy.state(&#39;window&#39;)</code> to get references to the application&#39;s document and window objects without using <code>cy.document()</code> and <code>cy.window()</code> commands. In our case <code>cy.state(&#39;ctx&#39;)._runnable</code> looks like it might do the trick. If there is a test running, it returns an object. After the tests have finished, it returns undefined. Thus we can we use it to determine if we can call <code>cy.task</code> or must use <code>cy.now</code> to call get the info from the plugin process.</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Returns true if we are currently running a test</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isTestRunning</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">Boolean</span>(cy.state(<span class="string">&#x27;ctx&#x27;</span>)._runnable)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Prints data sessions stored in the plugin space</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">Cypress.printSharedDataSessions = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (isTestRunning()) &#123;</span><br><span class="line">    <span class="keyword">return</span> cy.task(<span class="string">&#x27;dataSession:print&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> cy.now(<span class="string">&#x27;task&#x27;</span>, <span class="string">&#x27;dataSession:print&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>One last detail. Normally <code>cy.*</code> methods can only be called inside a test or a hook. The commands <code>cy.now</code> and <code>cy.state</code> are exceptions.</p>
 
@@ -190,7 +190,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/cy-now-and-state/" data-id="ckxajqd2b009c3cvgfmicbzpx" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/cy-now-and-state/" data-id="ckxak2yta009ck6vgg39d964z" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/cy-now-and-state/#disqus_thread" class="article-comment-link">Comments</a>
       
