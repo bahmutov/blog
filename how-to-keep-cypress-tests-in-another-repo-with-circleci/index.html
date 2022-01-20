@@ -34,8 +34,9 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/rerun-from-failed.gif">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/fixed-comment.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/test-history.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/status.png">
 <meta property="article:published_time" content="2021-07-03T04:00:00.000Z">
-<meta property="article:modified_time" content="2021-10-06T11:59:47.926Z">
+<meta property="article:modified_time" content="2022-01-20T03:21:45.620Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="cypress">
 <meta property="article:tag" content="circle">
@@ -165,6 +166,7 @@ ga('send', 'pageview');
 <li><a href="#update-2-add-the-cypress-github-integration">Update 2: add the Cypress GitHub integration</a></li>
 <li><a href="#update-3-trigger-the-circleci-pipeline-correctly">Update 3: trigger the CircleCI pipeline correctly</a></li>
 <li><a href="#update-4-the-downsides">Update 4: The downsides</a></li>
+<li><a href="#update-5-github-commit-status">Update 5: GitHub commit status</a></li>
 <li><a href="#see-also">See also</a></li>
 </ul>
 <!-- tocstop -->
@@ -356,6 +358,13 @@ ga('send', 'pageview');
 <li>finally, Cypress has killer <a target="_blank" rel="noopener" href="https://on.cypress.io/component-testing">component tests</a>. You can only write and run those from the same repository, since the component tests import the ... source components.</li>
 </ul>
 <p>Ultimately, I believe that becoming familiar with end-to-end tests and making a proof of concept allows for using the tests in a repo separate from the web application. But you do want to eventually merge the tests to live closer to the code to make the entire process as simple as possible. After all, your mental energy should be directed towards the feature work, not towards the repo juggling.</p>
+<h2><span id="update-5-github-commit-status">Update 5: GitHub commit status</span></h2><p>When the tests run in one repo, you can send the statuses back to the original application repo. You do need to send the commit SHA to know where to set the status though. For example, I am using the CircleCI pipeline parameter <code>TEST_COMMIT</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">TEST_COMMIT:</span></span><br><span class="line">  <span class="attr">description:</span> <span class="string">&#x27;Source commit SHA if known to report status checks&#x27;</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">  <span class="attr">default:</span> <span class="string">&#x27;&#x27;</span></span><br></pre></td></tr></table></figure>
+<p>Inside the test project, you can use my plugin <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-set-github-status">cypress-set-github-status</a> that registers itself inside the plugin process.</p>
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function">(<span class="params">on, config</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// when we are done, post the status to GitHub</span></span><br><span class="line">  <span class="comment">// application repo, using the passed commit SHA</span></span><br><span class="line">  <span class="comment">// https://github.com/bahmutov/cypress-set-github-status</span></span><br><span class="line">  <span class="built_in">require</span>(<span class="string">&#x27;cypress-set-github-status&#x27;</span>)(on, config, &#123;</span><br><span class="line">    owner: <span class="string">&#x27;bahmutov&#x27;</span>,</span><br><span class="line">    repo: <span class="string">&#x27;todomvc-no-tests-vercel&#x27;</span>,</span><br><span class="line">    commit: config.env.testCommit || process.env.TEST_COMMIT,</span><br><span class="line">    token: process.env.GITHUB_TOKEN || process.env.PERSONAL_GH_TOKEN,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>To authenticate, we are using a personal GitHub token. Each commit in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-no-tests-vercel">bahmutov/todomvc-no-tests-vercel</a> will trigger the CircleCI run in the tests repo, but it will set the pending status for each machine and then the final test result.</p>
+<p><img src="../images/separate-circleci/status.png" alt="The tests statuses in the app repo"></p>
+<p>I picked the single status per CI machine because GitHub has a limit of 100 statuses per commit, which can be exceeded with lots of specs or tests. But the number of machines running tests in parallel is unlikely to surpass the limit.</p>
 <h2><span id="see-also">See also</span></h2><ul>
 <li><a href="/blog/how-to-keep-cypress-tests-in-another-repo/" title="How to Keep Cypress Tests in Another Repo While Using GitHub Actions">How to Keep Cypress Tests in Another Repo While Using GitHub Actions</a></li>
 <li><a href="/blog/tested-ecommerce/" title="Deploy E-Commerce Site to Netlify and Test Using GitHub Actions">Deploy E-Commerce Site to Netlify and Test Using GitHub Actions</a></li>
@@ -395,7 +404,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/" data-id="ckydnlu2700mdvovgd195d6i1" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/" data-id="ckymeryvk00metkvgetls3o8r" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/#disqus_thread" class="article-comment-link">Comments</a>
       
