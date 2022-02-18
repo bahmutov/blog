@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Incremental Blog Scraping | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="In the previous blog post Scrape Static Site with Algolia I have shown how to scrape a static site to make it instantly searchable. After each deploy, you run the scraper which replaces the entire Alg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Incremental Blog Scraping">
+<meta property="og:url" content="https://glebbahmutov.com/blog/incremental-post-scraping/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="In the previous blog post Scrape Static Site with Algolia I have shown how to scrape a static site to make it instantly searchable. After each deploy, you run the scraper which replaces the entire Alg">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/selectors.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/merge.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/record.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/the-search.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/the-result.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/cy-scrape.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/sitemap.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/tag.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/filter.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/cat.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/run.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/scrape.png">
+<meta property="article:published_time" content="2022-02-18T05:00:00.000Z">
+<meta property="article:modified_time" content="2022-02-18T14:29:00.468Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta property="article:tag" content="github">
+<meta property="article:tag" content="algolia">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/incremental-scraping/selectors.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-incremental-post-scraping" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2022-02-18T05:00:00.000Z" itemprop="datePublished">Feb 18 2022</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Incremental Blog Scraping
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to scrape the changed blog posts and upload to Algolia.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>In the previous blog post <a href="/blog/scrape-static-site-with-algolia/" title="Scrape Static Site with Algolia">Scrape Static Site with Algolia</a> I have shown how to scrape a static site to make it instantly searchable. After each deploy, you run the scraper which replaces the entire Algolia index with new content. That might work for smaller sites, but quickly runs into Algolia usage limits as the site scales up. I have an Algolia index for all my <a href="../tags/cypress/">Cypress blog posts</a> and scraping all blog posts again and again generated way too many record operations, hitting the 10k limit on my free Algolia plan.</p>
+<p>The worst thing was - when I publish a new Cypress blog post, the rest of the posts stay unchanged, so all that scraping is replacing the search records with identical records. We need to devise a way to only scrape the new and the changed blog posts. This is what I call &quot;incremental&quot; scraping.</p>
+<h2><span id="text-records">Text records</span></h2><p>Another problem one can run into is the number of records created by blog post. At first, I used a CSS selector that returns all paragraphs, list items, and even the code comments to create individual Algolia records</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">.article .article-inner .article-entry p,</span><br><span class="line">.article .article-inner .article-entry li,</span><br><span class="line">.article .article-inner .article-entry figure.highlight .comment</span><br></pre></td></tr></table></figure>
+<p>For a typical blog post like <a href="/blog/email-cypress-report/" title="Email Cypress Test Report">Email Cypress Test Report</a> the above selector returns 20 text records.</p>
+<p><img src="../images/incremental-scraping/selectors.png" alt="A small blog post might generate more than twenty records"></p>
+<p>In addition, the text records, we scrape the H1, H2, and the blog description, creating hierarchical Algolia records. All this means that a typical post on my blog generates 25 - 80 Algolia records. Multiply by the number of Cypress posts I have written over the years (180+ as of this writing) and each scraping session might use up 9k Algolia operations. For comparison: the free Algolia monthly plan has a limit of 10k operations - and we are hitting it in a single scrape!</p>
+<h2><span id="changing-the-text-records">Changing the text records</span></h2><p>After consulting with the Algolia engineers, I have decided to change how the scraping records are formed. Instead of taking the individual <code>P</code>, <code>LI</code>, and <code>.comment</code> elements, and creating a record for each one, I have decided to combine them all into a single text record. After all - you cannot individually target a <code>P</code> record. My blog post only has anchor links for the header elements, thus all the <code>P</code>, <code>LI</code>, and other elements between them could be a single Algolia text record with the header anchor.</p>
+<p><img src="../images/incremental-scraping/merge.png" alt="Our goal is to have a single text record between the headers"></p>
+<p>Unfortunately, the default <a target="_blank" rel="noopener" href="https://docsearch.algolia.com/docs/legacy/run-your-own/">Algolia scraper code</a> does not allow merging the text records into one large record before uploading. Thus I needed to implement something myself. Luckily, Cypress can load the page and process it in every possible way. Time to write our own scraper.</p>
+<h2><span id="scraper-inside-cypress">Scraper inside Cypress</span></h2><blockquote class="pullquote"><p>🎁 You can find my source code used to incrementally scrape the blog posts in the repository <a target="_blank" rel="noopener" href="https://github.com/bahmutov/scrape-blog-post-page">bahmutov/scrape-blog-post-page</a>.</p>
+</blockquote>
+<p>Using the <a target="_blank" rel="noopener" href="https://on.cypress.io/get">cy.get</a> command we get the individual records, including the headers. Then we combine them into largr text records, up until we see a header element. Then we start a new text record. This is done by Cypress in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/scrape-blog-post-page/blob/main/cypress/integration/utils.js">cypress/integration/utils.js</a> file</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/utils.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">hasAnchor</span>(<span class="params">$el</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> $anchor = $el.find(<span class="string">&#x27;[id]&#x27;</span>)</span><br><span class="line">  <span class="keyword">return</span> $anchor.length &gt; <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">getAnchor</span>(<span class="params">$el</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> $anchor = $el.find(<span class="string">&#x27;[id]&#x27;</span>)</span><br><span class="line">  <span class="keyword">return</span> $anchor.attr(<span class="string">&#x27;id&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// now process all article elements, grouping them by the anchor</span></span><br><span class="line"><span class="keyword">return</span> cy</span><br><span class="line">  .get(</span><br><span class="line">    <span class="string">`</span></span><br><span class="line"><span class="string">      header.article-header h2,</span></span><br><span class="line"><span class="string">      article .article-inner h2,</span></span><br><span class="line"><span class="string">      .article .article-inner .article-entry p,</span></span><br><span class="line"><span class="string">      .article .article-inner .article-entry figure.highlight .comment</span></span><br><span class="line"><span class="string">    `</span>,</span><br><span class="line">  )</span><br><span class="line">  .each(<span class="function">(<span class="params">$snippet</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (hasAnchor($snippet)) &#123;</span><br><span class="line">      <span class="keyword">const</span> anchor = getAnchor($snippet)</span><br><span class="line">      currentRecord = &#123;</span><br><span class="line">        anchor,</span><br><span class="line">        text: <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">      &#125;</span><br><span class="line">      records.push(currentRecord)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      currentRecord.text += <span class="string">&#x27;\n&#x27;</span> + $snippet.text().replace(<span class="regexp">/\s+/g</span>, <span class="string">&#x27; &#x27;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>Whenever we see a header element with an anchor, we start a new text record. All the individual <code>P</code> and <code>.comment</code> records after that are appended as text, forming one large chunk of text (the code later checks the total text record size, Algolia recommends the records to be below 10k or 100k bytes). Thus instead of 20 individual text records, the &quot;Email Cypress Test Report&quot; blog post will have just 3 text records plus a few header records.</p>
+<p><img src="../images/incremental-scraping/record.png" alt="Typical text record after scraping"></p>
+<p>A typical Algolia record has one or several paragraphs of text, an anchor, and the full URL that uses the anchor to immediately direct the user to the right place. Here is the user searching using a part of the text above. You can try searching yourself by going to <a target="_blank" rel="noopener" href="https://cypress.tips/search">cypress.tips/search</a></p>
+<p><img src="../images/incremental-scraping/the-search.png" alt="The search widget finds the scraped text"></p>
+<p>When the user clicks on the search result, they are directed to the section&#39;s URL.</p>
+<p><img src="../images/incremental-scraping/the-result.png" alt="The click on the search result takes you to the section"></p>
+<p>I use Cypress to scrape, even if something like <a target="_blank" rel="noopener" href="https://cheerio.js.org/">cheerio.js</a> is faster. I can see and debug the scraper much better by using the Cypress GUI. I can see each found DOM element (including using at the DevTools Elements panel), step through the code, save the intermediate records - all to understand what the scraping algorithm is doing. If I wanted, I could then transfer the scraper logic into a Node script using <code>cheerio.js</code>. But as you will see in the next section, there is no need to optimize the speed of the scraper at the expense of the debugging experience - because we will scrape very few posts at a time.</p>
+<p><img src="../images/incremental-scraping/cy-scrape.png" alt="Observing the records being merged in Cypress browser"></p>
+<p>The merged text and header records are then uploading to Algolia using the code inside the Cypress <a target="_blank" rel="noopener" href="https://github.com/bahmutov/scrape-blog-post-page/blob/main/cypress/plugins/index.js">plugins file</a>.</p>
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> algoliasearch = <span class="built_in">require</span>(<span class="string">&#x27;algoliasearch&#x27;</span>)</span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function">(<span class="params">on, config</span>) =&gt;</span> &#123;</span><br><span class="line">  on(<span class="string">&#x27;task&#x27;</span>, &#123;</span><br><span class="line">    <span class="comment">// upload scraped records to Algolia</span></span><br><span class="line">    <span class="keyword">async</span> <span class="function"><span class="title">uploadRecords</span>(<span class="params">&#123; records, slug &#125;</span>)</span> &#123;</span><br><span class="line">      <span class="keyword">const</span> &#123; APPLICATION_ID, ADMIN_API_KEY, INDEX_NAME &#125; = process.env</span><br><span class="line">      <span class="keyword">if</span> (!APPLICATION_ID || !ADMIN_API_KEY || !INDEX_NAME) &#123;</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&#x27;Algolia app/key not set&#x27;</span>)</span><br><span class="line">        <span class="built_in">console</span>.log(</span><br><span class="line">          <span class="string">&#x27;Skipping uploading %d records for slug %s&#x27;</span>,</span><br><span class="line">          records.length,</span><br><span class="line">          slug,</span><br><span class="line">        )</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">const</span> client = algoliasearch(APPLICATION_ID, ADMIN_API_KEY)</span><br><span class="line">      <span class="keyword">const</span> index = client.initIndex(INDEX_NAME)</span><br><span class="line"></span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">&#x27;%s: removing existing records for %s&#x27;</span>, INDEX_NAME, slug)</span><br><span class="line">      <span class="keyword">await</span> index.deleteBy(&#123;</span><br><span class="line">        filters: slug,</span><br><span class="line">      &#125;)</span><br><span class="line"></span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">&#x27;%s: adding %d records&#x27;</span>, INDEX_NAME, records.length)</span><br><span class="line">      <span class="comment">// each record should have a unique id set</span></span><br><span class="line">      <span class="keyword">await</span> index.saveObjects(records, &#123;</span><br><span class="line">        autoGenerateObjectIDIfNotExist: <span class="literal">true</span>,</span><br><span class="line">      &#125;)</span><br><span class="line"></span><br><span class="line">      <span class="comment">// cy.task must return something</span></span><br><span class="line">      <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Note that if a blog post has been edited, we need to remove any existing records, which I do by using the post slug</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// take the last part of the url which is the post name</span></span><br><span class="line"><span class="keyword">const</span> slug = _.last(_.filter(_.split(baseUrl, <span class="string">&#x27;/&#x27;</span>), <span class="built_in">Boolean</span>)</span><br></pre></td></tr></table></figure>
+<p>Now we just need to make sure we only scrape the changed and the new blog posts.</p>
+<h2><span id="incremental-scraping">Incremental scraping</span></h2><p>On my Hexo blog every published blog post has its &quot;lastmod&quot; date, which you can find in the <a href="https://glebbahmutov.com/blog/sitemap.xml">sitemap.xml</a></p>
+<p><img src="../images/incremental-scraping/sitemap.png" alt="Blog post URLs and last modified dates"></p>
+<p>We can get the list of Cypress blog posts from the <a href="https://glebbahmutov.com/blog/tags/cypress/">/tags/cypress/</a> page.</p>
+<p><img src="../images/incremental-scraping/tag.png" alt="A page with all Cypress blog posts"></p>
+<p><strong>Tip:</strong> if you use the pagination in Hexo blog, then the &quot;tag&quot; page only shows the first N blog posts for a tag. I have removed this limit by cloning the pagination plugin which you can find at <a target="_blank" rel="noopener" href="https://github.com/bahmutov/hexo-generator-gleb">bahmutov/hexo-generator-gleb</a>.</p>
+<p>Getting the list of URLs from the tag page is simple to do using <code>cheerio.js</code> in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/scrape-blog-post-page/blob/main/get-post-urls.js">get-post-urls.js</a></p>
+<figure class="highlight js"><figcaption><span>get-post-urls.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> cheerio = <span class="built_in">require</span>(<span class="string">&#x27;cheerio&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> &#123; URL &#125; = <span class="built_in">require</span>(<span class="string">&#x27;url&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">getBlogPostUrls</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> tagPageUrl = <span class="string">&#x27;https://glebbahmutov.com/blog/tags/cypress/&#x27;</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> res = <span class="keyword">await</span> got(tagPageUrl)</span><br><span class="line">  <span class="keyword">const</span> $ = cheerio.load(res.body)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// find all tags pointing at the blog posts</span></span><br><span class="line">  <span class="comment">// and put the full URL in the array</span></span><br><span class="line">  <span class="keyword">const</span> links = []</span><br><span class="line">  $(<span class="string">&#x27;a.archive-article-title&#x27;</span>).each(<span class="function"><span class="keyword">function</span> (<span class="params">k, el</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> relativeUrl = $(el).attr(<span class="string">&#x27;href&#x27;</span>)</span><br><span class="line">    <span class="keyword">const</span> fullUrl = <span class="keyword">new</span> URL(relativeUrl, tagPageUrl)</span><br><span class="line">    links.push(fullUrl.href)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;found %d links&#x27;</span>, links.length)</span><br><span class="line">  <span class="keyword">return</span> links</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Any time we want to get the list of blog posts to scrape, we can get the sitemap, parse it into URLs and the last modified dates. At the same time we get the Cypress post URLs and intersect the two lists.</p>
+<figure class="highlight js"><figcaption><span>get-modified-post-urls.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> &#123; getBlogPostUrls &#125; = <span class="built_in">require</span>(<span class="string">&#x27;./get-post-urls&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> &#123; getSiteMap &#125; = <span class="built_in">require</span>(<span class="string">&#x27;./get-sitemap&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">Promise</span>.all([getSiteMap(), getBlogPostUrls()]).then(<span class="function">(<span class="params">[modified, posts]</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> cypressPostsWithModified = &#123;&#125;</span><br><span class="line">  posts.forEach(<span class="function">(<span class="params">url</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!modified[url]) &#123;</span><br><span class="line">      <span class="built_in">console</span>.error(<span class="string">&#x27;missing modified date for %s&#x27;</span>, url)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      cypressPostsWithModified[url] = modified[url]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> filename = <span class="string">&#x27;blog-post-urls.json&#x27;</span></span><br><span class="line">  fs.writeFileSync(</span><br><span class="line">    filename,</span><br><span class="line">    <span class="built_in">JSON</span>.stringify(cypressPostsWithModified, <span class="literal">null</span>, <span class="number">2</span>) + <span class="string">&#x27;\n&#x27;</span>,</span><br><span class="line">  )</span><br><span class="line">  <span class="built_in">console</span>.log(</span><br><span class="line">    <span class="string">&#x27;saved %d links to %s&#x27;</span>,</span><br><span class="line">    <span class="built_in">Object</span>.keys(cypressPostsWithModified).length,</span><br><span class="line">    filename,</span><br><span class="line">  )</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>I like saving the intermediate results as JSON files, because that allows me to inspect the data, and continue from a known state. Now we need to decide for each URL if it needs scraping. At first, I tried to use Algolia to tell me the scraped timestamps, but later decided to simplify the logic and just have a database of records and the scrape timestamps. I have created <a target="_blank" rel="noopener" href="https://github.com/bahmutov/was-it-scraped">was-it-scraped</a> NPM module to abstract saving which records were scraped already. Under the hood it uses an external Supabase database, but you could use a local JSON file as well. Now we can write a script to filter all the found Cypress blog posts and only leave the ones that need scraping:</p>
+<figure class="highlight js"><figcaption><span>filter-scraped-posts.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>)</span><br><span class="line"><span class="comment">// an object with [url] =&gt; [modified]</span></span><br><span class="line"><span class="comment">// with modified string in the format &quot;YYYY-MM-DD&quot;</span></span><br><span class="line"><span class="keyword">const</span> allPosts = <span class="built_in">require</span>(<span class="string">&#x27;./blog-post-urls.json&#x27;</span>)</span><br><span class="line"><span class="built_in">console</span>.log(</span><br><span class="line">  <span class="string">&#x27;checking %d posts if they are scraped&#x27;</span>,</span><br><span class="line">  <span class="built_in">Object</span>.keys(allPosts).length,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> &#123; wasScrapedAfter &#125; = <span class="built_in">require</span>(<span class="string">&#x27;was-it-scraped&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">checkScrapeStatus</span>(<span class="params">urlsModified</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> urls = <span class="built_in">Object</span>.keys(urlsModified)</span><br><span class="line">  <span class="keyword">const</span> results = []</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> url <span class="keyword">of</span> urls) &#123;</span><br><span class="line">    <span class="keyword">const</span> modified = <span class="keyword">new</span> <span class="built_in">Date</span>(urlsModified[url])</span><br><span class="line">    <span class="keyword">const</span> scraped = <span class="keyword">await</span> wasScrapedAfter(url, modified)</span><br><span class="line">    <span class="keyword">if</span> (!scraped) &#123;</span><br><span class="line">      results.push(url)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> results</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">checkScrapeStatus(allPosts).then(<span class="function">(<span class="params">list</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> filename = <span class="string">&#x27;need-scraping.json&#x27;</span></span><br><span class="line">  fs.writeFileSync(filename, <span class="built_in">JSON</span>.stringify(list, <span class="literal">null</span>, <span class="number">2</span>) + <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;saved %d links to be scraped into %s&#x27;</span>, list.length, filename)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>A typical run quickly goes through the hundreds of URLs to only find the new and the modified blog posts.</p>
+<p><img src="../images/incremental-scraping/filter.png" alt="Filtering all URLs by the last scraped vs modified dates"></p>
+<p>In the above run, only a single blog post URL will require scraping.</p>
+<p><img src="../images/incremental-scraping/cat.png" alt="The saved JSON file lists a single blog post URL that needs scraping"></p>
+<p>The last Node script goes through the list of URLs to scrape and fires up Cypress via its <a target="_blank" rel="noopener" href="https://on.cypress.io/module-api">NPM module API</a>. After scraping it marks the last scraped timestamp in the database for those blog posts using the <code>was-it-scraped</code> module and its <code>markScraped</code> function.</p>
+<figure class="highlight js"><figcaption><span>scrape-filtered-posts.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; markScraped &#125; = <span class="built_in">require</span>(<span class="string">&#x27;was-it-scraped&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> cypress = <span class="built_in">require</span>(<span class="string">&#x27;cypress&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> urlsToScrape = <span class="built_in">require</span>(<span class="string">&#x27;./need-scraping.json&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;to scrape %d posts&#x27;</span>, urlsToScrape.length)</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">scrapeOnePost</span>(<span class="params">url</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> outputFolder = <span class="string">&#x27;scraped&#x27;</span></span><br><span class="line">  <span class="keyword">const</span> slug = url.split(<span class="string">&#x27;/&#x27;</span>).filter(<span class="built_in">Boolean</span>).pop()</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;scraping url %s, slug %s&#x27;</span>, url, slug)</span><br><span class="line">  <span class="keyword">const</span> outputRecordsFilename = path.join(</span><br><span class="line">    outputFolder,</span><br><span class="line">    <span class="string">`<span class="subst">$&#123;slug&#125;</span>-algolia-objects.json`</span>,</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">  <span class="keyword">await</span> cypress.run(&#123;</span><br><span class="line">    config: &#123;</span><br><span class="line">      baseUrl: url,</span><br><span class="line">    &#125;,</span><br><span class="line">    env: &#123;</span><br><span class="line">      slug,</span><br><span class="line">      outputRecordsFilename,</span><br><span class="line">    &#125;,</span><br><span class="line">    spec: <span class="string">&#x27;cypress/integration/spec2.js&#x27;</span>,</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> records = <span class="built_in">JSON</span>.parse(fs.readFileSync(outputRecordsFilename))</span><br><span class="line">  <span class="keyword">await</span> uploadRecordsToAlgolia(records, slug)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">await</span> markScraped(url)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">scrapeUrls</span>(<span class="params">urls</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> url <span class="keyword">of</span> urls) &#123;</span><br><span class="line">    <span class="keyword">await</span> scrapeOnePost(url)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">scrapeUrls(urlsToScrape)</span><br></pre></td></tr></table></figure>
+<h2><span id="continuous-incremental-scraping">Continuous incremental scraping</span></h2><p>We can do the scraping locally, but a more consistent way is to let the CI run the scraper every night. I am using GitHub actions to call the above scripts, see the code in the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/scrape-blog-post-page/blob/main/.github/workflows/scrape.yml">.github/workflows/scrape.yml</a> file.</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/scrape.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">Scrape</span></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">main</span></span><br><span class="line">  <span class="attr">schedule:</span></span><br><span class="line">    <span class="comment"># scrape any new blog posts every night</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">cron:</span> <span class="string">&#x27;0 1 * * *&#x27;</span></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">scrape:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span> <span class="string">🛎</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v2</span></span><br><span class="line"></span><br><span class="line">      <span class="comment"># Install NPM dependencies, cache them correctly</span></span><br><span class="line">      <span class="comment"># https://github.com/cypress-io/github-action</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Install</span> <span class="string">dependencies</span> <span class="string">📦</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v2</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">runTests:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Get</span> <span class="string">modified</span> <span class="string">posts</span> <span class="string">📰</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">node</span> <span class="string">./get-modified-post-urls</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Filter</span> <span class="string">scraped</span> <span class="string">posts</span> <span class="string">📤</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">node</span> <span class="string">./filter-scraped-posts</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="attr">SUPABASE_URL:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.SUPABASE_URL</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">SUPABASE_KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.SUPABASE_KEY</span> <span class="string">&#125;&#125;</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Show</span> <span class="string">list</span> <span class="string">of</span> <span class="string">posts</span> <span class="string">to</span> <span class="string">scrape</span> <span class="string">🖨</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">cat</span> <span class="string">need-scraping.json</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Scrape</span> <span class="string">the</span> <span class="string">changed</span> <span class="string">posts</span> <span class="string">🚀</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">node</span> <span class="string">./scrape-filtered-posts</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="comment"># for updating the scraped timestamps</span></span><br><span class="line">          <span class="attr">SUPABASE_URL:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.SUPABASE_URL</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">SUPABASE_KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.SUPABASE_KEY</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="comment"># for updating the Algolia index</span></span><br><span class="line">          <span class="attr">APPLICATION_ID:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.APPLICATION_ID</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">INDEX_NAME:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.INDEX_NAME</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">ADMIN_API_KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.ADMIN_API_KEY</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>The above workflow is fast. For example, a recent run with one blog post to scrape took 35 seconds.</p>
+<p><img src="../images/incremental-scraping/run.png" alt="Running the scrape workflow on GitHub Actions"></p>
+<p>When scraping the blog post, Cypress outputs the main messages about the scraping progress.</p>
+<p><img src="../images/incremental-scraping/scrape.png" alt="Scraping the blog post and uploading the records to Algolia"></p>
+<p>Even this blog post will be scraped automatically, as it tagged &quot;cypress&quot; too.</p>
+<h2><span id="see-also">See also</span></h2><ul>
+<li><a href="/blog/scrape-static-site-with-algolia/" title="Scrape Static Site with Algolia">Scrape Static Site with Algolia</a> is a good introduction to scraping</li>
+<li><a href="/blog/scrape-slides/" title="Scrape Slides">Scrape Slides</a> how similarly to this approach I scrape my <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">slides.com/bahmutov</a> presentations</li>
+<li>I scrape my YouTube <a target="_blank" rel="noopener" href="https://www.youtube.com/playlist?list=PLP9o9QNnQuAYYRpJzDNWpeuOVTwxmIxcI">Cypress Tips &amp; Tricks playlist</a> using the code in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/scrape-youtube-videos">bahmutov/scrape-youtube-videos</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/incremental-post-scraping/" data-id="ckzsie9al00nx0uvgeb7zgt38" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/incremental-post-scraping/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/algolia/" rel="tag">algolia</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/github/" rel="tag">github</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="../email-cypress-report/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Email Cypress Test Report</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">145</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">452</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">113</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">183</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">135</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.42px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.67px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.83px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.75px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.83px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.5px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.33px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.92px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.42px;">browser</a> <a href="../tags/ci/" style="font-size: 16.67px;">ci</a> <a href="../tags/circle/" style="font-size: 13.75px;">circle</a> <a href="../tags/climate/" style="font-size: 14.58px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 14.58px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.5px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 13.75px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.83px;">d3</a> <a href="../tags/db/" style="font-size: 14.58px;">db</a> <a href="../tags/docker/" style="font-size: 14.17px;">docker</a> <a href="../tags/documentation/" style="font-size: 12.08px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.58px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 17.92px;">functional</a> <a href="../tags/generators/" style="font-size: 11.67px;">generators</a> <a href="../tags/git/" style="font-size: 15px;">git</a> <a href="../tags/github/" style="font-size: 15.83px;">github</a> <a href="../tags/graphql/" style="font-size: 11.67px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.5px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.83px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.25px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.5px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.67px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.83px;">interview</a> <a href="../tags/jade/" style="font-size: 11.25px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.58px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.83px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.75px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.67px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.25px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.33px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.25px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.5px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.08px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.42px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.67px;">ramda</a> <a href="../tags/react/" style="font-size: 12.5px;">react</a> <a href="../tags/react-native/" style="font-size: 11.25px;">react native</a> <a href="../tags/reactive/" style="font-size: 14.17px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.25px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.67px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.33px;">security</a> <a href="../tags/sentry/" style="font-size: 13.75px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12.08px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.17px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.42px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.5px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.42px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.33px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.25px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.67px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12.08px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.83px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="">Incremental Blog Scraping</a>
+          </li>
+        
+          <li>
+            <a href="../email-cypress-report/">Email Cypress Test Report</a>
+          </li>
+        
+          <li>
+            <a href="../re-run-the-tests-with-checkbox/">Re-run The Tests By Clicking A Checkbox</a>
+          </li>
+        
+          <li>
+            <a href="../react-app-actions/">Control React Applications From Cypress Tests</a>
+          </li>
+        
+          <li>
+            <a href="../react-state-from-e2e-tests/">Access React Components From Cypress E2E Tests</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2022 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/incremental-post-scraping/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>
