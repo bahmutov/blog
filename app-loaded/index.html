@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>When Has The App Loaded | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Let&#39;s take an application that fetches data from the server and write end-to-end tests for it. What happens if the application takes a little bit longer than usual to bootstrap, get the data, and">
+<meta property="og:type" content="article">
+<meta property="og:title" content="When Has The App Loaded">
+<meta property="og:url" content="https://glebbahmutov.com/blog/app-loaded/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Let&#39;s take an application that fetches data from the server and write end-to-end tests for it. What happens if the application takes a little bit longer than usual to bootstrap, get the data, and">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/app-loaded/todos.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/app-loaded/wait.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/app-loaded/network.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/app-loaded/delay.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/app-loaded/render-delay.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/app-loaded/body-loaded.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/app-loaded/window.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/app-loaded/todos-n.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/app-loaded/check-todos.png">
+<meta property="article:published_time" content="2022-03-31T04:00:00.000Z">
+<meta property="article:modified_time" content="2022-03-31T13:44:22.773Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/app-loaded/todos.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-app-loaded" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2022-03-31T04:00:00.000Z" itemprop="datePublished">Mar 31 2022</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      When Has The App Loaded
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to wait for the application to load data before testing it.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Let&#39;s take an application that fetches data from the server and write end-to-end tests for it. What happens if the application takes a little bit longer than usual to bootstrap, get the data, and render it? Will the test fail because it does not wait for the data to finish loading?</p>
+<p>The example I am about to show comes from <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-workshop-basics">bahmutov&#x2F;cypress-workshop-basics</a>. The test visits the application URL and confirms there are no items on the page.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;starts with zero items&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;li.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Hmm, the test passes, yet I can clearly see 2 todo items on the page? Is the assertion <code>cy.get(&#39;li.todo&#39;).should(&#39;have.length&#39;, 0)</code> not doing its job?</p>
+<p><img src="../images/app-loaded/todos.png" alt="The test passes when it should have failed"></p>
+<p>The test finishes <em>too quickly</em>. While the application is still loading the data, the assertion <code>cy.get(&#39;li.todo&#39;).should(&#39;have.length&#39;, 0)</code> checks the empty initial page. There are no todo items, and the test completes. Only then the Ajax call returns and the 2 items are rendered on the page. By then the test has finished.</p>
+<p>Note that the <code>.should(&#39;have.length&#39;, 0)</code> assertion is similar to the <code>.should(&#39;not.exist&#39;)</code> assertion. Such negative assertions are dangerous in my opinion, they can pass for the wrong reason (like in our case). Read the blog posts <a href="/blog/negative-assertions/" title="Be Careful With Negative Assertions">Be Careful With Negative Assertions</a> and <a href="/blog/negative-assertions-and-missing-states/" title="Negative Assertions And Missing States">Negative Assertions And Missing States</a> for more examples.</p>
+<h2><span id="waiting-for-the-data-load">Waiting for the data load</span></h2><p>The simplest solution to this problem, is to make the test wait for the data to load. Perhaps a one second delay would be enough?</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;starts with zero items (waits)&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">wait</span>(<span class="number">1000</span>)</span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;li.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Yes, now the test fails as expected, because the page shows the loaded data when the test checks it.</p>
+<p><img src="../images/app-loaded/wait.png" alt="The test waits one second before checking the page"></p>
+<p>Is one second wait enough? It might be enough when running the application locally. When running the tests against a remote server, we might need to wait longer. The worst is when the data load takes approximately one second. It leads to a race condition between the application and the test. Sometimes the application takes slightly longer than one second, and the test fails to detect the data, leading to the <a target="_blank" rel="noopener" href="https://on.cypress.io/flaky-test-management">flaky tests</a>.</p>
+<h2><span id="waiting-for-network-call-to-finish">Waiting for network call to finish</span></h2><p>A much better solution is to spy on the Ajax call made by the application and wait for the data to return before checking the page. You can use <a target="_blank" rel="noopener" href="https://on.cypress.io/intercept">cy.intercept</a> command to spy on calls made by the application. You can spy on Ajax calls or any resource requested by the browser.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;starts with zero items&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// start Cypress network server</span></span><br><span class="line">  <span class="comment">// spy on route `GET /todos`</span></span><br><span class="line">  <span class="comment">// THEN visit the page</span></span><br><span class="line">  cy.<span class="title function_">intercept</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>).<span class="title function_">as</span>(<span class="string">&#x27;todos&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">wait</span>(<span class="string">&#x27;@todos&#x27;</span>) <span class="comment">// wait for `GET /todos` response</span></span><br><span class="line">    <span class="comment">// inspect the server&#x27;s response</span></span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;response.body&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">  <span class="comment">// then check the DOM</span></span><br><span class="line">  <span class="comment">// note that we don&#x27;t have to use &quot;cy.wait(...).then(...)&quot;</span></span><br><span class="line">  <span class="comment">// because all Cypress commands are flattened into a single chain</span></span><br><span class="line">  <span class="comment">// automatically. Thus just write &quot;cy.wait(); cy.get();&quot; naturally</span></span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;li.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/app-loaded/network.png" alt="The test waits for the network call to complete"></p>
+<p>The command <code>cy.wait(&#39;@todos&#39;)</code> waits for the network call, even if the call is made later.</p>
+<p>In my application example, I can force the application to wait N seconds before making the initial load.</p>
+<p>The application might delay the Ajax call.</p>
+<figure class="highlight js"><figcaption><span>app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// state.delay comes from URL query parameter</span></span><br><span class="line"><span class="comment">// ?delay=2000</span></span><br><span class="line"><span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">commit</span>(<span class="string">&#x27;SET_LOADING&#x27;</span>, <span class="literal">true</span>)</span><br><span class="line"></span><br><span class="line">  axios</span><br><span class="line">    .<span class="title function_">get</span>(<span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="function">(<span class="params">r</span>) =&gt;</span> r.<span class="property">data</span>)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="function">(<span class="params">todos</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="title function_">commit</span>(<span class="string">&#x27;SET_TODOS&#x27;</span>, todos)</span><br><span class="line">      <span class="title function_">commit</span>(<span class="string">&#x27;SET_LOADING&#x27;</span>, <span class="literal">false</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">    .<span class="title function_">catch</span>(<span class="function">(<span class="params">e</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;could not load todos&#x27;</span>)</span><br><span class="line">      <span class="variable language_">console</span>.<span class="title function_">error</span>(e.<span class="property">message</span>)</span><br><span class="line">      <span class="variable language_">console</span>.<span class="title function_">error</span>(e.<span class="property">response</span>.<span class="property">data</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">    .<span class="title function_">finally</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">      <span class="comment">// an easy way for the application to signal</span></span><br><span class="line">      <span class="comment">// that it is done loading</span></span><br><span class="line">      <span class="variable language_">document</span>.<span class="property">body</span>.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;loaded&#x27;</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;, state.<span class="property">delay</span>)</span><br></pre></td></tr></table></figure>
+
+<p>The delay makes no difference, the test still correctly waits for the application to load its initial data.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;starts with zero items (delay)&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">intercept</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>).<span class="title function_">as</span>(<span class="string">&#x27;todos&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/?delay=2000&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">wait</span>(<span class="string">&#x27;@todos&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;li.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Look at the recording below. The Ajax call is detected two seconds after the visit, yet <code>cy.wait(&#39;@todos&#39;)</code> happily waits for it before Cypress proceeds to the next command.</p>
+<p><img src="../images/app-loaded/delay.gif" alt="The test waits for the delayed Ajax call"></p>
+<h2><span id="render-delay">Render delay</span></h2><p>What if our application has a delay between receiving the data and rendering it on the page?</p>
+<figure class="highlight js"><figcaption><span>app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">axios</span><br><span class="line">  .<span class="title function_">get</span>(<span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">r</span>) =&gt;</span> r.<span class="property">data</span>)</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">todos</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">      <span class="title function_">commit</span>(<span class="string">&#x27;SET_TODOS&#x27;</span>, todos)</span><br><span class="line">      <span class="title function_">commit</span>(<span class="string">&#x27;SET_LOADING&#x27;</span>, <span class="literal">false</span>)</span><br><span class="line">    &#125;, state.<span class="property">renderDelay</span>)</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Hmm, our test again passes when it should have failed.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;starts with zero items (delay plus render delay)&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">intercept</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>).<span class="title function_">as</span>(<span class="string">&#x27;todos&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/?delay=2000&amp;renderDelay=1500&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">wait</span>(<span class="string">&#x27;@todos&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;li.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/app-loaded/render-delay.gif" alt="The delay between the network call and showing items on the page confuses the test"></p>
+<p>The &quot;missing&quot; step between finishing the network call and rendering the data on the page is exactly the problem I have described in the blog post <a href="/blog/negative-assertions-and-missing-states/" title="Negative Assertions And Missing States">Negative Assertions And Missing States</a>. The test does not &quot;know&quot; that the application is still not done loading. We need an explicit way of signalling from the application to the test runner &quot;I am done loading the data&quot;.</p>
+<h2><span id="observe-the-page">Observe the page</span></h2><p>The best approach to tell that the application has finished loading ... is for application to set something observable to tell the test runner (and the human users) that the data load is done. For example, the application can set a CSS class or a utility data attribute</p>
+<figure class="highlight js"><figcaption><span>app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">SET_LOADING</span>(<span class="params">state, flag</span>) &#123;</span><br><span class="line">  state.<span class="property">loading</span> = flag</span><br><span class="line">  <span class="keyword">if</span> (flag === <span class="literal">false</span>) &#123;</span><br><span class="line">    <span class="comment">// an easy way for the application to signal</span></span><br><span class="line">    <span class="comment">// that it is done loading</span></span><br><span class="line">    <span class="variable language_">document</span>.<span class="property">body</span>.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;loaded&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Then the test can tell when the application has finished loading by observing the <code>&lt;body&gt;</code> element.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;starts with zero items (check body.loaded)&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// use delays to simulate the delayed load and render</span></span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/?delay=2000&amp;renderDelay=1500&#x27;</span>)</span><br><span class="line">  <span class="comment">// the application sets &quot;loaded&quot; class on the body</span></span><br><span class="line">  <span class="comment">// in the test we can check for this class</span></span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;body&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.class&#x27;</span>, <span class="string">&#x27;loaded&#x27;</span>)</span><br><span class="line">  <span class="comment">// then check the number of items</span></span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;li.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The test behaves correctly and fails as expected.</p>
+<p><img src="../images/app-loaded/body-loaded.gif" alt="The test waits for the body element to have class loaded"></p>
+<p>Note: the assertion <code>.should(&#39;have.class&#39;, &#39;loaded&#39;)</code> passes after 3.5 seconds; the application requests the data after 2 seconds, and renders it after 1.5 seconds. The assertion might time out if the data load takes slightly longer, since the default command timeout is 4 seconds. I would suggest using a longer command time out in this case:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;body&#x27;</span>, &#123; <span class="attr">timeout</span>: <span class="number">7_000</span> &#125;).<span class="title function_">should</span>(<span class="string">&#x27;have.class&#x27;</span>, <span class="string">&#x27;loaded&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<h2><span id="check-the-window-object">Check the window object</span></h2><p>We can use another mechanism to signal the test runner that the application has finished loading the data. We can even pass the data we got from the server!</p>
+<figure class="highlight js"><figcaption><span>app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">SET_TODOS</span>(<span class="params">state, todos</span>) &#123;</span><br><span class="line">  state.<span class="property">todos</span> = todos</span><br><span class="line">  <span class="comment">// expose the todos via the global &quot;window&quot; object</span></span><br><span class="line">  <span class="comment">// but only if we are running Cypress tests</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="variable language_">window</span>.<span class="property">Cypress</span>) &#123;</span><br><span class="line">    <span class="variable language_">window</span>.<span class="property">todos</span> = todos</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The test then can detect when the <code>window.todos</code> property is set using <a target="_blank" rel="noopener" href="https://on.cypress.io/window">cy.window</a> and <a target="_blank" rel="noopener" href="https://on.cypress.io/its">cy.its</a> commands.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;starts with zero items (check the window)&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// use delays to simulate the delayed load and render</span></span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/?delay=2000&amp;renderDelay=1500&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">window</span>().<span class="title function_">its</span>(<span class="string">&#x27;todos&#x27;</span>, &#123; <span class="attr">timeout</span>: <span class="number">7_000</span> &#125;)</span><br><span class="line">  <span class="comment">// then check the number of items</span></span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;li.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/app-loaded/window.png" alt="Continue the test when the application sets the window.todos object"></p>
+<p>If we can detect when the <code>window.todos</code> property is set, we can read the actual todos and use them to check the rendered page.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;starts with N items&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// use delays to simulate the delayed load and render</span></span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/?delay=2000&amp;renderDelay=1500&#x27;</span>)</span><br><span class="line">  <span class="comment">// access the loaded Todo items</span></span><br><span class="line">  cy.<span class="title function_">window</span>()</span><br><span class="line">    <span class="comment">// you can drill down nested properties using &quot;.&quot;</span></span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;todos.length&#x27;</span>)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="function">(<span class="params">n</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="comment">// then check the number of items</span></span><br><span class="line">      cy.<span class="title function_">get</span>(<span class="string">&#x27;li.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, n)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/app-loaded/todos-n.gif" alt="Using the data from the app to check the rendered page"></p>
+<p>You can even use the <code>window.todos</code> to check what the page renders.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;starts with N items and checks the page&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// use delays to simulate the delayed load and render</span></span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/?delay=2000&amp;renderDelay=1500&#x27;</span>)</span><br><span class="line">  <span class="comment">// access the loaded Todo items</span></span><br><span class="line">  cy.<span class="title function_">window</span>()</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;todos&#x27;</span>)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="function">(<span class="params">todos</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="comment">// then check the number of items</span></span><br><span class="line">      cy.<span class="title function_">get</span>(<span class="string">&#x27;li.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, todos.<span class="property">length</span>)</span><br><span class="line">      todos.<span class="title function_">forEach</span>(<span class="function">(<span class="params">todo</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (todo.<span class="property">completed</span>) &#123;</span><br><span class="line">          cy.<span class="title function_">contains</span>(<span class="string">&#x27;.todo&#x27;</span>, todo.<span class="property">title</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.class&#x27;</span>, <span class="string">&#x27;completed&#x27;</span>)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          cy.<span class="title function_">contains</span>(<span class="string">&#x27;.todo&#x27;</span>, todo.<span class="property">title</span>).<span class="title function_">should</span>(<span class="string">&#x27;not.have.class&#x27;</span>, <span class="string">&#x27;completed&#x27;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/app-loaded/check-todos.png" alt="Check if the page renders each todo correctly"></p>
+<p>For more on accessing the application data from the Cypress test via the <code>window</code> object, see the blog post <a href="/blog/stub-via-window/" title="Stub Objects By Passing Them Via Window Property">Stub Objects By Passing Them Via Window Property</a>.</p>
+<h2><span id="conclusion">Conclusion</span></h2><p>The test runner should not &quot;run away&quot; from the application. If the application is still loading the data, the test runner should wait for the data to load and the page to be ready to continue testing. In this blog post, I have shown how to wait for the data to load using:</p>
+<ul>
+<li>a hard-coded <code>cy.wait(N)</code> command</li>
+<li>network spy using the <code>cy.intercept</code> command</li>
+<li>a <code>body</code> element property added after the load</li>
+<li>a property on the <code>window</code> object set by the application after the load</li>
+</ul>
+<p>Happy testing!</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/app-loaded/" data-id="cl1f1vr2n003wfjvg25rxbptx" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/app-loaded/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="../stub-via-window/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Stub Objects By Passing Them Via Window Property</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">146</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">463</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">113</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">195</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">21</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">23</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">139</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.4px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.6px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.8px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.8px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.8px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.6px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.2px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.8px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15.2px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.6px;">browser</a> <a href="../tags/ci/" style="font-size: 16.8px;">ci</a> <a href="../tags/circle/" style="font-size: 14px;">circle</a> <a href="../tags/climate/" style="font-size: 14.8px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.2px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.4px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.8px;">d3</a> <a href="../tags/db/" style="font-size: 14.8px;">db</a> <a href="../tags/docker/" style="font-size: 14.4px;">docker</a> <a href="../tags/documentation/" style="font-size: 12px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.8px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18px;">functional</a> <a href="../tags/generators/" style="font-size: 11.6px;">generators</a> <a href="../tags/git/" style="font-size: 15.2px;">git</a> <a href="../tags/github/" style="font-size: 16px;">github</a> <a href="../tags/graphql/" style="font-size: 11.6px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.4px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.8px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.2px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.4px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.6px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.8px;">interview</a> <a href="../tags/jade/" style="font-size: 11.2px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.6px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.8px;">jshint</a> <a href="../tags/markdown/" style="font-size: 14px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.8px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.2px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.4px;">nodejs</a> <a href="../tags/performance/" style="font-size: 16.4px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.4px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.2px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.4px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.8px;">ramda</a> <a href="../tags/react/" style="font-size: 12.4px;">react</a> <a href="../tags/react-native/" style="font-size: 11.2px;">react native</a> <a href="../tags/reactive/" style="font-size: 14.4px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.2px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.6px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.2px;">security</a> <a href="../tags/sentry/" style="font-size: 14px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 12px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.2px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.6px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.4px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.4px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.6px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.2px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.6px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 12px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.8px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="">When Has The App Loaded</a>
+          </li>
+        
+          <li>
+            <a href="../stub-via-window/">Stub Objects By Passing Them Via Window Property</a>
+          </li>
+        
+          <li>
+            <a href="../css-animations/">How Cypress Freezes CSS Animations And You Can Too</a>
+          </li>
+        
+          <li>
+            <a href="../negative-assertions-and-missing-states/">Negative Assertions And Missing States</a>
+          </li>
+        
+          <li>
+            <a href="../fixture-and-request/">Compare The Response To A Fixture</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2022 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/app-loaded/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>
