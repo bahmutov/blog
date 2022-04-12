@@ -19,8 +19,9 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/faster-ci-feedback/group-chat.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/faster-ci-feedback/fixed.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/faster-ci-feedback/utils.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/faster-ci-feedback/changed-specs.png">
 <meta property="article:published_time" content="2021-10-04T04:00:00.000Z">
-<meta property="article:modified_time" content="2022-02-08T20:30:25.981Z">
+<meta property="article:modified_time" content="2022-04-12T18:33:55.893Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="cypress">
 <meta property="article:tag" content="github">
@@ -127,6 +128,19 @@ ga('send', 'pageview');
     <div class="article-entry" itemprop="articleBody">
       
         <p>As your project grows, the end-to-end tests take longer and longer to finish. You open a pull request and ... wait for 10-20 minutes for the tests to finish. Then you search the Cypress Dashboard to find the spec with the modified test, just to see if it has failed or passed. All this time, you are thinking to yourself - why can&#39;t Cypress run the <em>modified</em> specs first? While there is no built-in way in Cypress as of October 2021, it is not hard to implement it yourself. In this blog post, I will show how to run new and changed Cypress.io specs first if you are using GitHub Actions. Similar approach could be used with any CI provider, like <a href="/blog/faster-ci-feedback-on-circleci/" title="CircleCI">CircleCI</a>.</p>
+<!-- toc -->
+
+<ul>
+<li><a href="#the-initial-workflow">The initial workflow</a></li>
+<li><a href="#the-pull-request-workflow">The pull request workflow</a></li>
+<li><a href="#limit-the-git-output">Limit the Git output</a></li>
+<li><a href="#workflow-in-action">Workflow in action</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#update-1-pick-the-changed-specs-better">Update 1: pick the changed specs better</a></li>
+<li><a href="#update-2-pick-the-changed-specs-better-part-2">Update 2: pick the changed specs better part 2</a></li>
+</ul>
+<!-- tocstop -->
+
 <blockquote class="pullquote"><p>🎁 You can find the source code for this blog post in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/chat.io">bahmutov&#x2F;chat.io</a></p>
 </blockquote>
 
@@ -192,7 +206,7 @@ ga('send', 'pageview');
 <p>Thus you want to pipe the output through the filters first - the filters do not get paginated. For example, you can get the raw number of changed files.</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">n=$(git diff --name-only --diff-filter=AM origin/main | grep cypress/integration | wc -l | tr -d &#x27; &#x27;)</span><br><span class="line">if [ $&#123;n&#125; -gt 20 ]; then</span><br><span class="line">  echo &quot;Too many files changes...&quot;</span><br><span class="line">  # stop the changed specs job</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
 
-<h2><span id="in-action">In action</span></h2><p>Let&#39;s see how the above workflow performs. I have opened the pull request <a target="_blank" rel="noopener" href="https://github.com/bahmutov/chat.io/pull/12">#12</a>.</p>
+<h2><span id="workflow-in-action">Workflow in action</span></h2><p>Let&#39;s see how the above workflow performs. I have opened the pull request <a target="_blank" rel="noopener" href="https://github.com/bahmutov/chat.io/pull/12">#12</a>.</p>
 <p>The GH workflow shows the steps, and that the modified specs task was executed</p>
 <p><img src="../images/faster-ci-feedback/workflow.png" alt="GitHub workflow"></p>
 <p>The <code>list-changed-spec</code> step has calculated the two changed Cypress test files correctly</p>
@@ -215,6 +229,16 @@ ga('send', 'pageview');
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">specs=$(npx find-cypress-specs --branch main)</span><br><span class="line">n=$(npx find-cypress-specs --branch main --count)</span><br></pre></td></tr></table></figure>
 
 <p>This number and the list are computed using the Git and the cypress.json file settings.</p>
+<h2><span id="update-2-pick-the-changed-specs-better-part-2">Update 2: pick the changed specs better part 2</span></h2><p>When using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/find-cypress-specs">find-cypress-specs</a> in a busy repository, I found a shortcoming: the added and changed specs <em>against</em> the main branch picked up specs changed on the <em>main</em> branch in addition to the specs changed in the pull request branch. So I added another option to the CLI tool: pick the changed specs <em>only</em> between the current commit and its parent merge commit. The best way to show the difference is via a diagram below.</p>
+<p><img src="../images/faster-ci-feedback/changed-specs.png" alt="The specs changed by the commits on the main and featureA branches"></p>
+<p>Let&#39;s say we want to find the changed specs between the last commit on the branch &quot;FeatureA&quot; and the current head of branch &quot;main&quot;. It would give us the changed <em>files</em> between the two branches.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># from the branch &quot;FeatureA&quot;</span><br><span class="line">$ npx find-cypress-specs --branch main</span><br><span class="line">spec1.js,spec2.js,spec3.js,spec4.js</span><br></pre></td></tr></table></figure>
+
+<p>We are probably not interested in the specs <code>spec3.js</code> and <code>spec4.js</code> added on the &quot;main&quot; branch - they are not part of the feature work. To limit the changed specs to search the current branch up to the merge commit &quot;C1&quot; we can use the <code>--parent</code> flag.</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># from the branch &quot;FeatureA&quot;</span><br><span class="line">$ npx find-cypress-specs --branch main --parent</span><br><span class="line">spec1.js,spec2.js</span><br></pre></td></tr></table></figure>
+
+<p>I think it makes a lot more sense, doesn&#39;t it?</p>
+<p><strong>Tip:</strong> if you use <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress-grep">cypress-grep</a> to <a href="/blog/cypress-grep-filters/" title="tag and selectively run tests">tag and selectively run tests</a>, you can filter the changed specs by the presence of tag(s). For example, to run only the changed specs that have the tag &quot;@user&quot; inside, use <code>npx find-cypress-specs --branch main --parent --tagged @user</code>.</p>
 
       
     </div>
@@ -248,7 +272,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/faster-ci-feedback/" data-id="cl1f1vr5z00ivfjvgc3rd4q3g" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/faster-ci-feedback/" data-id="cl1whh45j00iup8vgb6qoei5r" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/faster-ci-feedback/#disqus_thread" class="article-comment-link">Comments</a>
       
