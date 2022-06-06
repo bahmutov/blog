@@ -51,7 +51,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-tips-and-tricks/payment.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cy-tips-and-tricks/eslint-cy.png">
 <meta property="article:published_time" content="2016-12-30T05:00:00.000Z">
-<meta property="article:modified_time" content="2022-03-23T19:43:12.286Z">
+<meta property="article:modified_time" content="2022-06-06T20:37:36.298Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="testing">
 <meta property="article:tag" content="cypress">
@@ -228,6 +228,7 @@ ga('send', 'pageview');
 <li><a href="#compare-two-loaded-files">Compare two loaded files</a></li>
 <li><a href="#do-not-truncate-arrays-and-objects-in-assertions">Do not truncate arrays and objects in assertions</a></li>
 <li><a href="#vary-test-commands-depending-on-the-viewport">Vary test commands depending on the viewport</a></li>
+<li><a href="#cyget-vs-cyintercept-commands">cy.get vs cy.intercept commands</a></li>
 <li><a href="#see-also">See also</a></li>
 <li><a href="#related-posts">Related posts</a></li>
 </ul>
@@ -248,7 +249,7 @@ There is also &quot;Search&quot; box that quickly finds relevant documents. The 
 If you still have an issue with Cypress, please search through open and
 closed <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress/issues">issues</a>.</p>
 <p>You can also read my other blog posts about Cypress under
-<a href="../tags/cypress/">tags&#x2F;cypress</a>.</p>
+<a href="../tags/cypress/">tags&#x2F;cypress</a> and subscribe to my monthly <a target="_blank" rel="noopener" href="https://cypresstips.substack.com/">Cypress Tips &amp; Tricks Newsletter</a>.</p>
 <h2><span id="run-cypress-on-your-own-ci">Run Cypress on your own CI</span></h2><p>As long as the project has a project key, you can run the tests on your
 own <a target="_blank" rel="noopener" href="https://on.cypress.io/continuous-integration">CI boxes</a>.
 I found running inside Docker to be the easiest, and even built an
@@ -934,6 +935,14 @@ the proxied jQuery function
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// start of the test</span></span><br><span class="line">cy.<span class="title function_">viewport</span>(<span class="number">1200</span>, <span class="number">400</span>)</span><br><span class="line"><span class="comment">// more commands</span></span><br><span class="line"><span class="comment">// now check if the window resolution is desktop</span></span><br><span class="line">cy.<span class="title function_">window</span>().<span class="title function_">its</span>(<span class="string">&#x27;innerWidth&#x27;</span>).<span class="title function_">then</span>(<span class="function"><span class="params">w</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (w &gt;= <span class="number">768</span>) &#123;</span><br><span class="line">    <span class="comment">// queue more desktop commands</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// queue more mobile commands</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
 
 <p>Finally, if you must know the current application window width at that moment, the reference to the app&#39;s window is stored in the <code>cy.state</code> object. Thus you can use a synchronous call: <code>cy.state(&#39;window&#39;).innerWidth</code>.</p>
+<h2><span id="cyget-vs-cyintercept-commands">cy.get vs cy.intercept commands</span></h2><p>I often use <a target="_blank" rel="noopener" href="https://on.cypress.io/get">cy.get</a> and <a target="_blank" rel="noopener" href="https://on.cypress.io/contains">cy.contains</a> commands to select elements on the page. Both commands <a target="_blank" rel="noopener" href="https://on.cypress.io/retry-ability">retry</a> until the element is there or the command times out, but there are certain differences.</p>
+<ul>
+<li><code>cy.get</code> can yield multiple elements, while <code>cy.contains</code> yields the first one only</li>
+<li><code>cy.get</code> uses the CSS selector, and if you need to find an element using the text you could use <code>:contains</code>. The text can only be a simple case-sensitive string</li>
+<li><code>cy.contains</code> can find using a regular expression or by text</li>
+</ul>
+<p>I personally use <code>cy.contains</code> whenever I need a single element by text, and use <code>cy.get</code> if there are several elements to find.</p>
+<p><strong>Tip:</strong> for more examples of finding the elements by text and&#x2F;or selector, see <a href="https://glebbahmutov.com/cypress-examples/commands/querying.html">my querying examples</a> and <a href="https://glebbahmutov.com/cypress-examples/">&quot;Find elements by exact class or text&quot; recipe</a>.</p>
 <h2><span id="see-also">See also</span></h2><ul>
 <li>my website <a target="_blank" rel="noopener" href="https://cypress.tips/">cypress.tips</a></li>
 <li>subscribe to my monthly email <a target="_blank" rel="noopener" href="https://cypresstips.substack.com/">Cypress Tips &amp; Tricks</a></li>
@@ -986,7 +995,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/cypress-tips-and-tricks/" data-id="cl409bhqp004ezqvgcyzv7oa0" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/cypress-tips-and-tricks/" data-id="cl4373cf5004d6yvghpw3and7" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/cypress-tips-and-tricks/#disqus_thread" class="article-comment-link">Comments</a>
       
