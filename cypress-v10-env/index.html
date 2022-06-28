@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Cypress v10 Environment Variables | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cypress tests have two different sets of values: the config values and the user values. The config values are controlling the test runner itself: the spec pattern, the viewport resolution, even the ba">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cypress v10 Environment Variables">
+<meta property="og:url" content="https://glebbahmutov.com/blog/cypress-v10-env/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Cypress tests have two different sets of values: the config values and the user values. The config values are controlling the test runner itself: the spec pattern, the viewport resolution, even the ba">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/v10-env/env1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/v10-env/block.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/v10-env/combined.png">
+<meta property="article:published_time" content="2022-06-28T04:00:00.000Z">
+<meta property="article:modified_time" content="2022-06-28T22:23:21.785Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/v10-env/env1.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-cypress-v10-env" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2022-06-28T04:00:00.000Z" itemprop="datePublished">Jun 28 2022</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Cypress v10 Environment Variables
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to pass the user values to Cypress v10+ test runner.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Cypress tests have two different sets of values: the config values and the user values. The config values are controlling the test runner itself: the spec pattern, the viewport resolution, even the <code>baseUrl</code> is the config value (which is why you need to set it using the config block, see the video <a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=f5UaXuAc52c&feature=youtu.be">How to correctly use the baseUrl to visit a site in Cypress</a>). The user values are everything else: the username and the password to enter into the site under the test, the API key to use with the <code>cy.request</code> command, the item name to search for. These values are called in Cypress-speak &quot;env values&quot; and you can access them using the <a target="_blank" rel="noopener" href="https://on.cypress.io/env">Cypress.env</a> command.</p>
+<p>Cypress v10 has merged the plugins file with the <code>cypress.json</code> file into a single <code>cypress.config.js</code> file. By adding the <a target="_blank" rel="noopener" href="https://on.cypress.io/component-testing">component testing</a> into the mix, the config file is confusing: where should we add our user values? Should they go into the top-level <code>env</code> object? Or be under the <code>e2e</code> property? What if we put them into both places? And how can we control these values using the <code>setupNodeEvents</code> callback? Let&#39;s start playing with the source code in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-env-v10-example">bahmutov&#x2F;cypress-env-v10-example</a> repo:</p>
+<figure class="highlight js"><figcaption><span>cypress.config.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; defineConfig &#125; = <span class="built_in">require</span>(<span class="string">&#x27;cypress&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = <span class="title function_">defineConfig</span>(&#123;</span><br><span class="line">  <span class="comment">// our project does not use fixture files</span></span><br><span class="line">  <span class="attr">fixturesFolder</span>: <span class="literal">false</span>,</span><br><span class="line">  <span class="attr">env</span>: &#123;</span><br><span class="line">    <span class="comment">// user values block 1</span></span><br><span class="line">    <span class="attr">level</span>: <span class="number">1</span>,</span><br><span class="line">    <span class="attr">root</span>: <span class="literal">true</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">e2e</span>: &#123;</span><br><span class="line">    <span class="comment">// our project does not need the support file</span></span><br><span class="line">    <span class="attr">supportFile</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">env</span>: &#123;</span><br><span class="line">      <span class="comment">// user values block 2</span></span><br><span class="line">      <span class="attr">level</span>: <span class="number">2</span>,</span><br><span class="line">      <span class="attr">e2e</span>: <span class="literal">true</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="title function_">setupNodeEvents</span>(<span class="params">on, config</span>) &#123;</span><br><span class="line">      <span class="comment">// can we control the &quot;env&quot; object here?</span></span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>So what do we see for the above configuration? Launch the Test Runner and look at the &quot;Settings&quot; tab right under the &quot;Specs&quot; tab. Look at the &quot;Project Settings&quot;. Scroll down to the &quot;Resolved configuration&quot;, which is a large object. We see <em>only the environment variables from the e2e block</em>. The top level config object is meant <em>only</em> for the test runner&#39;s own configuration properties.</p>
+<p><img src="../images/v10-env/env1.png" alt="The resolved Cypress env object"></p>
+<p>So here is our first find: no root level <code>env</code> block.</p>
+<p><img src="../images/v10-env/block.png" alt="You should place the env object in the e2e object"></p>
+<h2><span id="custom-logic">Custom logic</span></h2><p>What about the <code>setupNodeEvents</code> callback? What can it do for our user values? Notice that it gets the <code>config</code> passed as the second argument. Let&#39;s print the <code>config.env</code> to the terminal.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">setupNodeEvents(on, config) &#123;</span><br><span class="line">  // can we control the &quot;env&quot; object here?</span><br><span class="line">  console.log(config.env)</span><br><span class="line">&#125;,</span><br><span class="line">// prints</span><br><span class="line">&#123; level: 2, e2e: true &#125;</span><br></pre></td></tr></table></figure>
+
+<p>Great, so whatever you see in the resolved project settings is also passed into the <code>setupNodeEvents</code> callback. But there is more: you can <em>change</em> the <code>config.env</code> object in that callback. You can remove &#x2F; change &#x2F; add new values to that object! Just remember to <strong>return the updated config object</strong> from the <code>setupNodeEvents</code> callback (I forget to return it regularly, and then curse myself hours later when I notice the mistake).</p>
+<p>The <code>cypress.config.js</code> file runs from a Node (Electron) Cypress process, thus it can access your local environment, unlike the spec or support files that run in the browser. Thus we can access the process environment variables, or read local files, etc. For example, let&#39;s say we want to pass the username and the password to our tests. We could use the process environment variables to do this securely:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ USERNAME=Joe PASSWORD=Smart12345 npx cypress open</span><br></pre></td></tr></table></figure>
+
+<p>Here is what we could do in our <code>cypress.config.js</code> file to use the <code>USERNAME</code> and the <code>PASSWORD</code> values</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">setupNodeEvents</span>(<span class="params">on, config</span>) &#123;</span><br><span class="line">  <span class="comment">// set any additional user values</span></span><br><span class="line">  config.<span class="property">env</span>.<span class="property">registered</span> = <span class="literal">true</span></span><br><span class="line">  config.<span class="property">env</span>.<span class="property">user</span> = &#123;</span><br><span class="line">    <span class="attr">name</span>: process.<span class="property">env</span>.<span class="property">USERNAME</span>,</span><br><span class="line">    <span class="attr">password</span>: process.<span class="property">env</span>.<span class="property">PASSWORD</span>,</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// REMEMBER TO RETURN THE CHANGED CONFIG OBJECT</span></span><br><span class="line">  <span class="keyword">return</span> config</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>Open the Test Runner with <code>USERNAME=Joe PASSWORD=Smart12345 npx cypress open</code> command and see the resolved config; it now includes the <code>e2e.env</code> object plus the values added by the <code>setupNodeEvents</code> callback</p>
+<p><img src="../images/v10-env/combined.png" alt="The resolved env object with inserted values"></p>
+<blockquote class="pullquote"><p>💡 Windows OS has its own syntax for <a target="_blank" rel="noopener" href="https://www.howtogeek.com/789660/how-to-use-windows-cmd-environment-variables/">setting the process environment variables</a>. No matter what your operating system is, I recommend using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/as-a">as-a</a> to inject such values.</p>
+</blockquote>
+
+<h2><span id="cypress-prefix">Cypress prefix</span></h2><p>Instead of reading the <code>process.env</code> values in the <code>setupNodeEvents</code> callback, we can let Cypress automatically read these values. Cypress is nice enough to automatically read any process environment values that start with the <code>CYPRESS_</code> prefix, and if the name does not match any built-in config values, it is added to the <code>env</code> object automatically. Let&#39;s remove our custom logic from the <code>cypress.config.js</code> file</p>
+<figure class="highlight js"><figcaption><span>cypress.config.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// go back to printing the parsed `config.env` object</span></span><br><span class="line"><span class="title function_">setupNodeEvents</span>(<span class="params">on, config</span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(config.<span class="property">env</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>We could have achieved the same <code>env</code> object by opening Cypress with the following process environment variables</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ CYPRESS_registered=true \</span><br><span class="line">  CYPRESS_user=&#x27;&#123;&quot;name&quot;:&quot;Joe&quot;,&quot;password&quot;:&quot;Smart12345&quot;&#125;&#x27; \</span><br><span class="line">  npx cypress open</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  level: 2,</span><br><span class="line">  e2e: true,</span><br><span class="line">  user: &#123; name: &#x27;Joe&#x27;, password: &#x27;Smart12345&#x27; &#125;,</span><br><span class="line">  registered: true</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Cypress automatically parses such variables, making sure they have the right type, and any JSON stringified objects are parsed into the JS objects.</p>
+<h2><span id="recommended-reading">Recommended reading</span></h2><ul>
+<li><a href="/blog/keep-passwords-secret-in-e2e-tests/" title="Keep passwords secret in E2E tests">Keep passwords secret in E2E tests</a></li>
+<li><a href="/blog/secrets-to-env/" title="Set All Cypress Env Values Using A Single GitHub Actions Secret">Set All Cypress Env Values Using A Single GitHub Actions Secret</a></li>
+<li><a target="_blank" rel="noopener" href="https://on.cypress.io/environment-variables">Cypress environment variables documentation</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/cypress-v10-env/" data-id="cl4yqk39x004fosvggtvygfm0" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/cypress-v10-env/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="../cypress-v10-tips/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Cypress v10 Tips and Tricks</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">22</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">148</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">479</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">113</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">30</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">213</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">84</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">23</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">141</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">19</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.38px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.54px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.77px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.85px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.77px;">algolia</a> <a href="../tags/angularjs/" style="font-size: 17.69px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 13.08px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.69px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 15px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.38px;">browser</a> <a href="../tags/ci/" style="font-size: 16.92px;">ci</a> <a href="../tags/circle/" style="font-size: 13.85px;">circle</a> <a href="../tags/climate/" style="font-size: 14.62px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.31px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.23px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.77px;">d3</a> <a href="../tags/db/" style="font-size: 14.62px;">db</a> <a href="../tags/docker/" style="font-size: 14.23px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.92px;">documentation</a> <a href="../tags/es6/" style="font-size: 14.62px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.08px;">functional</a> <a href="../tags/generators/" style="font-size: 11.54px;">generators</a> <a href="../tags/git/" style="font-size: 15px;">git</a> <a href="../tags/github/" style="font-size: 16.15px;">github</a> <a href="../tags/graphql/" style="font-size: 11.54px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.31px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.77px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.15px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.31px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.54px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.77px;">interview</a> <a href="../tags/jade/" style="font-size: 11.15px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.62px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.77px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.85px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.54px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.15px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.46px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.77px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.31px;">presentation</a> <a href="../tags/promises/" style="font-size: 17.31px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.38px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.54px;">ramda</a> <a href="../tags/react/" style="font-size: 12.31px;">react</a> <a href="../tags/react-native/" style="font-size: 11.15px;">react native</a> <a href="../tags/reactive/" style="font-size: 14.23px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.15px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.54px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.08px;">security</a> <a href="../tags/sentry/" style="font-size: 13.85px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.92px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.23px;">testing</a> <a href="../tags/tutorial/" style="font-size: 15.38px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.31px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.38px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.46px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.15px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.54px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.92px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.77px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="">Cypress v10 Environment Variables</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-v10-tips/">Cypress v10 Tips and Tricks</a>
+          </li>
+        
+          <li>
+            <a href="../test-app/">Test App From Another Repo</a>
+          </li>
+        
+          <li>
+            <a href="../run-all-specs-cypress-v10/">Run All Specs in Cypress v10</a>
+          </li>
+        
+          <li>
+            <a href="../mobile-tests/">How We Run The Mobile Web Browser Tests at Mercari US</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2022 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/cypress-v10-env/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>
