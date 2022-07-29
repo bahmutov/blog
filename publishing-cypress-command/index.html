@@ -21,7 +21,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/any.gif">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/publish-custom-command/visible-types.gif">
 <meta property="article:published_time" content="2021-01-22T05:00:00.000Z">
-<meta property="article:modified_time" content="2021-10-20T01:59:59.036Z">
+<meta property="article:modified_time" content="2022-07-28T21:24:10.451Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="cypress">
 <meta name="twitter:card" content="summary">
@@ -138,6 +138,7 @@ ga('send', 'pageview');
 <li><a href="#types">Types</a><ul>
 <li><a href="#types-in-the-project">Types in the project</a></li>
 <li><a href="#types-for-other-projects">Types for other projects</a></li>
+<li><a href="#global-plus-exports">Global plus exports</a></li>
 </ul>
 </li>
 <li><a href="#es6-import-and-export">ES6 import and export</a></li>
@@ -249,6 +250,13 @@ Then use the command `cy.getByLabel` (default) or the custom name
 
 <p>Publish the new version of the package - it is a new feature, so it becomes v2.1.0, and the example project should use the types by loading them like this:</p>
 <p><img src="/blog/images/publish-custom-command/visible-types.gif" alt="cy.getByLabel method has the right types"></p>
+<h3><span id="global-plus-exports">Global plus exports</span></h3><p>Sometimes the module registers custom Cypress commands AND exports functions. To make sure it is working and to avoid <code>file index.d.ts is not a module</code> error, I had to create two <code>.d.ts</code> files</p>
+<figure class="highlight ts"><figcaption><span>index.d.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// import the custom Cypress commands provided by this module</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> globals <span class="keyword">from</span> <span class="string">&#x27;./globals&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// all functions the index.js exports</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">function</span> <span class="title function_">slowCypressDown</span>(<span class="params">ms: <span class="built_in">number</span> | <span class="literal">false</span></span>): <span class="built_in">void</span></span><br></pre></td></tr></table></figure>
+
+<p>The <code>globals.d.ts</code> file contains the Cypress namespace where we can add the custom commands</p>
+<figure class="highlight ts"><figcaption><span>globals.d.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// load type definitions that come with Cypress module</span></span><br><span class="line"><span class="comment">// and then add our new commands to the &quot;cy&quot; object</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> <span class="title class_">Cypress</span> &#123;</span><br><span class="line">  <span class="keyword">interface</span> <span class="title class_">Chainable</span> &#123;</span><br><span class="line">    <span class="title function_">commandOne</span>(): <span class="title class_">Chainable</span>&lt;<span class="built_in">any</span>&gt;</span><br><span class="line">    <span class="title function_">commandTwo</span>(): <span class="title class_">Chainable</span>&lt;<span class="built_in">any</span>&gt;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>See the plugin <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-slow-down">cypress-slow-down</a></p>
 <h2><span id="es6-import-and-export">ES6 import and export</span></h2><p>If we register the custom command, and try to avoid modifying the global state using <code>require</code>, we might as well declare our registration function using the ES6 <code>export</code> keyword.</p>
 <figure class="highlight js"><figcaption><span>src/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> <span class="title function_">registerCommand</span> = (<span class="params">name = <span class="string">&#x27;getByLabel&#x27;</span></span>) =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> <span class="title function_">getByCommand</span> = (<span class="params">label</span>) =&gt; &#123;</span><br><span class="line">    cy.<span class="title function_">log</span>(<span class="string">`**<span class="subst">$&#123;name&#125;</span>**`</span>)</span><br><span class="line">    cy.<span class="title function_">contains</span>(<span class="string">&#x27;label&#x27;</span>, label)</span><br><span class="line">      .<span class="title function_">invoke</span>(<span class="string">&#x27;attr&#x27;</span>, <span class="string">&#x27;for&#x27;</span>)</span><br><span class="line">      .<span class="title function_">then</span>(<span class="function">(<span class="params">id</span>) =&gt;</span> &#123;</span><br><span class="line">        cy.<span class="title function_">get</span>(<span class="string">&#x27;#&#x27;</span> + id)</span><br><span class="line">      &#125;)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="title class_">Cypress</span>.<span class="property">Commands</span>.<span class="title function_">add</span>(name, getByCommand)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -262,6 +270,7 @@ Then use the command `cy.getByLabel` (default) or the custom name
 <li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-data-session">cypress-data-session</a></li>
 <li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-each">cypress-each</a></li>
 <li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-network-idle">cypress-network-idle</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-slow-down">cypress-slow-down</a></li>
 </ul>
 
       
@@ -299,7 +308,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/publishing-cypress-command/" data-id="cl63phk5q00bvpqvg0cf8dms0" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/publishing-cypress-command/" data-id="cl66k6ezb00bz5pvg8iv8dv8n" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/publishing-cypress-command/#disqus_thread" class="article-comment-link">Comments</a>
       
