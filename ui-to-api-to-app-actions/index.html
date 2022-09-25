@@ -20,8 +20,10 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/ui-to-api-to-app-actions/delete-todo.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/ui-to-api-to-app-actions/devtools.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/ui-to-api-to-app-actions/app-completes.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ui-to-api-to-app-actions/id-string.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ui-to-api-to-app-actions/spok.png">
 <meta property="article:published_time" content="2022-09-24T04:00:00.000Z">
-<meta property="article:modified_time" content="2022-09-24T13:35:04.615Z">
+<meta property="article:modified_time" content="2022-09-25T13:13:18.412Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="testing">
 <meta property="article:tag" content="cypress">
@@ -187,6 +189,17 @@ ga('send', 'pageview');
 
 <p>If you understand how to apply this concept from Cypress end-to-end and component tests, you will never look back 😉</p>
 <h2><span id="code-coverage">Code coverage</span></h2><p>You might ask me: aren&#39;t we bypassing the application code when calling app actions? Yes we do - but only in some tests. We still exercise the &quot;normal&quot; application code that adds an item in the spec &quot;adding.cy.ts&quot;. We then bypass it in <em>other</em> specs that test other features. The combined code coverage when you run all specs together would show 100% code coverage.</p>
+<h2><span id="bonus-1-use-cy-spok-with-network-requests">Bonus 1: Use cy-spok with network requests</span></h2><p>When spying on the API calls made by the application, we could only validate some properties of the request object, since the <code>id</code> is a dynamic random string.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// spy on the API call the app is making to create a todo</span></span><br><span class="line">cy.<span class="title function_">intercept</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>).<span class="title function_">as</span>(<span class="string">&#x27;addTodo&#x27;</span>)</span><br><span class="line">...</span><br><span class="line"><span class="comment">// confirm the API request</span></span><br><span class="line">cy.<span class="title function_">wait</span>(<span class="string">&#x27;@addTodo&#x27;</span>)</span><br><span class="line">  .<span class="title function_">its</span>(<span class="string">&#x27;request.body&#x27;</span>)</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;deep.include&#x27;</span>, &#123;</span><br><span class="line">    title,</span><br><span class="line">    <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  .<span class="title function_">and</span>(<span class="string">&#x27;have.property&#x27;</span>, <span class="string">&#x27;id&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>I strongly recommend using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cy-spok">cy-spok</a> plugin to validate complex objects. In our case, the ID is a 10-character string of digits.</p>
+<p><img src="../images/ui-to-api-to-app-actions/id-string.png" alt="The todo item in the network request sent to the backend"></p>
+<p>Let&#39;s validate the entire object.</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/api/adding-cy-spok.cy.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// spy on the API call the app is making to create a todo</span></span><br><span class="line">cy.<span class="title function_">intercept</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>).<span class="title function_">as</span>(<span class="string">&#x27;addTodo&#x27;</span>)</span><br><span class="line">...</span><br><span class="line">cy.<span class="title function_">wait</span>(<span class="string">&#x27;@addTodo&#x27;</span>)</span><br><span class="line">  .<span class="title function_">its</span>(<span class="string">&#x27;request.body&#x27;</span>)</span><br><span class="line">  .<span class="title function_">should</span>(</span><br><span class="line">    <span class="title function_">spok</span>(&#123;</span><br><span class="line">      title,</span><br><span class="line">      <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">      <span class="comment">// id property should match this regular expression</span></span><br><span class="line">      <span class="attr">id</span>: spok.<span class="title function_">test</span>(<span class="regexp">/^\d&#123;10&#125;$/</span>),</span><br><span class="line">    &#125;),</span><br><span class="line">  )</span><br></pre></td></tr></table></figure>
+
+<p>The Command Log shows each property passing its validation</p>
+<p><img src="../images/ui-to-api-to-app-actions/spok.png" alt="Confirming the Todo object using cy-spok"></p>
+<p>For more <code>cy-spok</code> examples read the blog posts <a href="/blog/network-requests-with-cypress/" title="How To Check Network Requests Using Cypress">How To Check Network Requests Using Cypress</a> and <a href="/blog/restart-server/" title="Server Running Inside Cypress Plugin Process">Server Running Inside Cypress Plugin Process</a>.</p>
 <h2><span id="see-also">See also</span></h2><ul>
 <li><a target="_blank" rel="noopener" href="https://www.cypress.io/blog/2019/01/03/stop-using-page-objects-and-start-using-app-actions/">Stop using Page Objects and Start using App Actions</a></li>
 <li><a href="/blog/dependent-test/" title="Writing Tests That Depend On Other Tests">Writing Tests That Depend On Other Tests</a></li>
@@ -230,7 +243,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/ui-to-api-to-app-actions/" data-id="cl8fyfw5c00huizvg5hn062l4" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/ui-to-api-to-app-actions/" data-id="cl8hd4bs000ht06vgdxstfv9i" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/ui-to-api-to-app-actions/#disqus_thread" class="article-comment-link">Comments</a>
       
