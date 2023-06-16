@@ -38,7 +38,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/pr-error1.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/pr-error2.png">
 <meta property="article:published_time" content="2023-06-15T04:00:00.000Z">
-<meta property="article:modified_time" content="2023-06-15T16:30:25.416Z">
+<meta property="article:modified_time" content="2023-06-16T20:33:44.367Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="tutorial">
 <meta property="article:tag" content="performance">
@@ -157,6 +157,8 @@ ga('send', 'pageview');
 <li><a href="#lighthouse-github-status-checks">Lighthouse GitHub status checks</a></li>
 <li><a href="#performance-checks-for-pull-requests">Performance checks for pull requests</a></li>
 <li><a href="#see-also">See also</a></li>
+<li><a href="#bonus-1-run-chrome-in-docker">Bonus 1: Run Chrome in Docker</a></li>
+<li><a href="#bonus-2-basic-authentication">Bonus 2: Basic authentication</a></li>
 </ul>
 <!-- tocstop -->
 
@@ -236,6 +238,7 @@ ga('send', 'pageview');
 <p>Let&#39;s push the code to GitHub and watch it fail</p>
 <p><img src="../images/trying-lighthouse/lhci-fails.png" alt="LHCI breaks the build because of the low performance score"></p>
 <p>Ok, now we know the CI will catch a performance regression, and I will set the performance <code>minScore</code> to 0.83</p>
+<p><strong>Tip:</strong> you can overwrite the url to test from the command line <code>lhci autorun --url &lt;url to test&gt;</code></p>
 <h2><span id="lighthouse-github-status-checks">Lighthouse GitHub status checks</span></h2><p>You could add commit status checks using either your personal GitHub token or by installing the <a target="_blank" rel="noopener" href="https://github.com/apps/lighthouse-ci">Lighthouse GitHub App</a>.</p>
 <p><img src="../images/trying-lighthouse/app1.png" alt="Lighthouse GitHub App"></p>
 <p>I will install the app and will give it access to the status checks in the example repo.</p>
@@ -268,6 +271,14 @@ ga('send', 'pageview');
 <li>📝 <a href="/blog/cypress-lighthouse/" title="Cypress Lighthouse Example">Cypress Lighthouse Example</a></li>
 <li><a target="_blank" rel="noopener" href="https://blog.logrocket.com/lighthouse-meets-github-actions-use-lighthouse-ci/">Lighthouse meets GitHub Actions: How to use Lighthouse in CI</a></li>
 </ul>
+<h2><span id="bonus-1-run-chrome-in-docker">Bonus 1: Run Chrome in Docker</span></h2><p>If you need to use a Docker container to run Lighthouse, then it needs Chrome installed. You can pick a Chrome image from Cypress <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress-docker-images">cypress-docker-images</a>:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># we need Chrome browser to run Lighthouse</span></span><br><span class="line"><span class="attr">container:</span> <span class="string">cypress/browsers:node18.12.0-chrome107</span></span><br></pre></td></tr></table></figure>
+
+<p>When running Chrome inside a Docker container, it needs a few flags usually:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// lighthouserc.js</span></span><br><span class="line"><span class="attr">collect</span>: &#123;</span><br><span class="line">  <span class="attr">url</span>: [<span class="string">&#x27;...&#x27;</span>],</span><br><span class="line">  <span class="attr">settings</span>: &#123;</span><br><span class="line">    <span class="attr">chromeFlags</span>: <span class="string">&#x27;--disable-gpu --no-sandbox --disable-dev-shm-usage&#x27;</span>,</span><br><span class="line">    <span class="attr">preset</span>: <span class="string">&#x27;desktop&#x27;</span>,</span><br><span class="line">    <span class="attr">onlyCategories</span>: <span class="string">&#x27;performance&#x27;</span>,</span><br><span class="line">    <span class="attr">maxWaitForLoad</span>: <span class="number">10_000</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="bonus-2-basic-authentication">Bonus 2: Basic authentication</span></h2><p>If your page is protected by the basic authentication, you need to encode the username and password and send it with your Lighthouse requests</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// lighthouserc.js</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// encode the username and password like the browser does</span></span><br><span class="line"><span class="keyword">const</span> basicAuth = <span class="title function_">btoa</span>(</span><br><span class="line">  <span class="built_in">encodeURIComponent</span>(process.<span class="property">env</span>.<span class="property">username</span>) +</span><br><span class="line">    <span class="string">&#x27;:&#x27;</span> +</span><br><span class="line">    <span class="built_in">encodeURIComponent</span>(process.<span class="property">env</span>.<span class="property">password</span>),</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = &#123;</span><br><span class="line">  <span class="attr">ci</span>: &#123;</span><br><span class="line">    <span class="attr">collect</span>: &#123;</span><br><span class="line">      <span class="attr">url</span>: [<span class="string">&#x27;https://web.mercari.guru&#x27;</span>],</span><br><span class="line">      <span class="attr">settings</span>: &#123;</span><br><span class="line">        <span class="comment">// provide basic auth via browser header</span></span><br><span class="line">        <span class="attr">extraHeaders</span>: <span class="string">`&#123;&quot;Authorization&quot;: &quot;Basic <span class="subst">$&#123;basicAuth&#125;</span>&quot;&#125;`</span>,</span><br><span class="line">        <span class="attr">chromeFlags</span>: <span class="string">&#x27;--disable-gpu --no-sandbox --disable-dev-shm-usage&#x27;</span>,</span><br><span class="line">        <span class="attr">preset</span>: <span class="string">&#x27;desktop&#x27;</span>,</span><br><span class="line">        <span class="attr">onlyCategories</span>: <span class="string">&#x27;performance&#x27;</span>,</span><br><span class="line">        <span class="attr">maxWaitForLoad</span>: <span class="number">10_000</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
 
       
     </div>
@@ -304,7 +315,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/trying-lighthouse/" data-id="clixdevtt00jf7amyecj12i11" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/trying-lighthouse/" data-id="cliz12pe800jfpbmy0d8f5p3n" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/trying-lighthouse/#disqus_thread" class="article-comment-link">Comments</a>
       
