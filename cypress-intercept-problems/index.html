@@ -44,8 +44,9 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/intercept-problems/four.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/intercept-problems/dynamic-alias.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/intercept-problems/multiple.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/intercept-problems/disable-cache1.png">
 <meta property="article:published_time" content="2020-12-09T05:00:00.000Z">
-<meta property="article:modified_time" content="2023-05-15T20:19:38.308Z">
+<meta property="article:modified_time" content="2023-12-06T16:19:45.054Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="testing">
 <meta property="article:tag" content="cypress">
@@ -170,7 +171,8 @@ ga('send', 'pageview');
 <li><a href="#simulate-network-error">Simulate network error</a></li>
 <li><a href="#force404">Force 404</a></li>
 <li><a href="#network-idle">Network idle</a></li>
-<li><strong>new 🌟</strong> <a href="#stub-sse-resource">Stub SSE resource</a></li>
+<li><a href="#stub-sse-resource">Stub SSE resource</a></li>
+<li><strong>new 🌟</strong> <a href="#disable-network-caching">Disable network caching</a></li>
 <li><a href="#more-info">More info</a></li>
 </ul>
 <h2><span id="the-intercept-was-registered-too-late">The intercept was registered too late</span></h2><h3><span id="the-problem">The problem</span></h3><p>Let&#39;s say the application is making <code>GET /todos</code> call to load its data. We might write a test like this to spy on this call:</p>
@@ -387,6 +389,30 @@ ga('send', 'pageview');
 <h2><span id="stub-sse-resource">Stub SSE Resource</span></h2><p>If you want to stub a server-side events resource, you can respond to the request with a text body that simply lists the events. Unfortunately, the events are not going to be spaced in time, but it still works. See the <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress Network Testing Exercises</a> bonus lesson 22 for details.</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">cy.<span class="title function_">intercept</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/fruits-sse&#x27;</span>, <span class="function">(<span class="params">req</span>) =&gt;</span> &#123;</span><br><span class="line">  req.<span class="title function_">reply</span>(&#123;</span><br><span class="line">    <span class="attr">headers</span>: &#123;</span><br><span class="line">      <span class="string">&#x27;Content-Type&#x27;</span>: <span class="string">&#x27;text/event-stream&#x27;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">body</span>:</span><br><span class="line">      <span class="comment">// important: the text should not have</span></span><br><span class="line">      <span class="comment">// leading or trailing whitespace</span></span><br><span class="line">      <span class="comment">// and the blank lines are important</span></span><br><span class="line">      <span class="string">&#x27;retry: 60000\n\n&#x27;</span> +</span><br><span class="line">      <span class="string">&#x27;id: 0\n&#x27;</span> +</span><br><span class="line">      <span class="string">&#x27;data: &#123;&quot;fruit&quot;:&quot;Kiwi&quot;&#125;\n\n&#x27;</span> +</span><br><span class="line">      <span class="string">&#x27;id: 1\n&#x27;</span> +</span><br><span class="line">      <span class="string">&#x27;data: &#123;&quot;fruit&quot;:&quot;Lemons&quot;&#125;\n\n&#x27;</span> +</span><br><span class="line">      <span class="string">&#x27;id: 2\n&#x27;</span> +</span><br><span class="line">      <span class="string">&#x27;data: &#123;&quot;fruit&quot;:&quot;Mango&quot;&#125;\n\n&#x27;</span> +</span><br><span class="line">      <span class="string">&#x27;event: end\n&#x27;</span> +</span><br><span class="line">      <span class="string">&#x27;data: Stream closed\n&#x27;</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;).<span class="title function_">as</span>(<span class="string">&#x27;sse&#x27;</span>)</span><br></pre></td></tr></table></figure>
 
+<h2><span id="disable-network-caching">Disable network caching</span></h2><p>Cypress network interception happens outside the browser. But the browsers love to save bandwidth, so they cache the data internally. Often you see response headers like <code>ETag: W/&quot;960-cdSYN2pW398HtVmxLUpnD9XjLME&quot;</code> and request headers like <code>If-None-Match: W/&quot;960-cdSYN2pW398HtVmxLUpnD9XjLME&quot;</code> - these control the data caching. The server will look at the <code>If-None-Match</code> header value and respond with <code>304 Not Modified</code> if the data hash is still the same as what the browser already has.</p>
+<p>This creates problems during Cypress testing if you want to get the actual data, but the server sends an empty body with 304 response.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cy.<span class="title function_">wait</span>(<span class="string">&#x27;@load&#x27;</span>)</span><br><span class="line">  .<span class="title function_">its</span>(<span class="string">&#x27;responses.body&#x27;</span>)</span><br><span class="line">  <span class="comment">// oops, you got &quot;&quot;</span></span><br><span class="line">  <span class="comment">// because the server responds with 304</span></span><br></pre></td></tr></table></figure>
+
+<p>To stop the browser from sending request header <code>If-None-Match</code> you can:</p>
+<ul>
+<li>in the interactive mode open DevTools and check &quot;Disable cache&quot; checkbox.</li>
+</ul>
+<p><img src="/blog/images/intercept-problems/disable-cache1.png" alt="Disable network cache using browser DevTools"></p>
+<p>While the DevTools stay open, the browser will NOT use the cached data and will receive the full data from the server.</p>
+<ul>
+<li>you can delete the request header <code>If-None-Match</code> inside the intcept</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cy.<span class="title function_">intercept</span>(<span class="string">&#x27;/...&#x27;</span>, <span class="function">(<span class="params">req</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">delete</span> req.<span class="property">headers</span>[<span class="string">&#x27;If-None-Match&#x27;</span>]</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The request automatically continues to the server and without it, the server has no idea what data the browser has, thus it is forced to send the full response.</p>
+<ul>
+<li>disable network cache using Chrome Debugger Protocol and built-in <a href="/blog/cypress-automation/" title="Cypress Automation">Cypress Automation</a></li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// disable network caching using a Chrome Debugger Protocol command</span></span><br><span class="line"><span class="comment">// by using &quot;cy.wrap&quot; command we ensure that the promise returned</span></span><br><span class="line"><span class="comment">// by the Cypress.automation method resolves before proceeding</span></span><br><span class="line"><span class="comment">// to the next Cypress command</span></span><br><span class="line">cy.<span class="title function_">wrap</span>(</span><br><span class="line">  <span class="title class_">Cypress</span>.<span class="title function_">automation</span>(<span class="string">&#x27;remote:debugger:protocol&#x27;</span>, &#123;</span><br><span class="line">    <span class="attr">command</span>: <span class="string">&#x27;Network.setCacheDisabled&#x27;</span>,</span><br><span class="line">    <span class="attr">params</span>: &#123;</span><br><span class="line">      <span class="attr">cacheDisabled</span>: <span class="literal">false</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;),</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><strong>Tip:</strong> I wrote <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-cdp">cypress-cdp</a> plugin that makes the above commands much simpler</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cy.<span class="title function_">CDP</span>(<span class="string">&#x27;Network.setCacheDisabled&#x27;</span>, &#123;</span><br><span class="line">  <span class="attr">cacheDisabled</span>: <span class="literal">true</span>,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
 <h2><span id="cypress-network-testing-exercises-course">Cypress Network Testing Exercises Course</span></h2><p>I show solutions to many problems shown in this blog post in my hands-on course <a target="_blank" rel="noopener" href="https://cypress.tips/courses/network-testing">Cypress Network Testing Exercises</a>.</p>
 <h2><span id="more-info">More info</span></h2><ul>
 <li>blog post <a target="_blank" rel="noopener" href="https://filiphric.com/migrating-route-to-intercept-in-cypress">Migrating .route() to .intercept() in Cypress</a></li>
@@ -441,7 +467,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/cypress-intercept-problems/" data-id="clprqem5v0042vymy0dqjaplv" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/cypress-intercept-problems/" data-id="clptz6uz1004d2lmy6q92fyzz" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/cypress-intercept-problems/#disqus_thread" class="article-comment-link">Comments</a>
       
