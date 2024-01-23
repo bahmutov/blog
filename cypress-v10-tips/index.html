@@ -20,7 +20,7 @@
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cypress-v10-tips/migrator.png">
 <meta property="og:image" content="https://glebbahmutov.com/blog/images/cypress-v10-tips/switches.png">
 <meta property="article:published_time" content="2022-06-21T04:00:00.000Z">
-<meta property="article:modified_time" content="2024-01-05T15:08:00.301Z">
+<meta property="article:modified_time" content="2024-01-23T15:47:23.126Z">
 <meta property="article:author" content="Gleb Bahmutov">
 <meta property="article:tag" content="testing">
 <meta property="article:tag" content="cypress">
@@ -152,6 +152,7 @@ ga('send', 'pageview');
 <li><a href="#see-all-chrome-browser-command-line-switches">See all Chrome browser command line switches</a></li>
 <li><a href="#set-the-subject-type-for-an-aliased-value">Set the subject type for an aliased value</a></li>
 <li><a href="#use-the-browser-name-in-the-config">Use the browser name in the config</a></li>
+<li><a href="#use-a-different-baseurl-for-a-test">Use a different baseUrl for a test</a></li>
 </ul>
 <!-- tocstop -->
 
@@ -282,6 +283,13 @@ ga('send', 'pageview');
 <figure class="highlight xml"><figcaption><span>results/my-test-output-chrome.xml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">testsuites</span> <span class="attr">name</span>=<span class="string">&quot;Mocha Tests&quot;</span> <span class="attr">time</span>=<span class="string">&quot;0.068&quot;</span> <span class="attr">tests</span>=<span class="string">&quot;1&quot;</span> <span class="attr">failures</span>=<span class="string">&quot;0&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">testsuite</span> <span class="attr">name</span>=<span class="string">&quot;Root Suite&quot;</span> <span class="attr">timestamp</span>=<span class="string">&quot;2024-01-05T15:00:32&quot;</span> <span class="attr">tests</span>=<span class="string">&quot;1&quot;</span> <span class="attr">file</span>=<span class="string">&quot;cypress/e2e/spec.cy.js&quot;</span> <span class="attr">time</span>=<span class="string">&quot;0.067&quot;</span> <span class="attr">failures</span>=<span class="string">&quot;0&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">testcase</span> <span class="attr">name</span>=<span class="string">&quot;works&quot;</span> <span class="attr">time</span>=<span class="string">&quot;0.017&quot;</span> <span class="attr">classname</span>=<span class="string">&quot;works&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">testcase</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">testsuite</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">testsuites</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
 <p>See the source code in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-browser-name">bahmutov&#x2F;cypress-browser-name</a>.</p>
+<h2><span id="use-a-different-baseurl-for-a-test">Use a different baseUrl for a test</span></h2><p>Imagine you are testing the customer site. You set the <code>baseUrl</code> in the config file:</p>
+<figure class="highlight js"><figcaption><span>cypress.config.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; defineConfig &#125; = <span class="built_in">require</span>(<span class="string">&#x27;cypress&#x27;</span>)</span><br><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = <span class="title function_">defineConfig</span>(&#123;</span><br><span class="line">  <span class="attr">e2e</span>: &#123;</span><br><span class="line">    <span class="attr">baseUrl</span>: <span class="string">&#x27;https://mysite.com&#x27;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>But there is a second admin site and you need to test a few features there. How do you change the <code>baseUrl</code>? Set it in the single test or in a suite of tests!</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/admin.cy.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works&#x27;</span>, &#123; <span class="attr">baseUrl</span>: <span class="string">&#x27;https://admin.mysite.com&#x27;</span> &#125;, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// test the admin site</span></span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// or set it for all the tests inside the suite</span></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;Admin site&#x27;</span>, &#123; <span class="attr">baseUrl</span>: <span class="string">&#x27;https://admin.mysite.com&#x27;</span> &#125;, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;works 1&#x27;</span>, <span class="function">() =&gt;</span> &#123; ... &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;works 2&#x27;</span>, <span class="function">() =&gt;</span> &#123; ... &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>See <a target="_blank" rel="noopener" href="https://on.cypress.io/configuration">Configuration page</a> to see all parameters you can set in the config object.</p>
 
       
     </div>
@@ -318,7 +326,7 @@ linkjuice.init('.article-entry', {
     
 
     <footer class="article-footer">
-      <a data-url="https://glebbahmutov.com/blog/cypress-v10-tips/" data-id="clrkuys68005e62my6albh4lo" class="article-share-link">Share</a>
+      <a data-url="https://glebbahmutov.com/blog/cypress-v10-tips/" data-id="clrqj5li2005e7rmy5jir6f23" class="article-share-link">Share</a>
       
         <a href="https://glebbahmutov.com/blog/cypress-v10-tips/#disqus_thread" class="article-comment-link">Comments</a>
       
