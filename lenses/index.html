@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>I can see clearly now | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Consider object property access. We mostly think of this as a built-in JavaScript syntax. Reading a value at a given property &quot;foo&quot; happens as soon as we write 1O.foo &#x2F;&#x2F; value of property &amp;q">
+<meta property="og:type" content="article">
+<meta property="og:title" content="I can see clearly now">
+<meta property="og:url" content="https://glebbahmutov.com/blog/lenses/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Consider object property access. We mostly think of this as a built-in JavaScript syntax. Reading a value at a given property &quot;foo&quot; happens as soon as we write 1O.foo &#x2F;&#x2F; value of property &amp;q">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/lenses/nyc.jpg">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/lenses/nyc-deliveries.jpg">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/lenses/rambot.png">
+<meta property="article:published_time" content="2017-07-22T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.548Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="functional">
+<meta property="article:tag" content="ramda">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/lenses/nyc.jpg">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-lenses" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2017-07-22T04:00:00.000Z" itemprop="datePublished">Jul 22 2017</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      I can see clearly now
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Using functional lenses to modify objects by example.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Consider object property access. We mostly think of this as a built-in
+JavaScript syntax. Reading a value at a given property &quot;foo&quot; happens as soon
+as we write</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">O.<span class="property">foo</span> <span class="comment">// value of property &quot;foo&quot; in object &quot;O&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Similarly, as soon as we write the assignment operator we set the value
+of property &quot;foo&quot;</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">O.<span class="property">foo</span> = <span class="string">&quot;bar&quot;</span></span><br><span class="line"><span class="comment">// object &quot;O&quot; has property &quot;foo&quot; with value &quot;bar&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>What if we wanted to split reading property &quot;foo&quot; into two steps. Step 1 would
+just configure it, and step 2 would actually read it? We could easily do this
+using a closure</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="title function_">read</span> = property =&gt; <span class="function"><span class="params">object</span> =&gt;</span> object[property]</span><br></pre></td></tr></table></figure>
+
+<p>The function returning a function - that&#39;s a common approach. The first call
+only specifies the property name we plan to access and returns a function
+that is waiting for an actual object. Interesting that we could call <code>read</code>
+once and then use the returned function <em>multiple times, even on different
+objects</em>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="title function_">read</span> = property =&gt; <span class="function"><span class="params">object</span> =&gt;</span> object[property]</span><br><span class="line"><span class="keyword">const</span> fooReader = <span class="title function_">read</span>(<span class="string">&#x27;foo&#x27;</span>)</span><br><span class="line"><span class="title function_">fooReader</span>(&#123;<span class="attr">foo</span>: <span class="number">42</span>&#125;)    <span class="comment">// 42</span></span><br><span class="line"><span class="title function_">fooReader</span>(&#123;<span class="attr">bar</span>: <span class="string">&#x27;baz&#x27;</span>&#125;) <span class="comment">// undefined</span></span><br></pre></td></tr></table></figure>
+
+<p>We could make a &quot;writer&quot; similarly, and we could even curry the function
+to accept property, value and object in three separate calls</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="title function_">write</span> = property =&gt; <span class="function"><span class="params">value</span> =&gt;</span> <span class="function"><span class="params">object</span> =&gt;</span> object[property] = value</span><br><span class="line"><span class="keyword">const</span> fooSet = <span class="title function_">write</span>(<span class="string">&#x27;foo&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> fooSet5 = <span class="title function_">fooSet</span>(<span class="number">5</span>)</span><br><span class="line"><span class="keyword">const</span> o = &#123;&#125;</span><br><span class="line"><span class="title function_">fooSet5</span>(o)</span><br><span class="line"><span class="comment">// o is &#123;foo: 5&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>We could make <code>write</code> immutable to make sure we are not modifying the object
+when setting a property, and we could also support deep paths.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> fooBarBazSet = <span class="title function_">write</span>(<span class="string">&#x27;foo.bar.baz&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> o = ...</span><br><span class="line"><span class="keyword">const</span> updated = <span class="title function_">fooBarBazSet</span>(<span class="number">5</span>, o)</span><br></pre></td></tr></table></figure>
+
+<p>Not only we do not know which object we are going to query or update;
+we do not even know if we are going to <em>read or write</em> value at a given
+path like <code>foo.bar.baz</code>. Thus the first call should just &quot;save&quot; the path,
+and then a separate function call should know how to read or write.</p>
+<h2><span id="lenses">Lenses</span></h2><p>Wrapping a path like <code>foo.bar.baz</code> so that in the future we can read from
+that location in some object, or set its value is called creating a &quot;lens&quot;.
+In Ramda world, it works like this</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> fooBarBazLens = R.<span class="title function_">lensPath</span>([<span class="string">&#x27;foo&#x27;</span>, <span class="string">&#x27;bar&#x27;</span>, <span class="string">&#x27;baz&#x27;</span>])</span><br><span class="line"></span><br><span class="line"><span class="comment">// reading value is called `R.view`</span></span><br><span class="line"><span class="keyword">const</span> readFooBarBaz = R.<span class="title function_">view</span>(fooBarBazLens)</span><br><span class="line"><span class="title function_">readFooBarBaz</span>(&#123;<span class="attr">foo</span>: &#123;<span class="attr">bar</span>: &#123;<span class="attr">baz</span>: <span class="number">42</span>&#125;&#125;&#125;)</span><br><span class="line"><span class="comment">//=&gt; 42</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// writing value is called `R.set`</span></span><br><span class="line"><span class="keyword">const</span> setFooBarBaz = R.<span class="title function_">set</span>(readFooBarBaz)</span><br><span class="line"><span class="keyword">const</span> o = &#123;&#125;</span><br><span class="line"><span class="keyword">const</span> output = <span class="title function_">setFooBarBaz</span>(<span class="number">1</span>, o)</span><br><span class="line"><span class="comment">// o is still &#123;&#125;</span></span><br><span class="line"><span class="comment">// output is &#123;foo: &#123;bar: &#123;baz: 1&#125;&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Hmm, I wish writing a value using a path inside lens was called &quot;R.project&quot; 😃.
+But that name is already taken.</p>
+<p>If we deal with single level (a plain property), we have function
+<a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#lensProp">R.lensProp</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> fooLens = R.<span class="title function_">lensProp</span>(<span class="string">&#x27;foo&#x27;</span>)</span><br><span class="line">R.<span class="title function_">view</span>(fooLens, &#123;<span class="attr">foo</span>: <span class="number">42</span>&#125;) <span class="comment">// 42</span></span><br></pre></td></tr></table></figure>
+
+<p>which is equivalent of <code>R.lensPath([&#39;foo&#39;])</code></p>
+<h2><span id="lenses-as-street-directions">Lenses as street directions</span></h2><p>Here is an analogy that helps visualize the lens concept. Imagine giving
+street directions like &quot;north 2 blocks, east 1 block then north 4 blocks&quot;.
+Directions like this could be used to deliver a box or pick up a box
+(write and read property value respectively). And directions like this
+would work (usually) in any intersection city; Manhattan in New York City
+is a good place.</p>
+<p><img src="/blog/images/lenses/nyc.jpg" alt="Directions in NYC"></p>
+<p>We can apply same directions &quot;N 2, E 1, N 4&quot;, and if we start at different
+places, we will end up in 3 different places.</p>
+<ul>
+<li>starting at 17th st and 10th ave we will arrive at 23 st and 9th avenue.</li>
+<li>from 14th and 8th we get to 20th and 7th</li>
+<li>from 11th and 6th we get to 17th and 5th</li>
+</ul>
+<p>Using same directions we can pick up a box or drop it off.</p>
+<p><img src="/blog/images/lenses/nyc-deliveries.jpg" alt="Delivering and picking up values using directions"></p>
+<p>That&#39;s how I think of lenses.</p>
+<h2><span id="lenses-for-the-win">Lenses for the win</span></h2><p>Here is a cool use for lenses. I hate programming. Well, not really hate the
+programming itself as much as I hate the boring code writing. For example, we
+often take some objects and transform them into other objects; usually
+picking only some properties, trimming strings etc. Libraries like Ramda
+and Lodash make it simpler with its variety of functions to modify objects.</p>
+<p>Check out things like <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#pick">R.pick</a> and
+<a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#evolve">R.evolve</a> - they make object transform
+quick, yet still this is rote work 👎.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> tomato = &#123;</span><br><span class="line">  <span class="attr">firstName</span>: <span class="string">&#x27;  Tomato &#x27;</span>,</span><br><span class="line">  <span class="attr">data</span>: &#123;<span class="attr">elapsed</span>: <span class="number">100</span>, <span class="attr">remaining</span>: <span class="number">1400</span>&#125;,</span><br><span class="line">  <span class="attr">id</span>:<span class="number">123</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> transformations = &#123;</span><br><span class="line">  <span class="attr">firstName</span>: R.<span class="property">trim</span>,</span><br><span class="line">  <span class="attr">lastName</span>: R.<span class="property">trim</span>, <span class="comment">// Will not get invoked.</span></span><br><span class="line">  <span class="attr">data</span>: &#123;<span class="attr">elapsed</span>: R.<span class="title function_">add</span>(<span class="number">1</span>), <span class="attr">remaining</span>: R.<span class="title function_">add</span>(-<span class="number">1</span>)&#125;</span><br><span class="line">&#125;</span><br><span class="line">R.<span class="title function_">pick</span>([<span class="string">&#x27;firstName&#x27;</span>], R.<span class="title function_">evolve</span>(transformations, tomato))</span><br><span class="line"><span class="comment">//=&gt; &#123;firstName: &#x27;Tomato&#x27;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>We often have the initial object, and if we write the above code a bot
+can quickly evaluate it and give us the output. This is often used to
+play with code snippets on <a target="_blank" rel="noopener" href="https://gitter.im/ramda/ramda">Ramda Gitter channel</a></p>
+<p><img src="/blog/images/lenses/rambot.png" alt="Rambot in action"></p>
+<p>This has a huge huge shortcoming, actually 2 of them.</p>
+<ol>
+<li>We usually have the input object and <em>the desired output object</em>,
+  but not the code. We have to write the code.</li>
+<li>Writing code is <strong>freaking complicated</strong> and requires skills and experience.
+  Who has time for that?</li>
+</ol>
+<p>What if we could just give input and output objects and let a bot &#x2F; CLI &#x2F;
+program compute the transformation code?</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> tomato = &#123;</span><br><span class="line">  <span class="attr">firstName</span>: <span class="string">&#x27;  Tomato &#x27;</span>,</span><br><span class="line">  <span class="attr">data</span>: &#123;<span class="attr">elapsed</span>: <span class="number">100</span>, <span class="attr">remaining</span>: <span class="number">1400</span>&#125;,</span><br><span class="line">  <span class="attr">id</span>:<span class="number">123</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> desired = &#123;<span class="attr">firstName</span>: <span class="string">&#x27;Tomato&#x27;</span>&#125;</span><br><span class="line"><span class="keyword">var</span> t = <span class="title function_">verySmartBot</span>(tomato, desired)</span><br></pre></td></tr></table></figure>
+
+<p>The computed function <code>t</code> is a transformation function that not only
+computes <code>t(tomato)</code> to be <code>desired</code>, but applies <em>same transformation</em>
+to any object with the same <em>shape</em> as input. For example</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> banana = &#123;</span><br><span class="line">  <span class="attr">firstName</span>: <span class="string">&#x27; Banana&#x27;</span>,</span><br><span class="line">  <span class="attr">data</span>: <span class="string">&#x27;some data&#x27;</span>,</span><br><span class="line">  <span class="attr">id</span>: <span class="number">42</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">t</span>(banana)</span><br><span class="line"><span class="comment">// &#123;firstName: &#x27;Banana&#x27;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Cool cool cool, so now anyone can &quot;program&quot; by showing the program &quot;before&quot;
+and &quot;after&quot; objects, how do we write this &quot;verySmartBot&quot; program and what
+do lenses have to do with it?</p>
+<p>Well, take a look at <em>every property</em> in the output object, like <code>firstName</code>.
+We can brute force search for same value in the input object, and will file
+matching property <code>firstName</code> (value is important, not the property name
+itself). So we find that our transformation needs to</p>
+<ul>
+<li>read property <code>firstName</code> from the source object (any future source object)</li>
+<li>transform it using <code>R.trim</code></li>
+<li>write value into property <code>firstName</code> of the destination object</li>
+</ul>
+<p>Hmm, does this look familiar? Reading source property while deferring the
+actual object is viewing via a lens <code>R.view(R.lensProp(&#39;firstName&#39;))</code>.
+Writing a value into an object is setting via a lens
+<code>R.set(R.lensProp(&#39;firstName&#39;))</code>. And in the middle there is <code>R.trim(value)</code>!</p>
+<p>Take a look a the implementation in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/change-by-example">change-by-example</a>.
+The search for each destination property grabs all paths in the object,
+including deep properties</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="title function_">allPaths</span> = (<span class="params">obj</span>) =&gt; ...</span><br><span class="line"><span class="keyword">const</span> paths = <span class="title function_">allPaths</span>(destination)</span><br><span class="line"><span class="comment">// paths = [[&#x27;firstName&#x27;], [&#x27;data&#x27;], [&#x27;id&#x27;]]</span></span><br><span class="line">paths.<span class="title function_">forEach</span>(<span class="function"><span class="params">path</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> destinationValue = R.<span class="title function_">view</span>(R.<span class="title function_">lensPath</span>(path), destination)</span><br><span class="line">  <span class="comment">// find source property</span></span><br><span class="line">  <span class="keyword">const</span> readTransform = <span class="title function_">findTransformTo</span>(destinationValue)</span><br><span class="line">  <span class="keyword">if</span> (readTransform) &#123;</span><br><span class="line">    <span class="comment">// found!</span></span><br><span class="line">    <span class="keyword">const</span> write = R.<span class="title function_">set</span>(R.<span class="title function_">lensPath</span>(path))</span><br><span class="line">    <span class="keyword">const</span> <span class="title function_">readAndWrite</span> = (<span class="params"><span class="keyword">from</span>, to</span>) =&gt; <span class="title function_">write</span>(<span class="title function_">readTransform</span>(<span class="keyword">from</span>), to)</span><br><span class="line">    destinationPropertyTransforms.<span class="title function_">push</span>(readAndWrite)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>You can see how simple the code is yourself <a target="_blank" rel="noopener" href="https://github.com/bahmutov/change-by-example/blob/c4ac5a3d018e7cdd1bc56fb86021eedae88854a0/src/index.js#L21">here</a></p>
+<p>Similarly, to find the source property (even if deep inside the source
+object), we use <code>allPaths</code> and lenses for each path.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// find lens inside the source object</span></span><br><span class="line"><span class="comment">// and transform to produce given value</span></span><br><span class="line"><span class="keyword">let</span> sourceLens</span><br><span class="line"><span class="keyword">let</span> transform</span><br><span class="line"><span class="keyword">const</span> paths = <span class="title function_">allPaths</span>(source)</span><br><span class="line">paths.<span class="title function_">some</span>(<span class="function"><span class="params">path</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> sourceValue = R.<span class="title function_">view</span>(R.<span class="title function_">lensPath</span>(path), source)</span><br><span class="line">  <span class="keyword">const</span> foundTransform = allTransforms.<span class="title function_">some</span>(<span class="function"><span class="params">t</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">const</span> out = <span class="title function_">t</span>(sourceValue)</span><br><span class="line">      <span class="keyword">if</span> (R.<span class="title function_">equals</span>(value, out)) &#123;</span><br><span class="line">        sourceLens = path</span><br><span class="line">        transform = t</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (e) &#123;&#125;</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="keyword">return</span> foundTransform</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// return sourceLens and transform</span></span><br></pre></td></tr></table></figure>
+
+<p>That&#39;s it. This abstracts access to every property in the source object
+and in the destination object and allows quickly finding matching ones.
+Then we can just give it two objects and enjoy programming-free computing.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> source = &#123;</span><br><span class="line">  <span class="attr">name</span>: &#123;</span><br><span class="line">    <span class="attr">first</span>: <span class="string">&#x27;joe&#x27;</span>,</span><br><span class="line">    <span class="attr">last</span>: <span class="string">&#x27;smith&#x27;</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">occupation</span>: <span class="string">&#x27;plumber&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> destination = &#123;</span><br><span class="line">  <span class="attr">firstName</span>: <span class="string">&#x27;Joe&#x27;</span>,</span><br><span class="line">  <span class="attr">job</span>: <span class="string">&#x27;plumber&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> verySmartBot = <span class="built_in">require</span>(<span class="string">&#x27;change-by-example&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> t = <span class="title function_">verySmartBot</span>(source, destination)</span><br><span class="line"><span class="comment">// now give the &quot;t&quot; a different object</span></span><br><span class="line"><span class="title function_">t</span>(&#123;</span><br><span class="line">  <span class="attr">name</span>: &#123;<span class="attr">first</span>: <span class="string">&#x27;mary&#x27;</span>&#125;,</span><br><span class="line">  <span class="attr">occupation</span>: <span class="string">&#x27;driver&#x27;</span></span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// &#123;firstName: &#x27;Mary&#x27;, job: &#x27;driver&#x27;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>All thanks to lenses.</p>
+<h2><span id="links">Links</span></h2><ul>
+<li>Ramda lenses <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#lens">R.lens</a></li>
+<li><a target="_blank" rel="noopener" href="https://egghead.io/lessons/javascript-change-object-properties-with-ramda-lenses">Change Object Properties with Ramda Lenses</a></li>
+<li><a target="_blank" rel="noopener" href="http://randycoulman.com/blog/2016/07/12/thinking-in-ramda-lenses/">Thinking in Ramda: Lenses</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/change-by-example">change-by-example</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/lenses/" data-id="clxj6w7dq00a8bjn70cna01ww" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/lenses/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/functional/" rel="tag">functional</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/ramda/" rel="tag">ramda</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../linters-gonna-lint/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Linters Gonna Lint
+        
+      </div>
+    </a>
+  
+  
+    <a href="../mocking-vs-refactoring/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Mocking vs Refactoring</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/lenses/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Redux and RethinkDB | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="In this blog post I try to see if using a modern database can be a good companion to Redux pattern. In particular I find that a database allows atomic data updates nicely by design. This blog post jus">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redux and RethinkDB">
+<meta property="og:url" content="https://glebbahmutov.com/blog/redux-and-rethinkdb/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="In this blog post I try to see if using a modern database can be a good companion to Redux pattern. In particular I find that a database allows atomic data updates nicely by design. This blog post jus">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/bahmutov/bahmutov.github.io/master/images/rethinkdb-state.png">
+<meta property="article:published_time" content="2016-02-08T05:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.574Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="immutable">
+<meta property="article:tag" content="db">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/bahmutov/bahmutov.github.io/master/images/rethinkdb-state.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-redux-and-rethinkdb" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-02-08T05:00:00.000Z" itemprop="datePublished">Feb 8 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/process/">process</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Redux and RethinkDB
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      A single data structure holding program&#39;s state has a name - database.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>In this blog post I try to see if using a modern database can be a good companion
+to Redux pattern. In particular I find that a database allows atomic data updates
+nicely by design. This blog post just shows the same example implemented using both 
+the Redux library and then a similar pattern using RethinkDB database to manage the state.</p>
+<p>You can find the companion source code at <a target="_blank" rel="noopener" href="https://github.com/bahmutov/redux-vs-rethinkdb">bahmutov&#x2F;redux-vs-rethinkdb</a>. If you want to jump
+ahead, see the code</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/redux-vs-rethinkdb/blob/master/src/redux-example.js">Redux src&#x2F;redux-example.js</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/redux-vs-rethinkdb/blob/master/src/rethinkdb-example.js">RethinkDB src&#x2F;rethinkdb-example.js</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/redux-vs-rethinkdb/blob/master/src/rethink-no-boiler.js">RethinkDB without boilerplate</a></li>
+</ul>
+<h2><span id="redux">Redux</span></h2><p>Let us take a look at the latest craze in the MVC world - <a target="_blank" rel="noopener" href="http://redux.js.org/">Redux</a>.
+It keeps the entirety of your application&#39;s data in a single &quot;store&quot;.
+There is no direct data manipulation outside the Redux flow, 
+instead the data is mutated by pure functions that take the &quot;state&quot; from the &quot;store&quot; 
+and additional arguments from &quot;actions&quot;.
+The small example from the Redux home page shows this nicely</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; createStore &#125; <span class="keyword">from</span> <span class="string">&#x27;redux&#x27;</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * This is a reducer, a pure function with (state, action) =&gt; state signature.</span></span><br><span class="line"><span class="comment"> * It describes how an action transforms the state into the next state.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">counter</span>(<span class="params">state = <span class="number">0</span>, action</span>) &#123;</span><br><span class="line">  <span class="keyword">switch</span> (action.<span class="property">type</span>) &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="string">&#x27;INCREMENT&#x27;</span>:</span><br><span class="line">    <span class="keyword">return</span> state + <span class="number">1</span></span><br><span class="line">  <span class="keyword">case</span> <span class="string">&#x27;DECREMENT&#x27;</span>:</span><br><span class="line">    <span class="keyword">return</span> state - <span class="number">1</span></span><br><span class="line">  <span class="attr">default</span>:</span><br><span class="line">    <span class="keyword">return</span> state</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// Create a Redux store holding the state of your app.</span></span><br><span class="line"><span class="comment">// Its API is &#123; subscribe, dispatch, getState &#125;.</span></span><br><span class="line"><span class="keyword">let</span> store = <span class="title function_">createStore</span>(counter)</span><br><span class="line"><span class="comment">// You can subscribe to the updates manually, or use bindings to your view layer.</span></span><br><span class="line">store.<span class="title function_">subscribe</span>(<span class="function">() =&gt;</span></span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(store.<span class="title function_">getState</span>())</span><br><span class="line">)</span><br><span class="line"><span class="comment">// The only way to mutate the internal state is to dispatch an action.</span></span><br><span class="line"><span class="comment">// The actions can be serialized, logged or stored and later replayed.</span></span><br><span class="line">store.<span class="title function_">dispatch</span>(&#123; <span class="attr">type</span>: <span class="string">&#x27;INCREMENT&#x27;</span> &#125;)</span><br><span class="line"><span class="comment">// 1</span></span><br><span class="line">store.<span class="title function_">dispatch</span>(&#123; <span class="attr">type</span>: <span class="string">&#x27;INCREMENT&#x27;</span> &#125;)</span><br><span class="line"><span class="comment">// 2</span></span><br><span class="line">store.<span class="title function_">dispatch</span>(&#123; <span class="attr">type</span>: <span class="string">&#x27;DECREMENT&#x27;</span> &#125;)</span><br><span class="line"><span class="comment">// 1</span></span><br></pre></td></tr></table></figure>
+
+<p>We have a store, a state (really just a single variable), and we have a pure
+function <code>counter</code>. This function <code>counter</code> takes the state and an action and returns new state,
+which goes back into the store. Well, sometimes we just return the state - if we don&#39;t know
+what to do for a particular action.</p>
+<p>In majority of applications the state would be more than a single variable; 
+it would be a complex (and hopefully immutable) object.</p>
+<p>Let us inspect the function that updates the state in response to actions.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">counter</span>(<span class="params">state = <span class="number">0</span>, action</span>) &#123;</span><br><span class="line">  <span class="keyword">switch</span> (action.<span class="property">type</span>) &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="string">&#x27;INCREMENT&#x27;</span>:</span><br><span class="line">    <span class="keyword">return</span> state + <span class="number">1</span></span><br><span class="line">  ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>This function <code>counter(state, action)</code> is called a <em>reducer</em> because multiple actions can be
+added to plain a Array list and then <em>reduced</em> into the final state (see the section
+&quot;Introducing Actions and Reducers&quot; in <a target="_blank" rel="noopener" href="http://teropa.info/blog/2015/09/10/full-stack-redux-tutorial.html#introducing-actions-and-reducers">Full-Stack Redux Tutorial</a> for a good example).</p>
+<p>Every time the value inside the store changes, we can get an event, and print the current
+value for example.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">store.<span class="title function_">subscribe</span>(<span class="function">() =&gt;</span></span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(store.<span class="title function_">getState</span>())</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>To recap: we have a &quot;store&quot; and a function that produces the new &quot;state&quot; based on 
+the input &quot;action&quot;. We can also subscribe to store changes and do something with 
+the new state (for example print it). All the data is stored in this &quot;state&quot; and
+the &quot;store&quot; controls the access to it.</p>
+<h2><span id="immutable-data">Immutable data</span></h2><p>In order to make Redux more powerful, people recommend using <em>an immutable data</em> 
+object for the state. An immutable data object never changes any of its properties -
+instead it always creates a <em>complete copy</em> of itself but with a specific value modified.
+As the simple example, let us increment a person&#39;s age in a function. We are going
+to pass an object with &quot;age&quot; property</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> kid = &#123;</span><br><span class="line">  <span class="attr">age</span>: <span class="number">20</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> adult = <span class="title function_">birthday</span>(kid)</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">birthday</span>(<span class="params">state</span>) &#123; <span class="comment">// our reducer</span></span><br><span class="line">  <span class="comment">// poor man&#x27;s deep clone</span></span><br><span class="line">  <span class="keyword">var</span> newState = <span class="title class_">JSON</span>.<span class="title function_">parse</span>(<span class="title class_">JSON</span>.<span class="title function_">stringify</span>(state))</span><br><span class="line">  newState.<span class="property">age</span> += <span class="number">1</span></span><br><span class="line">  <span class="keyword">return</span> newState</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Notice that this is &quot;immutable&quot; modification by convention - the built-in JavaScript objects 
+are hard to make totally constant. Event the ES6 <code>const</code> keyword only makes the variable reference
+constant, not the object it points to!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> foo = &#123; <span class="attr">bar</span>: <span class="number">42</span> &#125;</span><br><span class="line">foo = <span class="string">&#x27;something else&#x27;</span> <span class="comment">// ERROR</span></span><br><span class="line">foo.<span class="property">bar</span> = <span class="string">&#x27;baz&#x27;</span> <span class="comment">// Totally fine</span></span><br></pre></td></tr></table></figure>
+
+<p>Thus to prevent the accidental state object modification outside of the reducer function,
+we need a good library that freezes &#x2F; modifies an object efficiently, preventing any direct
+access to its internal data. A popular choice is <a target="_blank" rel="noopener" href="https://facebook.github.io/immutable-js/">Immutable.js</a>, which has a
+syntax slightly different from the plain JavaScript</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> kid = <span class="title class_">Immutable</span>.<span class="title class_">Map</span>(&#123;</span><br><span class="line">  <span class="attr">age</span>: <span class="number">20</span></span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// kid.age += 1 is no longer possible!</span></span><br><span class="line"><span class="keyword">const</span> adult = <span class="title function_">birthday</span>(kid)</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">birthday</span>(<span class="params">state</span>) &#123; <span class="comment">// our reducer</span></span><br><span class="line">  <span class="keyword">var</span> newState = state.<span class="title function_">set</span>(<span class="string">&#x27;age&#x27;</span>, state.<span class="title function_">get</span>(<span class="string">&#x27;age&#x27;</span>) + <span class="number">1</span>)</span><br><span class="line">  <span class="keyword">return</span> newState</span><br><span class="line">&#125;</span><br><span class="line">adult === kid <span class="comment">// false (new object returned)</span></span><br><span class="line">adult.<span class="property">age</span> <span class="comment">// 21</span></span><br><span class="line">kid.<span class="property">age</span>   <span class="comment">// 20 - old object is unchanged</span></span><br></pre></td></tr></table></figure>
+
+<p>With Immutable (or its equivalents), we are trying to ensure a consistent, performant
+and versatile application data container.</p>
+<p>If this sounds familiar, well, remember the databases?</p>
+<h2><span id="rethinkdb">RethinkDB</span></h2><p>Let us take a nice modern database, like <a target="_blank" rel="noopener" href="https://www.rethinkdb.com/">RethinkDB</a>. It can store all our data,
+can update a particular record, and even provide us with a 
+<a target="_blank" rel="noopener" href="https://rethinkdb.com/docs/changefeeds/javascript/">change feed</a> for a particular record.</p>
+<p>We can easily create architecture similar to Redux, but having the state inside the 
+Rethink database. I did not create a Redux-compatible store, instead I tried to recreate
+the way Redux store wraps around the state.</p>
+<p>Let me create a sample table that would hold our data.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">initDB</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> r = <span class="built_in">require</span>(<span class="string">&#x27;rethinkdb&#x27;</span>)</span><br><span class="line">  <span class="keyword">const</span> dbOptions = &#123; <span class="attr">host</span>: <span class="string">&#x27;localhost&#x27;</span>, <span class="attr">port</span>: <span class="number">28015</span> &#125;</span><br><span class="line">  <span class="keyword">return</span> r.<span class="title function_">connect</span>(dbOptions)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="function"><span class="params">conn</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">const</span> db = r.<span class="title function_">db</span>(<span class="string">&#x27;test&#x27;</span>)</span><br><span class="line">      <span class="keyword">return</span> db.<span class="title function_">tableCreate</span>(<span class="string">&#x27;state&#x27;</span>).<span class="title function_">run</span>(conn)</span><br><span class="line">        .<span class="title function_">then</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">          <span class="keyword">return</span> &#123;</span><br><span class="line">            <span class="attr">r</span>: r,</span><br><span class="line">            <span class="attr">conn</span>: conn,</span><br><span class="line">            <span class="attr">db</span>: db,</span><br><span class="line">            <span class="attr">table</span>: r.<span class="title function_">db</span>(<span class="string">&#x27;test&#x27;</span>).<span class="title function_">table</span>(<span class="string">&#x27;state&#x27;</span>)</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>We get into a different mind set right away: all database operations are asynchronous. We must
+use promises from the start (please, do not use callbacks, even if RethinkDB allows it).
+Promises have clear semantics, are part of the ES6 standard, and do not require inventing a new
+way of handling concurrency, unlike 
+<a target="_blank" rel="noopener" href="http://redux.js.org/docs/advanced/AsyncActions.html">Redux Async Actions</a>.</p>
+<h3><span id="initialize-the-database-state">Initialize the database state</span></h3><p>We now have an empty database table. Let us insert the default state object, and to keep
+code parity with Redux example (somewhat), let us create the default state in the reducer 
+function <code>counter</code> and insert it into the database.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// in Redux, default state was default parameter</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">counter</span>(<span class="params">state = <span class="number">0</span>, action</span>) &#123; ... &#125;</span><br><span class="line"><span class="comment">// in RethinkDB default state will be created for null action</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">counter</span>(<span class="params">rethinkState, action</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (!action) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;setting the default state&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> rethinkState.<span class="property">table</span>.<span class="title function_">insert</span>(&#123;</span><br><span class="line">      <span class="attr">id</span>: <span class="number">1</span>,</span><br><span class="line">      <span class="attr">state</span>: <span class="number">0</span></span><br><span class="line">    &#125;).<span class="title function_">run</span>(rethinkState.<span class="property">conn</span>).<span class="title function_">then</span>(<span class="function">() =&gt;</span> rethinkState)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>We will keep our application state in the table &#39;state&#39; in the document with <code>id: 1</code>.
+The JSON document just has the <code>id</code> and the initial value of 0 in the <code>state</code> property.</p>
+<p>This code looks a lot more verbose than the simple Redux example. In reality, the state into the
+reducer would be a complex object, and modifying an Immutable state object would also require
+non-trivial code.</p>
+<p>Also note that our <code>function counter</code> returns a promise resolved with the new <code>rethinkState</code> 
+object. Thus dispatching an action to the reducer function is an asynchronous operation.
+From the main program, we can initialize the start state like this</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">initDB</span>()</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function"><span class="params">rethinkState</span> =&gt;</span> <span class="title function_">counter</span>(rethinkState))</span><br><span class="line">  <span class="comment">// setting the default state</span></span><br></pre></td></tr></table></figure>
+
+<p>Or even shorter</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">initDB</span>()</span><br><span class="line">  .<span class="title function_">then</span>(counter)</span><br><span class="line">  <span class="comment">// setting the default state</span></span><br></pre></td></tr></table></figure>
+
+<h3><span id="always-returning-the-state">Always returning the state</span></h3><p>One of the Redux tenets is the graceful handling of unknown actions by returning the input
+state unmodified. We can easily achieve this too.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">counter</span>(<span class="params">rethinkState, action</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (!action) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;setting the default state&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> rethinkState.<span class="property">table</span>.<span class="title function_">insert</span>(&#123;</span><br><span class="line">      <span class="attr">id</span>: <span class="number">1</span>,</span><br><span class="line">      <span class="attr">state</span>: <span class="number">0</span></span><br><span class="line">    &#125;).<span class="title function_">run</span>(rethinkState.<span class="property">conn</span>).<span class="title function_">then</span>(<span class="function">() =&gt;</span> rethinkState)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">switch</span> (action.<span class="property">type</span>) &#123;</span><br><span class="line">  <span class="attr">default</span>:</span><br><span class="line">    <span class="keyword">return</span> rethinkState</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3><span id="increment-the-state-value">Increment the state value</span></h3><p>Let us implement a more interesting operation - increment the <code>state</code> variable
+inside the RethinkDB using Redux pattern. We need to fetch the current value
+and update it, but it has to be <em>atomic</em> - we cannot allow anyone else
+to change the value between the <code>fetch</code> and <code>update</code> steps. Luckily, most databases
+strive to implement the <code>atomic</code> updates (it is the &quot;A&quot; in 
+<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/ACID">ACID</a> properties). In RethinkDB, this is done
+using <a target="_blank" rel="noopener" href="https://www.rethinkdb.com/api/javascript/update/">ReQL update</a> function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">counter</span>(<span class="params">rethinkState, action</span>) &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">switch</span> (action.<span class="property">type</span>) &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="string">&#x27;INCREMENT&#x27;</span>:</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;incrementing value&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> rethinkState.<span class="property">table</span>.<span class="title function_">get</span>(<span class="number">1</span>).<span class="title function_">update</span>(&#123;</span><br><span class="line">      <span class="attr">state</span>: rethinkState.<span class="property">r</span>.<span class="title function_">row</span>(<span class="string">&#x27;state&#x27;</span>).<span class="title function_">add</span>(<span class="number">1</span>)</span><br><span class="line">    &#125;).<span class="title function_">run</span>(rethinkState.<span class="property">conn</span>).<span class="title function_">then</span>(<span class="function">() =&gt;</span> rethinkState)</span><br><span class="line">  <span class="attr">default</span>:</span><br><span class="line">    <span class="keyword">return</span> rethinkState</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>We are getting the document with id 1 in <code>rethinkState.table.get(1)</code>, then
+add 1 to its property <code>state</code> and set the result back into <code>state</code> property
+using <code>state: rethinkState.r.row(&#39;state&#39;).add(1)</code> expression.</p>
+<p>We implement the &quot;decrement&quot; operation similarly, but using
+<code>r.row(&#39;state&#39;).add(-1)</code> instead. The entire reducer function is verbose, but most of
+the boilerplate could be factored out if necessary (I will show this later).</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">counter</span>(<span class="params">rethinkState, action</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (!action) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;setting the default state&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> rethinkState.<span class="property">table</span>.<span class="title function_">insert</span>(&#123;</span><br><span class="line">      <span class="attr">id</span>: <span class="number">1</span>,</span><br><span class="line">      <span class="attr">state</span>: <span class="number">0</span></span><br><span class="line">    &#125;).<span class="title function_">run</span>(rethinkState.<span class="property">conn</span>).<span class="title function_">then</span>(<span class="function">() =&gt;</span> rethinkState)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">switch</span> (action.<span class="property">type</span>) &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="string">&#x27;INCREMENT&#x27;</span>:</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;incrementing value&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> rethinkState.<span class="property">table</span>.<span class="title function_">get</span>(<span class="number">1</span>).<span class="title function_">update</span>(&#123;</span><br><span class="line">      <span class="attr">state</span>: rethinkState.<span class="property">r</span>.<span class="title function_">row</span>(<span class="string">&#x27;state&#x27;</span>).<span class="title function_">add</span>(<span class="number">1</span>)</span><br><span class="line">    &#125;).<span class="title function_">run</span>(rethinkState.<span class="property">conn</span>).<span class="title function_">then</span>(<span class="function">() =&gt;</span> rethinkState)</span><br><span class="line">  <span class="keyword">case</span> <span class="string">&#x27;DECREMENT&#x27;</span>:</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;decrementing&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> rethinkState.<span class="property">table</span>.<span class="title function_">get</span>(<span class="number">1</span>).<span class="title function_">update</span>(&#123;</span><br><span class="line">      <span class="attr">state</span>: rethinkState.<span class="property">r</span>.<span class="title function_">row</span>(<span class="string">&#x27;state&#x27;</span>).<span class="title function_">add</span>(-<span class="number">1</span>)</span><br><span class="line">    &#125;).<span class="title function_">run</span>(rethinkState.<span class="property">conn</span>).<span class="title function_">then</span>(<span class="function">() =&gt;</span> rethinkState)</span><br><span class="line">  <span class="attr">default</span>:</span><br><span class="line">    <span class="keyword">return</span> rethinkState</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Starting the program we see the console messages</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">setting the default state</span><br><span class="line">incrementing value</span><br><span class="line">incrementing value</span><br><span class="line">decrementing</span><br></pre></td></tr></table></figure>
+
+<h3><span id="why-atomic-updates-matter">Why atomic updates matter</span></h3><p>The two good Redux tutorials I read recently all show actions that update the local state 
+AND send the update to the server. Here are the links</p>
+<ul>
+<li>Section &quot;Calling All Servers&quot; in <a target="_blank" rel="noopener" href="http://onehungrymind.com/build-better-angular-2-application-redux-ngrx/">Build a Better Angular 2 Application with Redux and ngrx</a></li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">updateItem</span>(<span class="params">item: Item</span>) &#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">http</span>.<span class="title function_">put</span>(<span class="string">`<span class="subst">$&#123;BASE_URL&#125;</span><span class="subst">$&#123;item.id&#125;</span>`</span>, <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(item), <span class="variable constant_">HEADER</span>)</span><br><span class="line">    .<span class="title function_">subscribe</span>(<span class="function"><span class="params">action</span> =&gt;</span> <span class="variable language_">this</span>.<span class="property">store</span>.<span class="title function_">dispatch</span>(&#123; <span class="attr">type</span>: <span class="string">&#x27;UPDATE_ITEM&#x27;</span>, <span class="attr">payload</span>: item &#125;));</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">deleteItem</span>(<span class="params">item: Item</span>) &#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">http</span>.<span class="title function_">delete</span>(<span class="string">`<span class="subst">$&#123;BASE_URL&#125;</span><span class="subst">$&#123;item.id&#125;</span>`</span>)</span><br><span class="line">    .<span class="title function_">subscribe</span>(<span class="function"><span class="params">action</span> =&gt;</span> <span class="variable language_">this</span>.<span class="property">store</span>.<span class="title function_">dispatch</span>(&#123; <span class="attr">type</span>: <span class="string">&#x27;DELETE_ITEM&#x27;</span>, <span class="attr">payload</span>: item &#125;));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Notice that there is no synchronization or order control between updating and deleting
+an item. What happens if the user updates an item and then deletes it? What if the 
+HTTP &quot;delete&quot; operation completes <em>before</em> HTTP &quot;update&quot; operation - will our store
+handle the inconsistent state? We will be trying to update an item that was already deleted,
+which could be problematic.</p>
+<p>Similarly, in section &quot;Sending Actions To The Server Using Redux Middleware&quot; of
+<a target="_blank" rel="noopener" href="http://teropa.info/blog/2015/09/10/full-stack-redux-tutorial.html#introducing-actions-and-reducers">Full-Stack Redux Tutorial</a> we just send every action to the server via a socket.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> socket = <span class="title function_">io</span>(<span class="string">`<span class="subst">$&#123;location.protocol&#125;</span>//<span class="subst">$&#123;location.hostname&#125;</span>:8090`</span>);</span><br><span class="line"><span class="keyword">const</span> store = <span class="title function_">createStoreWithMiddleware</span>(reducer);</span><br><span class="line"><span class="comment">// where each action goes through remoteActionMiddleware</span></span><br><span class="line"><span class="keyword">const</span> <span class="title function_">remoteActionMiddleware</span> = store =&gt; <span class="function"><span class="params">next</span> =&gt;</span> <span class="function"><span class="params">action</span> =&gt;</span> &#123;</span><br><span class="line">  socket.<span class="title function_">emit</span>(<span class="string">&#x27;action&#x27;</span>, action); <span class="comment">// sends action to the server</span></span><br><span class="line">  <span class="keyword">return</span> <span class="title function_">next</span>(action);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>In this case, we are using Socket.IO which uses TCP under the covers. The TCP
+guarantees the delivery order, which is nice - at least the <code>update; delete</code> actions
+will be delivered to the server in this order. Yet, we do not know if any <em>other</em> reducers
+after the message is sent are reliable. Thus we can still get the problem where
+something after the successful <code>socker.emit</code> takes a long time, allowing <code>delete</code> action
+to execute completely AND then try to update non-existent record.</p>
+<p>We can push this problem up or down our client code, use streams, merge actions to guarantee
+the store update order, etc. But this just means we are trying to solve the problem 
+<em>the database folks have already solved</em>.</p>
+<p>How do we use a database then to solve the application&#39;s sync between the client and the server?
+Just use the database wrapper, like 
+<a target="_blank" rel="noopener" href="https://github.com/mikemintz/rethinkdb-websocket-client">rethinkdb-websocket-client</a>. It will
+transparently work with central database, ensuring that you do not have to worry about inconsistent
+state on the client.</p>
+<h3><span id="subscribing-to-store-changes">Subscribing to store changes</span></h3><p>The Redux store allows anyone to subscribe to the state changes. RethinkDB has an equivalent,
+if not more powerful feature - <a target="_blank" rel="noopener" href="https://rethinkdb.com/docs/changefeeds/javascript/">change feeds</a>. </p>
+<p>Let us subscribe to the single document (the one with id 1) right after we create the database.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">initDB</span>()</span><br><span class="line">  .<span class="title function_">then</span>(<span class="keyword">function</span> <span class="title function_">subscribe</span>(<span class="params">state</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> state.<span class="property">table</span>.<span class="title function_">get</span>(<span class="number">1</span>).<span class="title function_">changes</span>().<span class="title function_">run</span>(state.<span class="property">conn</span>)</span><br><span class="line">      .<span class="title function_">then</span>(<span class="function"><span class="params">cursor</span> =&gt;</span> &#123;</span><br><span class="line">        cursor.<span class="title function_">each</span>(<span class="function">(<span class="params">err, change</span>) =&gt;</span> <span class="variable language_">console</span>.<span class="title function_">log</span>(change.<span class="property">new_val</span>.<span class="property">state</span>))</span><br><span class="line">      &#125;)</span><br><span class="line">      .<span class="title function_">then</span>(<span class="function">() =&gt;</span> state)</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The cursor returned from <code>state.table.get(1).changes()</code> has a callback <code>cursor.each</code>
+that is executed every time there is a change. In our case, because we returned
+the promise right after the database creation, we get a notification even for
+the initial store creation!</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">setting the default state</span><br><span class="line">0</span><br><span class="line">incrementing value</span><br><span class="line">1</span><br><span class="line">incrementing value</span><br><span class="line">2</span><br><span class="line">decrementing</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
+
+<p>Nice!</p>
+<p>Stepping aside the example, the RethinkDB change feeds are very powerful because 
+they allow very fine-grained subscriptions - an individual document, type of update, 
+derived and aggregate feeds.</p>
+<h2><span id="removing-the-boilerplate">Removing the boilerplate</span></h2><p>Let us simplify using the RethinkDB from the client&#39;s code. We need to recreate two API&#39;s
+similar to Redux example: first the store itself, and second the API to the state object
+passed to the reducer function.</p>
+<h3><span id="quotreduxquot-which-is-really-rethinkdb">&quot;Redux&quot; which is really RethinkDB</span></h3><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// store creation abstraction</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">createStore</span>(<span class="params">reducer</span>) &#123;</span><br><span class="line">  <span class="keyword">var</span> queue <span class="comment">// queue for async actions</span></span><br><span class="line">  <span class="keyword">var</span> rethinkInterface <span class="comment">// interface to rethinkDB</span></span><br><span class="line">  <span class="keyword">const</span> store = &#123;</span><br><span class="line">    <span class="attr">dispatch</span>: <span class="keyword">function</span> <span class="title function_">dispatch</span>(<span class="params">action</span>) &#123;</span><br><span class="line">      queue = queue.<span class="title function_">then</span>(<span class="function">() =&gt;</span> <span class="title function_">stateReducer</span>(action))</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">subscribe</span>: <span class="keyword">function</span> (<span class="params">cb</span>) &#123;</span><br><span class="line">      queue = queue.<span class="title function_">then</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> rethinkInterface.<span class="property">table</span>.<span class="title function_">get</span>(<span class="number">1</span>).<span class="title function_">changes</span>().<span class="title function_">run</span>(rethinkInterface.<span class="property">conn</span>)</span><br><span class="line">          .<span class="title function_">then</span>(<span class="function"><span class="params">cursor</span> =&gt;</span> &#123;</span><br><span class="line">            cursor.<span class="title function_">each</span>(<span class="function">(<span class="params">err, change</span>) =&gt;</span> <span class="title function_">cb</span>(change.<span class="property">new_val</span>.<span class="property">state</span>))</span><br><span class="line">          &#125;)</span><br><span class="line">      &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">  <span class="comment">// more code for state abstraction here </span></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">  queue = <span class="title function_">initDB</span>() <span class="comment">// returns RethinkDB object like before</span></span><br><span class="line">    .<span class="title function_">then</span>(<span class="function"><span class="params">rethink</span> =&gt;</span> rethinkInterface = rethink)</span><br><span class="line">  <span class="keyword">return</span> store</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Because we want to sync all promise-returning functions, we always schedule
+actions by addition them to the existing <code>queue</code> Promise. </p>
+<h3><span id="state-object-for-reducer">State object for reducer</span></h3><p>Second, let us create a &quot;state&quot; object abstraction for reducer to use. It will hide
+the actual RethinkDB calls from the reducer. This code goes inside the <code>createStore</code>
+function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">createStore</span>(<span class="params">reducer</span>) &#123;</span><br><span class="line">  <span class="keyword">var</span> queue <span class="comment">// queue for async actions</span></span><br><span class="line">  <span class="keyword">var</span> rethinkInterface <span class="comment">// interface to rethinkDB</span></span><br><span class="line">  <span class="comment">// simpler interface for reducer to use</span></span><br><span class="line">  <span class="keyword">var</span> state = &#123;</span><br><span class="line">    <span class="attr">set</span>: <span class="keyword">function</span> (<span class="params">value</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> rethinkInterface.<span class="property">table</span>.<span class="title function_">insert</span>(&#123;</span><br><span class="line">        <span class="attr">id</span>: <span class="number">1</span>,</span><br><span class="line">        <span class="attr">state</span>: value</span><br><span class="line">      &#125;).<span class="title function_">run</span>(rethinkInterface.<span class="property">conn</span>)</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">increment</span>: <span class="keyword">function</span> (<span class="params">delta</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> rethinkInterface.<span class="property">table</span>.<span class="title function_">get</span>(<span class="number">1</span>).<span class="title function_">update</span>(&#123;</span><br><span class="line">        <span class="attr">state</span>: rethinkInterface.<span class="property">r</span>.<span class="title function_">row</span>(<span class="string">&#x27;state&#x27;</span>).<span class="title function_">add</span>(delta)</span><br><span class="line">      &#125;).<span class="title function_">run</span>(rethinkInterface.<span class="property">conn</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">var</span> stateReducer = reducer.<span class="title function_">bind</span>(<span class="literal">null</span>, state)</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Our reducer function can use <code>state.set</code> and <code>state.increment</code> methods for much simpler
+code</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">counter</span>(<span class="params">state, action</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (!action) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;setting the default state&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> state.<span class="title function_">set</span>(<span class="number">0</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">switch</span> (action.<span class="property">type</span>) &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="string">&#x27;INCREMENT&#x27;</span>:</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;incrementing value&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> state.<span class="title function_">increment</span>(<span class="number">1</span>)</span><br><span class="line">  <span class="keyword">case</span> <span class="string">&#x27;DECREMENT&#x27;</span>:</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;decrementing&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> state.<span class="title function_">increment</span>(-<span class="number">1</span>)</span><br><span class="line">  <span class="attr">default</span>:</span><br><span class="line">    <span class="keyword">return</span> state</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The client code now looks just like the Redux code, except under the hood the actions
+all go into the queue, because everything is asynchronous</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> store = <span class="title function_">createStore</span>(counter)</span><br><span class="line">store.<span class="title function_">subscribe</span>(<span class="function"><span class="params">state</span> =&gt;</span> <span class="variable language_">console</span>.<span class="title function_">log</span>(state))</span><br><span class="line">store.<span class="title function_">dispatch</span>() <span class="comment">// set default state</span></span><br><span class="line">store.<span class="title function_">dispatch</span>(&#123; <span class="attr">type</span>: <span class="string">&#x27;INCREMENT&#x27;</span> &#125;)</span><br><span class="line">store.<span class="title function_">dispatch</span>(&#123; <span class="attr">type</span>: <span class="string">&#x27;INCREMENT&#x27;</span> &#125;)</span><br><span class="line">store.<span class="title function_">dispatch</span>(&#123; <span class="attr">type</span>: <span class="string">&#x27;DECREMENT&#x27;</span> &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>You can find the full example without boilerplate in 
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/redux-vs-rethinkdb/blob/master/src/rethink-no-boiler.js">src&#x2F;rethink-no-boiler.js</a>.</p>
+<h3><span id="bonus">Bonus</span></h3><p>RethinkDB is very developer friendly. For example, while running it exposes a nice admin
+interface, where I can view the currently held data. Here is the data after our little application
+has finished.</p>
+<p><img src="https://raw.githubusercontent.com/bahmutov/bahmutov.github.io/master/images/rethinkdb-state.png" alt="rethink example"></p>
+<p>Notice the document <code>&#123; id: 1, state: 1 &#125;</code> showing the current application state.</p>
+<h2><span id="conclusions">Conclusions</span></h2><p>I have written and rewritten this blog post several times. My thoughts circled around
+in a waltz before settling down on the idea of replacing the state with the database
+access.</p>
+<p>Redux is more of a design pattern; an API to updating application&#39;s data, rather than a 
+library or a component one must use. One has to think what makes sense to implement - 
+a simple Redux store, a Redux store where each action is sent to the server for recording,
+or a store-like wrapper around local or remote database.</p>
+<p>On a personal note, I deeply respect and admire the people behind both Redux library and
+RethinkDB. This blog post does not disparage or sings praises to any particular technology.
+Instead, I see a technology convergence, and maybe even rediscovery of an abstraction for
+dealing with application state from completely different perspectives.</p>
+<p>Maybe a Redux store is a good interface to RethinkDB instead of Immutable data structure?
+Maybe an Immutable data structure then could be implemented on top of the database? Would
+it make sense for hybrid server and client case, similar to how 
+<a target="_blank" rel="noopener" href="https://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html">Relay and GraphQL work</a>? Maybe if every state update needs to be sent to the server, we are recreating
+the thick clients, or even mainframe architecture again?</p>
+<h2><span id="links">Links</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="http://redux.js.org/">Redux</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.rethinkdb.com/">RethinkDB</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/redux-vs-rethinkdb">repo with source code</a> for this blog post</li>
+<li><a target="_blank" rel="noopener" href="http://teropa.info/blog/2015/09/10/full-stack-redux-tutorial.html#introducing-actions-and-reducers">Full-Stack Redux Tutorial</a></li>
+<li><a target="_blank" rel="noopener" href="http://blog.workshape.io/the-3ree-stack-react-redux-rethinkdb-express-js/">The 3REE Stack: React + Redux + RethinkDB + Express.js</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/redux-and-rethinkdb/" data-id="clxj6w7e000e5bjn76o7tcd7s" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/redux-and-rethinkdb/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/db/" rel="tag">db</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/immutable/" rel="tag">immutable</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../microservices-in-the-cloud-tutum/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Microservices in the cloud with Tutum
+        
+      </div>
+    </a>
+  
+  
+    <a href="../from-callbacks-to-tasks/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">From callbacks to Tasks</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/redux-and-rethinkdb/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

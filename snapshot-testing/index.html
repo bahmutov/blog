@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Snapshot testing the hard way | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="I really liked snapshot testing as implemented in Jest. Once you have a complex object, compare it with its previous value using expect(value).toMatchSnapshot(). If there is no previous snapshot, it w">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Snapshot testing the hard way">
+<meta property="og:url" content="https://glebbahmutov.com/blog/snapshot-testing/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="I really liked snapshot testing as implemented in Jest. Once you have a complex object, compare it with its previous value using expect(value).toMatchSnapshot(). If there is no previous snapshot, it w">
+<meta property="og:locale">
+<meta property="og:image" content="https://facebook.github.io/jest/img/blog/snapshot.png">
+<meta property="article:published_time" content="2017-02-08T05:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.589Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="ast">
+<meta property="article:tag" content="assertions">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://facebook.github.io/jest/img/blog/snapshot.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-snapshot-testing" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2017-02-08T05:00:00.000Z" itemprop="datePublished">Feb 8 2017</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Snapshot testing the hard way
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Framework-agnostic snapshot testing for Mocha, Jest, Vue, etc.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>I really liked <a target="_blank" rel="noopener" href="https://facebook.github.io/jest/blog/2016/07/27/jest-14.html">snapshot testing</a> as implemented in
+<a target="_blank" rel="noopener" href="https://facebook.github.io/jest/">Jest</a>. Once you have a complex object,
+compare it with its previous value using <code>expect(value).toMatchSnapshot()</code>.
+If there is no previous snapshot, it will be saved under the test name.
+If there is a snapshot file already, the assertion compares the given
+value with the saved one and throws a well formatted exception if the two
+values differ.</p>
+<p><img src="https://facebook.github.io/jest/img/blog/snapshot.png" alt="Jest snapshot image source:https://facebook.github.io/jest/img/blog/snapshot.png"></p>
+<p>Other frameworks have implemented the snapshot matching feature, for example
+<a target="_blank" rel="noopener" href="https://github.com/avajs/ava/releases/tag/v0.18.0">Ava v0.18.0</a>.
+Yet I always found that the snapshot testing is too closely
+tied to the Jest framework itself.
+This <a target="_blank" rel="noopener" href="https://github.com/facebook/jest/issues/2497">issue #2497</a> discusses the work that
+went into adding snapshots to Ava (see <a target="_blank" rel="noopener" href="https://github.com/avajs/ava/commit/ee65b6dbbb187eb8dd2dfb929febb9df161cf6e9">commit ee65b6d</a>) and how
+the snapshot testing could be better separated from Jest framework.</p>
+<h2><span id="goal">Goal</span></h2><p>I wanted to design a snapshot assertion that is separate from any particular
+testing framework. I <a href="../picking-javascript-testing-framework/">love</a> <a target="_blank" rel="noopener" href="http://mochajs.org/">Mocha</a> and would love to be
+able  to bring snapshot assertions to my unit, API and DOM tests.
+I would also like to be able to
+use the same library with other test runners, like Jest, Ava and QUnit.
+A stretch goal is to make this snapshot testing work inside end to end
+tests inside <a target="_blank" rel="noopener" href="https://www.cypress.io/">Cypress</a> tool.</p>
+<p>I wanted the simplest API possible. A single function that takes just a value.
+No test names, no arguments, nothing but a value.
+Everything else should be figured out automatically.</p>
+<h2><span id="snap-shot">Snap-shot</span></h2><p>This is what I wanted (and it got ultimately done in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/snap-shot">snap-shot</a>).</p>
+<figure class="highlight js"><figcaption><span>spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> snapshot = <span class="built_in">require</span>(<span class="string">&#x27;snap-shot&#x27;</span>)</span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;adds two numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">snapshot</span>(<span class="number">2</span> + <span class="number">3</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Notice the <code>snap-shot</code> is a 3rd party module, independent of Mocha &#x2F; Jasmine
+or any other BDD testing framework. Let us run this test using Mocha.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">$ npm install -D mocha snap-shot</span><br><span class="line">$ <span class="built_in">cat</span> package.json</span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;name&quot;</span>: <span class="string">&quot;snapshot-testing&quot;</span>,</span><br><span class="line">  <span class="string">&quot;version&quot;</span>: <span class="string">&quot;1.0.0&quot;</span>,</span><br><span class="line">  <span class="string">&quot;scripts&quot;</span>: &#123;</span><br><span class="line">    <span class="string">&quot;test&quot;</span>: <span class="string">&quot;mocha spec.js&quot;</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="string">&quot;dependencies&quot;</span>: &#123;</span><br><span class="line">    <span class="string">&quot;mocha&quot;</span>: <span class="string">&quot;3.2.0&quot;</span>,</span><br><span class="line">    <span class="string">&quot;snap-shot&quot;</span>: <span class="string">&quot;2.7.1&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">$ npm <span class="built_in">test</span> -s</span><br><span class="line">✓ adds two numbers</span><br><span class="line">1 passing (23ms)</span><br></pre></td></tr></table></figure>
+
+<p>There is a new file in our folder.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cat</span> __snapshots__/spec.js.snap-shot</span><br><span class="line">exports[<span class="string">&#x27;adds two numbers 1&#x27;</span>] = 5</span><br></pre></td></tr></table></figure>
+
+<p>Notice how <code>snap-shot</code> has discovered the right test name &quot;adds two numbers&quot;
+and saved the sum. If we have more snapshots in the same test,
+they will be saved in the same file with different index.</p>
+<figure class="highlight js"><figcaption><span>spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> snapshot = <span class="built_in">require</span>(<span class="string">&#x27;snap-shot&#x27;</span>)</span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;adds two numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">snapshot</span>(<span class="number">2</span> + <span class="number">3</span>)</span><br><span class="line">  <span class="title function_">snapshot</span>(<span class="number">2</span> + <span class="number">3</span> + <span class="number">10</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ npm <span class="built_in">test</span> -s</span><br><span class="line">$ <span class="built_in">cat</span> __snapshots__/spec.js.snap-shot</span><br><span class="line">exports[<span class="string">&#x27;adds two numbers 1&#x27;</span>] = 5</span><br><span class="line">exports[<span class="string">&#x27;adds two numbers 2&#x27;</span>] = 15</span><br></pre></td></tr></table></figure>
+
+<p>If the value changes, the snapshot difference will be clearly shown using
+<a target="_blank" rel="noopener" href="https://github.com/taylorhakes/variable-diff#readme">variable-diff</a>.</p>
+<figure class="highlight js"><figcaption><span>spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> snapshot = <span class="built_in">require</span>(<span class="string">&#x27;snap-shot&#x27;</span>)</span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;adds two numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">snapshot</span>(<span class="number">2</span> + <span class="number">2</span>)</span><br><span class="line">  <span class="title function_">snapshot</span>(<span class="number">2</span> + <span class="number">3</span> + <span class="number">10</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ npm <span class="built_in">test</span> -s</span><br><span class="line">snapshot difference</span><br><span class="line">5 =&gt; 4</span><br><span class="line">  1) adds two numbers</span><br><span class="line">  0 passing (27ms)</span><br><span class="line">  1 failing</span><br></pre></td></tr></table></figure>
+
+<p>Beautiful. <a target="_blank" rel="noopener" href="https://github.com/bahmutov/snap-shot">snap-shot</a> supports multiple values per test
+(as shown above), <a target="_blank" rel="noopener" href="https://github.com/bahmutov/snap-shot/blob/master/src/unknown-name-spec.js">dynamic test names</a> and <a target="_blank" rel="noopener" href="https://github.com/bahmutov/snap-shot/blob/master/src/async-spec.js">asynchronous tests</a>.
+It even works with <a target="_blank" rel="noopener" href="https://github.com/bahmutov/snap-shot-modules-test">transpiled</a> code, <a target="_blank" rel="noopener" href="https://github.com/bahmutov/snap-shot-jest-test#readme">React + JSX</a> and
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/snap-shot-vue-test#readme">Vue.js</a> libraries.</p>
+<p>The snapshot testing was plugged into our Node server API tests and literally
+collapsed the test boilerplate code into nothing. Combined with
+<a target="_blank" rel="noopener" href="https://egghead.io/playlists/learn-ramda-js-ec318ad7">Ramda pipeline</a>
+that cleans the returned data and makes it invariant from dynamic values,
+it became a simple and zero maintenance way to use real world data in our
+unit tests.</p>
+<p>The rest of this blog post is dedicated to the way <code>snap-shot</code> is implemented.
+I will finish with recipes for cleaning up data and making it suitable for
+snapshot testing.</p>
+<h2><span id="who-called-me">Who called me?</span></h2><p>When a test function calls <code>snapshot()</code> passing the value, we need to figure
+out the <em>caller</em> test name. Without test runner context to read it from
+it turns out to be hard :)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">snapshot</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="comment">// hmm, how do we get to the &quot;works&quot; string?</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">snapshot</span>()</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>We need to walk up the stack and find the <em>caller callback function</em> (in the
+case above it will be an anonymous arrow function expression). Hopefully
+the call information in the stack has meaningful line number we could save
+for the next step. I have looked how to grab the accurate stack locations
+in previous blog post <a href="../accurate-call-sites/">Accurate call sites</a>.
+In short, you can grab the call sites from V8 api or from an exception</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;on purpose&#x27;</span>)</span><br><span class="line">&#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;caller&#x27;</span>, e.<span class="property">stack</span>.<span class="title function_">split</span>(<span class="string">&#x27;\n&#x27;</span>)[<span class="number">2</span>])</span><br><span class="line">  <span class="comment">// do more parsing if necessary</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>From the stack we will get spec filename and line number, for example
+<code>spec.js</code>, line 5. We will use this information to find the actual test
+that called <code>snapshot</code>.</p>
+<h3><span id="finding-the-spec">Finding the spec</span></h3><p>Given filename and line number, let us find the <code>it(&lt;name&gt;, callback)</code>
+where the <code>callback</code> function covers the given line number. In order to
+do this, we will parse the source of the file into an Abstract Syntax Tree
+(AST). Then we will visit each node in tree to find
+a <em>call expression</em> node where the name of the function called
+is &quot;it&quot; and the callback function argument (position 2) is the
+<em>caller callback function</em> we just found.</p>
+<p>Hiding all details and using <a target="_blank" rel="noopener" href="https://github.com/substack/node-falafel#readme">falafel</a> finding the spec that calls
+the callback that calls <code>snapshot</code> is below</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">source:</span></span><br><span class="line"><span class="comment">  it(&#x27;works&#x27;, () =&gt; &#123;</span></span><br><span class="line"><span class="comment">    snapshot()</span></span><br><span class="line"><span class="comment">  &#125;)</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">const</span> options = &#123;</span><br><span class="line">  <span class="attr">locations</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="attr">sourceType</span>: <span class="string">&#x27;module&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">falafel</span>(source, options, <span class="function"><span class="params">node</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// nested IFs make debugging easier</span></span><br><span class="line">  <span class="keyword">if</span> (node.<span class="property">type</span> === <span class="string">&#x27;CallExpression&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="title function_">isTestFunction</span>(node.<span class="property">callee</span>)) &#123;</span><br><span class="line">      <span class="keyword">if</span> (node.<span class="property">loc</span>.<span class="property">start</span>.<span class="property">line</span> &lt; line &amp;&amp;</span><br><span class="line">        node.<span class="property">loc</span>.<span class="property">end</span>.<span class="property">line</span> &gt; line) &#123;</span><br><span class="line">          specName = node.<span class="property">arguments</span>[<span class="number">0</span>].<span class="property">value</span></span><br><span class="line">          <span class="comment">// specName will be &quot;works&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Note the &quot;options.locations&quot; - we need to keep track of source line numbers
+for each node in the AST.</p>
+<p>The above code becomes a little bit hairy if the source file is transpiled
+by the loader, for example if it has JSX and cannot be parsed by <code>falafel</code>
+directly. In <code>snap-shot</code> this is detected and the source file is
+transformed using <code>babel-core</code>. We just have to preserve the source line
+numbers, which we can do</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">transpile</span> (filename) &#123;</span><br><span class="line">  <span class="keyword">const</span> babel = <span class="built_in">require</span>(<span class="string">&#x27;babel-core&#x27;</span>)</span><br><span class="line">  <span class="keyword">const</span> &#123;transformFileSync&#125; = babel</span><br><span class="line">  <span class="comment">// trick to keep the line numbers same as original code</span></span><br><span class="line">  <span class="keyword">const</span> opts = &#123;</span><br><span class="line">    <span class="attr">sourceMaps</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">retainLines</span>: <span class="literal">true</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> &#123;code&#125; = <span class="title function_">transformFileSync</span>(filename, opts)</span><br><span class="line">  <span class="keyword">return</span> code</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3><span id="the-name-of-the-rose">The name of the rose</span></h3><p>Things become even trickier when the test function is called not with a
+literal string, but with a variable. Often we generate the tests for each
+item in an array like this</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> names = [<span class="string">&#x27;test A&#x27;</span>, <span class="string">&#x27;test B&#x27;</span>, <span class="string">&#x27;test C&#x27;</span>]</span><br><span class="line">names.<span class="title function_">forEach</span>(<span class="function"><span class="params">name</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(name, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="title function_">snapshot</span>(name + <span class="string">&#x27; works&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The static inspection of the call expression <code>it(name, ...)</code> does not provide
+a unique name to use. In this situation <code>snap-shot</code> does the following.
+It takes the source string of the test callback
+<code>() =&gt; &#123; snapshot(name + &#39; works&#39;) &#125;</code> and computes the SHA-256 hash.
+This hash is used to save the snapshot values instead of the name.
+In the above case the snapshot file will have something like</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">exports</span>[<span class="string">&#x27;7464af... 1&#x27;</span>] = <span class="string">&quot;test A works&quot;</span></span><br><span class="line"><span class="built_in">exports</span>[<span class="string">&#x27;7464af... 2&#x27;</span>] = <span class="string">&quot;test B works&quot;</span></span><br><span class="line"><span class="built_in">exports</span>[<span class="string">&#x27;7464af... 3&#x27;</span>] = <span class="string">&quot;test C works&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Notice that it is equivalent to a <em>single</em> test with 3 snapshot calls like</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;7464af...&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">snapshot</span>(<span class="string">&#x27;test A works&#x27;</span>)</span><br><span class="line">  <span class="title function_">snapshot</span>(<span class="string">&#x27;test B works&#x27;</span>)</span><br><span class="line">  <span class="title function_">snapshot</span>(<span class="string">&#x27;test C works&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Even better is to give <code>snap-shot</code> <em>something</em> to work with. Instead of
+arrow function, give it a <em>named function</em> as a callback. <code>snap-shot</code> will
+use the name to save the snapshot, instead of SHA hash.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> tests = [<span class="string">&#x27;test A&#x27;</span>, <span class="string">&#x27;test B&#x27;</span>, <span class="string">&#x27;test C&#x27;</span>]</span><br><span class="line">tests.<span class="title function_">forEach</span>(<span class="function"><span class="params">name</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(name, <span class="keyword">function</span> <span class="title function_">testSomething</span> () &#123;</span><br><span class="line">    <span class="title function_">snapshot</span>(name + <span class="string">&#x27; works&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">snapshot will use &quot;testSomething&quot; name</span></span><br><span class="line"><span class="comment">exports[&#x27;testSomething 1&#x27;] = &quot;test A works&quot;</span></span><br><span class="line"><span class="comment">exports[&#x27;testSomething 2&#x27;] = &quot;test B works&quot;</span></span><br><span class="line"><span class="comment">exports[&#x27;testSomething 3&#x27;] = &quot;test C works&quot;</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+
+<p>I believe this is enough for the purpose of bookkeeping. The above
+approach only breaks for test frameworks that randomize the test order
+(like <a target="_blank" rel="noopener" href="https://github.com/bahmutov/rocha#readme">rocha</a> or Jest when running the latest modified tests first).</p>
+<h3><span id="promises-are-either-a-pain-or-easy">Promises are either a pain or easy</span></h3><p>Nodejs has a problem. Asynchronous call stacks from promises are non-existent.
+Thus the best we can do is to make sure the outside function around the
+<code>snapshot(value)</code> call can be found. This requires a function just for the
+purpose of calling <code>snapshot</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// does not work</span></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;promise to snapshot (does nothing!)&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// straight into snapshot comparison does not work</span></span><br><span class="line">  <span class="keyword">return</span> <span class="title class_">Promise</span>.<span class="title function_">resolve</span>(<span class="number">20</span>)</span><br><span class="line">    .<span class="title function_">then</span>(snapshot)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;function around snapshot call&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// works fine</span></span><br><span class="line">  <span class="keyword">return</span> <span class="title class_">Promise</span>.<span class="title function_">resolve</span>(<span class="number">20</span>)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="function"><span class="params">data</span> =&gt;</span> <span class="title function_">snapshot</span>(data))</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>I hate non-implicit calls like <code>data =&gt; snapshot(data)</code> and prefer
+point-free code. Luckily we have an easy solution - pass the entire promise
+chain to <code>snapshot</code> and let is grab the resolved value.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;snapshot can wrap promise&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="title function_">snapshot</span>(<span class="title class_">Promise</span>.<span class="title function_">resolve</span>(<span class="string">&#x27;promise resolved&#x27;</span>))</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>We use the last solution in our asynchronous tests.</p>
+<h2><span id="snapshot-maintenance">Snapshot maintenance</span></h2><p>Even carefully stored data snapshots become obsolete with time and will need
+to be updated. The simplest way to update all stored values is to run
+<code>snap-shot</code> with an environment variable <code>UPDATE=1</code>. Combined with
+Mocha <a target="_blank" rel="noopener" href="http://mochajs.org/#g---grep-pattern">grep</a> feature, it is also very simple to update just a particular
+test.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ UPDATE=1 mocha -g <span class="string">&quot;test name pattern&quot;</span> spec.js</span><br></pre></td></tr></table></figure>
+
+<p>In the future I plan to add snapshot pruning and other nice to have features.</p>
+<h2><span id="snapshot-testing-recipes">Snapshot testing recipes</span></h2><p>In this section I would like to give examples of snapshot testing an API
+using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/snap-shot">snap-shot</a>. A lot of examples rely on massaging the data
+using <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/">Ramda</a> library. I recommend watching
+<a target="_blank" rel="noopener" href="https://egghead.io/playlists/learn-ramda-js-ec318ad7">this video playlist</a> to learn about Ramda functions that are
+super useful for this type of data processing.</p>
+<h3><span id="saving-the-test-name">Saving the test name</span></h3><p>If the tests are generated from data, like describe above, we can still
+&quot;remember&quot; the real test name. I can do this as the last step in the data
+transformation</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> tests = [<span class="string">&#x27;/a&#x27;</span>, <span class="string">&#x27;/b&#x27;</span>, <span class="string">&#x27;/c&#x27;</span>]</span><br><span class="line">tests.<span class="title function_">forEach</span>(<span class="function"><span class="params">name</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(name, <span class="keyword">function</span> <span class="title function_">testServer</span> () &#123;</span><br><span class="line">    <span class="title function_">snapshot</span>(</span><br><span class="line">      <span class="title function_">fetch</span>(baseUrl + name)</span><br><span class="line">        .<span class="title function_">then</span>(r = r.<span class="title function_">json</span>())</span><br><span class="line">        .<span class="title function_">then</span>(<span class="function"><span class="params">value</span> =&gt;</span> (&#123;name, value&#125;))</span><br><span class="line">    )</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">snapshot file will show the actual url / test name</span></span><br><span class="line"><span class="comment">exports[&#x27;testServer 1&#x27;] = &#123;</span></span><br><span class="line"><span class="comment">  name: &#x27;/a&#x27;,</span></span><br><span class="line"><span class="comment">  value: ...</span></span><br><span class="line"><span class="comment">&#125;</span></span><br><span class="line"><span class="comment">exports[&#x27;testServer 2&#x27;] = &#123;</span></span><br><span class="line"><span class="comment">  name: &#x27;/b&#x27;,</span></span><br><span class="line"><span class="comment">  value: ...</span></span><br><span class="line"><span class="comment">&#125;</span></span><br><span class="line"><span class="comment">exports[&#x27;testServer 3&#x27;] = &#123;</span></span><br><span class="line"><span class="comment">  name: &#x27;/c&#x27;,</span></span><br><span class="line"><span class="comment">  value: ...</span></span><br><span class="line"><span class="comment">&#125;</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+
+<p>The above code is simple enough to write without Ramda.</p>
+<h3><span id="see-the-snapshot">See the snapshot</span></h3><p>As I refactored the unit tests to use the snapshot, I have hit the stride.
+First, I would take a test that checked many properties at once. It could
+be individual checks (better error messages) or object equality assertion
+(shorter).</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// parsing commit messages in</span></span><br><span class="line"><span class="comment">// https://github.com/bahmutov/simple-commit-message</span></span><br><span class="line"><span class="comment">// separate assertions</span></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;handles &quot;break&quot; type&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> message = <span class="string">&#x27;break(log): new log format&#x27;</span></span><br><span class="line">  <span class="keyword">const</span> parsed = <span class="title function_">parse</span>(message)</span><br><span class="line">  <span class="title function_">snapshot</span>(parsed)</span><br><span class="line">  <span class="title function_">la</span>(parsed.<span class="property">firstLine</span> === message, <span class="string">&#x27;first line&#x27;</span>, parsed)</span><br><span class="line">  <span class="title function_">la</span>(parsed.<span class="property">type</span> === <span class="string">&#x27;major&#x27;</span>, <span class="string">&#x27;type&#x27;</span>, parsed)</span><br><span class="line">  <span class="title function_">la</span>(parsed.<span class="property">scope</span> === <span class="string">&#x27;log&#x27;</span>, <span class="string">&#x27;scope&#x27;</span>, parsed)</span><br><span class="line">  <span class="title function_">la</span>(parsed.<span class="property">subject</span> === <span class="string">&#x27;new log format&#x27;</span>, <span class="string">&#x27;subject&#x27;</span>, parsed)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// deep object equality test</span></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;handles &quot;major&quot; type&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> message = <span class="string">&#x27;major(log): new log format&#x27;</span></span><br><span class="line">  <span class="keyword">const</span> parsed = <span class="title function_">parse</span>(message)</span><br><span class="line">  <span class="keyword">const</span> expected = &#123;</span><br><span class="line">    <span class="attr">firstLine</span>: message,</span><br><span class="line">    <span class="attr">type</span>: <span class="string">&#x27;major&#x27;</span>,</span><br><span class="line">    <span class="attr">scope</span>: <span class="string">&#x27;log&#x27;</span>,</span><br><span class="line">    <span class="attr">subject</span>: <span class="string">&#x27;new log format&#x27;</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="title function_">la</span>(R.<span class="title function_">equals</span>(parsed, expected),</span><br><span class="line">    <span class="string">&#x27;different&#x27;</span>, parsed, <span class="string">&#x27;from&#x27;</span>, expected)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The above tests are very verbose. Yet, they make is simple to see what the
+expected <code>parsed</code> value is. When we switch this code to <code>snap-shot</code> we want
+the same experience - we want to see what the saved value is before
+committing it to the repository. This is simple to do and the best way
+is to run the desired spec by itself with environment variable <code>SHOW=1</code> set.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">it.<span class="title function_">only</span>(<span class="string">&#x27;handles &quot;break&quot; type&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">snapshot</span>(<span class="title function_">parse</span>(<span class="string">&#x27;break(log): new log format&#x27;</span>))</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">saving snapshot <span class="string">&quot;handles &quot;</span><span class="built_in">break</span><span class="string">&quot; type 1&quot;</span> <span class="keyword">for</span> file src/valid-message-spec.js</span><br><span class="line">&#123; firstLine: <span class="string">&#x27;break(log): new log format&#x27;</span>,</span><br><span class="line">  <span class="built_in">type</span>: <span class="string">&#x27;major&#x27;</span>,</span><br><span class="line">  scope: <span class="string">&#x27;log&#x27;</span>,</span><br><span class="line">  subject: <span class="string">&#x27;new log format&#x27;</span> &#125;</span><br><span class="line">    ✓ handles <span class="string">&quot;break&quot;</span> <span class="built_in">type</span> (45ms)</span><br></pre></td></tr></table></figure>
+
+<p>Everything looks good, we do not need to revert the snapshot file and the
+test looks much cleaner. Similarly we can transform the second test into
+a snapshot test, see the saved result and commit the changes.</p>
+<h3><span id="handle-undefined-values">Handle undefined values</span></h3><p><code>snap-shot</code> does NOT save &quot;undefined&quot; value as a snapshot because it
+does not make a good expected value. What if a server sometimes
+returns &quot;undefined&quot; and that is ok?</p>
+<p>Also, what if the actual value we want to store is a nested property
+inside a returned result? We have to handle the following responses</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">people</span>: &#123;</span><br><span class="line">    <span class="attr">names</span>: [...]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// or</span></span><br><span class="line"><span class="literal">undefined</span></span><br></pre></td></tr></table></figure>
+
+<p>Luckily we can access nested path, or provide a default value if any
+values along the path are &quot;undefined&quot; using <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#pathOr">Ramda.pathOr</a> function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;names&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="title function_">snapshot</span>(</span><br><span class="line">    <span class="title function_">fetchJson</span>(url)</span><br><span class="line">      .<span class="title function_">then</span>(R.<span class="title function_">pathOr</span>(<span class="string">&#x27;N/A&#x27;</span>, [<span class="string">&#x27;people&#x27;</span>, <span class="string">&#x27;names&#x27;</span>]))</span><br><span class="line">  )</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>If the server returns nothing, the snapshot will be <code>exports[&#39;names&#39;] = &#39;N/A&#39;</code>.
+If the server returns a valid names list, the snapshot will be
+<code>exports[&#39;names&#39;] = [...]</code> value.</p>
+<h3><span id="saving-invariant-snapshots">Saving invariant snapshots</span></h3><p>Imagine we fetch a list of people, which returns something like</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;people&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Joe&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;age&quot;</span><span class="punctuation">:</span> <span class="number">21</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Mary&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;age&quot;</span><span class="punctuation">:</span> <span class="number">20</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Adam&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;age&quot;</span><span class="punctuation">:</span> <span class="number">25</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>The list of people might change, so we do not want to save the list directly.
+Instead we want to save a transformed data that will be <em>invariant</em> to the
+actual numbers and names. The snapshot will allow us to test if the
+server returns a valid list of people, without knowing what the actual
+values should be.</p>
+<p>Each person in the list should have a name - which should be a non-empty
+string. Each person should have an age - a positive number. If the server
+returns a list with a person record that does not pass these predicates,
+than something is wrong.</p>
+<p>Let us transform the list into &quot;invariant&quot; snapshot (we assume the returned
+list will always have same number of items).</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> R = <span class="built_in">require</span>(<span class="string">&#x27;ramda&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> <span class="title function_">isNonEmptyString</span> = s =&gt; <span class="keyword">typeof</span> s === <span class="string">&#x27;string&#x27;</span> &amp;&amp; s</span><br><span class="line"><span class="keyword">const</span> person = &#123;</span><br><span class="line">  <span class="attr">name</span>: isNonEmptyString</span><br><span class="line">  <span class="attr">age</span>: R.<span class="title function_">lte</span>(<span class="number">1</span>) <span class="comment">// age should be &gt;= 1</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;returns people&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="title function_">snapshot</span>(</span><br><span class="line">    <span class="title function_">fetchJson</span>(<span class="string">&#x27;/people&#x27;</span>)</span><br><span class="line">      .<span class="title function_">then</span>(R.<span class="title function_">prop</span>(<span class="string">&#x27;people&#x27;</span>)) <span class="comment">// get &quot;people&quot; from returned object</span></span><br><span class="line">      .<span class="title function_">then</span>(R.<span class="title function_">project</span>([<span class="string">&#x27;name&#x27;</span>, <span class="string">&#x27;age&#x27;</span>])) <span class="comment">// pick only &quot;name&quot; and &quot;age&quot; from each</span></span><br><span class="line">      .<span class="title function_">then</span>(R.<span class="title function_">map</span>(R.<span class="title function_">evolve</span>(person)))</span><br><span class="line">  )</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The <code>R.map(R.evolve(person))</code> goes through the returned list, changing each
+property listed in <code>const peson = &#123;...&#125;</code> object. Each named property passes
+through the function and the value is placed into the returned object.
+For a single object it will produce</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">R.<span class="title function_">map</span>(person)(&#123;</span><br><span class="line">  <span class="string">&quot;name&quot;</span>: <span class="string">&quot;Joe&quot;</span>,</span><br><span class="line">  <span class="string">&quot;age&quot;</span>: <span class="number">21</span></span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">//&gt; &#123;name: true, age: true&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>The list we store in the snapshot thus ensures that all returned objects
+have valid name and age</p>
+<figure class="highlight js"><figcaption><span>snapshot.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">exports</span>[<span class="string">&#x27;returns people&#x27;</span>] = [</span><br><span class="line">  &#123;<span class="attr">name</span>: <span class="literal">true</span>, <span class="attr">age</span>: <span class="literal">true</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">name</span>: <span class="literal">true</span>, <span class="attr">age</span>: <span class="literal">true</span>&#125;,</span><br><span class="line">  &#123;<span class="attr">name</span>: <span class="literal">true</span>, <span class="attr">age</span>: <span class="literal">true</span>&#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<h3><span id="assemble-the-pipeline-separately">Assemble the pipeline separately</span></h3><p>The above code is a little hard to read, because each processing step
+happens as a promise callback.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> <span class="title function_">snapshot</span>(</span><br><span class="line">  <span class="title function_">fetchJson</span>(<span class="string">&#x27;/people&#x27;</span>)</span><br><span class="line">    .<span class="title function_">then</span>(R.<span class="title function_">prop</span>(<span class="string">&#x27;people&#x27;</span>)) <span class="comment">// get &quot;people&quot; from returned object</span></span><br><span class="line">    .<span class="title function_">then</span>(R.<span class="title function_">project</span>([<span class="string">&#x27;name&#x27;</span>, <span class="string">&#x27;age&#x27;</span>])) <span class="comment">// pick only &quot;name&quot; and &quot;age&quot; from each</span></span><br><span class="line">    .<span class="title function_">then</span>(R.<span class="title function_">map</span>(R.<span class="title function_">evolve</span>(person)))</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>Luckily, we can assemble the single function from each step separately
+and use it as a single <code>.then()</code> callback. Since each step happens from
+top to bottom, I prefer to use <a target="_blank" rel="noopener" href="http://ramdajs.com/docs/#pipe">Ramda.pipe</a> function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> toInvariant = R.<span class="title function_">pipe</span>(</span><br><span class="line">  R.<span class="title function_">prop</span>(<span class="string">&#x27;people&#x27;</span>),</span><br><span class="line">  R.<span class="title function_">project</span>([<span class="string">&#x27;name&#x27;</span>, <span class="string">&#x27;age&#x27;</span>]),</span><br><span class="line">  R.<span class="title function_">map</span>(R.<span class="title function_">evolve</span>(person))</span><br><span class="line">)</span><br><span class="line"><span class="keyword">return</span> <span class="title function_">snapshot</span>(</span><br><span class="line">  <span class="title function_">fetchJson</span>(<span class="string">&#x27;/people&#x27;</span>)</span><br><span class="line">    .<span class="title function_">then</span>(toInvariant)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>Short and clear, I hope. I even recommend unit testing the above
+<code>toInvariant</code> function to make sure it behaves as expected. You can use
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/comment-value#readme">comment-value</a> to understand the behavior of each composed
+function along the pipeline.</p>
+<h2><span id="conclusions">Conclusions</span></h2><p>This is my 3 tool and blog post in a row that used Abstract Syntax Trees
+to achieve something cool. The other ones were</p>
+<ul>
+<li><a href="../accurate-values-in-comments/">Accurate values in comments</a> - where I
+kept comments in sync with the code</li>
+<li><a href="../jscodeshift-example/">jscodeshift example</a> - where we could transform
+client code using our library automatically after a breaking API change</li>
+</ul>
+<p>Overall I must say getting it right was not an easy task and it might not prove
+useful after all. We will wait and see.
+The way the testing code is written in the real world might
+prevent <code>snap-shot</code> from finding the correct spec function.
+If that happens it will fail to save and load the proper snapshot value.
+Yet it will succeed if the testing code follows the my favorite principle</p>
+<blockquote>
+<p>Testing code should be simple</p>
+</blockquote>
+<p>The production code should be simple and elegant, but it is hard to achieve.
+The testing code on the other hand MUST be as simple as possible.
+Setup data, call an action, validate the result. That should be it, otherwise
+the tests become a drag and impossible to maintain. When tests are simple,
+the <code>snap-shot</code> should work no matter what testing framework is used.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/snapshot-testing/" data-id="clxj6w7e800h0bjn7a97ianer" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/snapshot-testing/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/assertions/" rel="tag">assertions</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/ast/" rel="tag">ast</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../how-i-publish-to-npm/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          How I publish to NPM
+        
+      </div>
+    </a>
+  
+  
+    <a href="../accurate-call-sites/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Accurate call sites</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/snapshot-testing/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

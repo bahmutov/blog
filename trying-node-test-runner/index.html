@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Trying Node.js Test Runner | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="In March of 2022 Node.js got a new built-in test runner via node:test module. I have evaluated the test runner and made several presentations showing its features and comparing the new built-in test r">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Trying Node.js Test Runner">
+<meta property="og:url" content="https://glebbahmutov.com/blog/trying-node-test-runner/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="In March of 2022 Node.js got a new built-in test runner via node:test module. I have evaluated the test runner and made several presentations showing its features and comparing the new built-in test r">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/a1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/a2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/a3.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/parallel.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/one-test.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/faucet.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/m1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/m2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/ava1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/ava3.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/chai.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/node-chai.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/spok.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/spok2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/filter1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/filter2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/ci1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/ts1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/misc1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/misc2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/debug.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/extension.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/only1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/only2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/done.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/node-test/dynamic.png">
+<meta property="article:published_time" content="2023-04-10T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.612Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="nodejs">
+<meta property="article:tag" content="tutorial">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/node-test/a1.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-trying-node-test-runner" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2023-04-10T04:00:00.000Z" itemprop="datePublished">Apr 10 2023</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Trying Node.js Test Runner
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Learning all about the new built-in Node.js test runner.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>In March of 2022 Node.js got a new built-in test runner via <a target="_blank" rel="noopener" href="https://nodejs.org/api/test.html">node:test</a> module. I have evaluated the test runner and made several presentations showing its features and comparing the new built-in test runner with the other test runners like Ava, Jest, and Mocha. You can flip through the <a target="_blank" rel="noopener" href="https://slides.com/bahmutov/node-test">slides</a> below or keep reading.</p>
+<center>
+<iframe src="https://slides.com/bahmutov/node-test/embed" width="576" height="420" title="Learn About Node's New Built-in Test Runner" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+</center>
+
+<!-- toc -->
+
+<ul>
+<li><a href="#history">History</a></li>
+<li><a href="#node-test-runner">Node test runner</a></li>
+<li><a href="#the-test-module">The test module</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#test-execution">Test execution</a></li>
+<li><a href="#parallel-tests">Parallel tests</a></li>
+<li><a href="#the-test-syntax">The test syntax</a><ul>
+<li><a href="#bdd-syntax">BDD syntax</a></li>
+</ul>
+</li>
+<li><a href="#test-reporters">Test reporters</a></li>
+<li><a href="#test-statuses">Test statuses</a></li>
+<li><a href="#assertions">Assertions</a><ul>
+<li><a href="#spok-assertions">spok assertions</a></li>
+</ul>
+</li>
+<li><a href="#test-filtering">Test filtering</a></li>
+<li><a href="#continuous-integration">Continuous integration</a></li>
+<li><a href="#spies-and-stubs">Spies and stubs</a><ul>
+<li><a href="#mocking-esm-modules">Mocking ESM modules</a></li>
+</ul>
+</li>
+<li><a href="#typescript">TypeScript</a></li>
+<li><a href="#miscellaneous-features">Miscellaneous features</a><ul>
+<li><a href="#timeouts">Timeouts</a></li>
+<li><a href="#named-skip">Named skip</a></li>
+<li><a href="#debugging">Debugging</a></li>
+</ul>
+</li>
+<li><a href="#only-test">Only test</a><ul>
+<li><a href="#done-callback">Done callback</a></li>
+</ul>
+</li>
+<li><a href="#dynamic-tests">Dynamic tests</a></li>
+<li><a href="#code-coverage">Code coverage</a></li>
+<li><a href="#missing-features">Missing features</a></li>
+<li><a href="#summary">Summary</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="history">History</span></h2><p>Node.js has appeared in 2009 and for the first 13 did not have a built-in test runner. This gave rise to a number of 3rd party test runners</p>
+<table>
+<thead>
+<tr>
+<th>Test runner</th>
+<th>Current major version</th>
+<th>Age (years)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mocha</td>
+<td>v10</td>
+<td>11</td>
+</tr>
+<tr>
+<td>tap</td>
+<td>v16</td>
+<td>11</td>
+</tr>
+<tr>
+<td>tape</td>
+<td>v5</td>
+<td>10</td>
+</tr>
+<tr>
+<td>ava</td>
+<td>v5</td>
+<td>9</td>
+</tr>
+<tr>
+<td>jest</td>
+<td>v27</td>
+<td>7</td>
+</tr>
+</tbody></table>
+<p>I even wrote my own test runner 11 year ago: <a target="_blank" rel="noopener" href="https://github.com/bahmutov/gt">gt</a></p>
+<p>I personally think Node.js follows the same &quot;minimal core&quot; as JavaScript itself. Thus things like linters, code formatters, and test runners are better made as 3rd party tools. While this was a good idea for a long time, now any language without a standard testing tool seems weird. Deno, Rust, Go - they all have their own built-in test runners.</p>
+<p>Currently my favorite JavaScript testing stack is Ava for Node and Cypress for the web testing.</p>
+<h2><span id="node-test-runner">Node test runner</span></h2><p>finally in Node v18 a new built-in test runner was <a target="_blank" rel="noopener" href="https://nodejs.org/en/blog/announcements/v18-release-announce/">announced</a>.</p>
+<p><img src="../images/node-test/a1.png" alt="Node v18 test runner announcement"></p>
+<p>It was marked as experimental, and already less than a year later was <a target="_blank" rel="noopener" href="https://github.com/nodejs/node/issues/46642">marked as stable</a> in Node v20.</p>
+<p><img src="../images/node-test/a2.png" alt="Node test runner marked stable"></p>
+<p>From the first announcement on April 19th 2022 to the stable version announcement on March 8th 2023 it took less than a year. I think this is precisely because there are so many good 3rd party test runners that the <code>node:test</code> could quickly implement the features that the testing community needs and that were validated by mocha, ava, jest, and others.</p>
+<h2><span id="the-test-module">The test module</span></h2><blockquote class="pullquote"><p>🎁 All source and test examples I show in this blog post can be found in my <a target="_blank" rel="noopener" href="https://github.com/bahmutov/node-tests">bahmutov&#x2F;node-tests</a> repo.</p>
+</blockquote>
+
+<p>The new <a target="_blank" rel="noopener" href="https://nodejs.org/api/test.html">node:test</a> module adds two things:</p>
+<ol>
+<li>The new <code>test</code> function to write your tests</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> test <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>The <code>--test</code> command line flag in Node itself</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># run all tests</span><br><span class="line">$ node --test tests/*.mjs</span><br></pre></td></tr></table></figure>
+
+<p><strong>Tip:</strong> if a JavaScript source file imports from <code>node:test</code> you can execute the tests even without the <code>--test</code> CLI flag.</p>
+<p>The <code>node:test</code> works great with another built-in Node module that has been around for a long time <code>node:assert</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> test <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">test</span>(<span class="string">&#x27;hello&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> message = <span class="string">&#x27;Hello&#x27;</span></span><br><span class="line">  assert.<span class="title function_">equal</span>(message, <span class="string">&#x27;Hello&#x27;</span>, <span class="string">&#x27;checking the greeting&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/a3.png" alt="Run the hello test"></p>
+<h2><span id="installation">Installation</span></h2><p>Having a built-in <code>node:test</code> module saves time downloading and installing a 3rd party module and its dependencies. All you need is to have the right Node version. The test module has been back-ported to other Node.js versions. I used Node v19 to evaluate the test runner, and all I needed to &quot;install&quot; it was to say &quot;nvm install&quot; because I use <a target="_blank" rel="noopener" href="https://github.com/nvm-sh/nvm">nvm</a> tool on my machine.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ nvm ls-remote</span><br><span class="line">$ nvm install 19</span><br><span class="line"></span><br><span class="line">Downloading and installing node v19.6.0...</span><br><span class="line">Downloading https://nodejs.org/dist/v19.6.0/...</span><br><span class="line">############################################## 100.0%</span><br><span class="line">Computing checksum with shasum -a 256</span><br><span class="line">Checksums matched!</span><br><span class="line">Now using node v19.6.0 (npm v9.4.0)</span><br></pre></td></tr></table></figure>
+
+<p>Other test runners all download and use 100s of NPM dependencies</p>
+<table>
+<thead>
+<tr>
+<th>Test runner</th>
+<th>NPM packages installed</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Mocha</td>
+<td>78</td>
+</tr>
+<tr>
+<td>Mocha + Chai + Sinon</td>
+<td>445</td>
+</tr>
+<tr>
+<td>Ava</td>
+<td>198</td>
+</tr>
+<tr>
+<td>Jest</td>
+<td>429</td>
+</tr>
+</tbody></table>
+<p>Installing dependencies takes time. For example, time how long it takes to add Jest:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D jest</span><br><span class="line">added 429 packages, and audited 430 packages in 10s</span><br></pre></td></tr></table></figure>
+
+<h2><span id="test-execution">Test execution</span></h2><p>Let&#39;s find and run all tests</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ node --test</span><br><span class="line"># runs tests in &quot;test&quot; subfolder</span><br></pre></td></tr></table></figure>
+
+<p>Or run tests in a JS file that imports from <code>node:test</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ node tests/demo.mjs</span><br></pre></td></tr></table></figure>
+
+<p>Running tests works great with the new built-in Node <a target="_blank" rel="noopener" href="https://nodejs.org/api/cli.html">watch mode</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ node --watch tests/demo.mjs</span><br><span class="line">$ node --watch --test tests/*.mjs</span><br></pre></td></tr></table></figure>
+
+<p>Node test runner can find all test specs following a <a target="_blank" rel="noopener" href="https://nodejs.org/api/test.html#test-runner-execution-model">naming convention</a>. Given the following folder structure with a mixture of source files and test files:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">tests/</span><br><span class="line">  names/</span><br><span class="line">    another.test.mjs</span><br><span class="line">    my_test.mjs</span><br><span class="line">    test-1.mjs</span><br><span class="line">    utils.mjs</span><br></pre></td></tr></table></figure>
+<p>You can run all tests using the command</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ node --test tests/names</span><br><span class="line">- tests/names/another.test.mjs</span><br><span class="line">- tests/names/my_test.mjs</span><br><span class="line">- tests/names/test-1.mjs</span><br></pre></td></tr></table></figure>
+
+<p>In summary, any source file that starts or ends its name with &quot;test&quot; will be considered a spec file with tests.</p>
+<h2><span id="parallel-tests">Parallel tests</span></h2><p>You can explicitly mark tests to run in parallel using <code>concurrency</code> parameter</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;parallel tests&#x27;</span>, &#123; <span class="attr">concurrency</span>: <span class="literal">true</span> &#125;, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;subtest 1&#x27;</span>, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;subtest 1 start&#x27;</span>)</span><br><span class="line">    <span class="keyword">await</span> <span class="title function_">delay</span>(<span class="number">5000</span>)</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;subtest 1 end&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;subtest 2&#x27;</span>, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;subtest 2 start&#x27;</span>)</span><br><span class="line">    <span class="keyword">await</span> <span class="title function_">delay</span>(<span class="number">5000</span>)</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;subtest 2 end&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The above two tests will run in parallel and finish in 5 seconds (since each takes 5 seconds to run)</p>
+<p><img src="../images/node-test/parallel.png" alt="The two tests ran in parallel"></p>
+<h2><span id="the-test-syntax">The test syntax</span></h2><p>The tests use modern <code>async/await</code> syntax, and you can nest tests inside other tests, and even create new tests dynamically</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> test <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">test</span>(<span class="string">&#x27;top level test&#x27;</span>, <span class="keyword">async</span> (t) =&gt; &#123;</span><br><span class="line">  <span class="keyword">await</span> t.<span class="title function_">test</span>(<span class="string">&#x27;subtest 1&#x27;</span>, <span class="function">(<span class="params">t</span>) =&gt;</span> &#123;</span><br><span class="line">    assert.<span class="title function_">strictEqual</span>(<span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">await</span> t.<span class="title function_">test</span>(<span class="string">&#x27;subtest 2&#x27;</span>, <span class="function">(<span class="params">t</span>) =&gt;</span> &#123;</span><br><span class="line">    assert.<span class="title function_">strictEqual</span>(<span class="number">2</span>, <span class="number">2</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><strong>Note:</strong> be careful with making syntax mistakes. For example omitting the <code>t</code> in the nested <code>t.test</code> call will lead to very confusing errors.</p>
+<h3><span id="bdd-syntax">BDD syntax</span></h3><p>I prefer to nest tests using suites of tests with <code>describe</code> and <code>it</code> callbacks. They are included in the <code>node:test</code> module.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; describe, it &#125; <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;top level test&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;subtest 1&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    assert.<span class="title function_">strictEqual</span>(<span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;subtest 2&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    assert.<span class="title function_">strictEqual</span>(<span class="number">2</span>, <span class="number">2</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>By default Node test runner uses TAP output, and it considers the above test to have just 1 top-level test. Which looks confusing honestly, since I would consider &quot;subtest 1&quot; and &quot;subtest 2&quot; to be the real tests.</p>
+<p><img src="../images/node-test/one-test.png" alt="TAP reports a single top-level test"></p>
+<h2><span id="test-reporters">Test reporters</span></h2><p>By default, <code>node:test</code> can generate TAP, spec, and dot reports</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ node --test --test-reporter tap # default</span><br><span class="line">$ node --test --test-reporter spec</span><br><span class="line">$ node --test --test-reporter dot</span><br></pre></td></tr></table></figure>
+
+<p>You can generate several reports, just need to redirect each one to a different output stream</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ node --test --test-reporter dot \</span><br><span class="line">  --test-reporter-destination stdout \</span><br><span class="line">  --test-reporter spec \</span><br><span class="line">  --test-reporter-destination out.txt</span><br></pre></td></tr></table></figure>
+
+<p><strong>Tip:</strong> make sure to specify all test runner options before listing the spec files or folders</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 🚨 DOES NOT WORK</span><br><span class="line">$ node test/hello.mjs --test-reporter spec</span><br><span class="line"></span><br><span class="line"># ✅ WORKS</span><br><span class="line">$ node --test-reporter spec test/hello.mjs</span><br></pre></td></tr></table></figure>
+
+<p>I would consider putting the test command into the <code>package.json</code> scripts</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;test&quot;</span><span class="punctuation">:</span> <span class="string">&quot;node --test&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;spec&quot;</span><span class="punctuation">:</span> <span class="string">&quot;node --test --test-reporter spec&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>The TAP output protocol is widely used and you can pipe it into <a target="_blank" rel="noopener" href="https://github.com/sindresorhus/awesome-tap#reporters">3rd party reporters</a>, for example into <a target="_blank" rel="noopener" href="https://github.com/ljharb/faucet">faucet</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># npm i -D faucet</span><br><span class="line">$ node --test | npx faucet</span><br></pre></td></tr></table></figure>
+
+<center>
+  <video autoplay muted loop controls>
+    <source src="../images/node-test/faucet.mp4" type="video/mp4">
+    <img src="../images/node-test/faucet.png">
+  </video>
+</center>
+
+<h2><span id="test-statuses">Test statuses</span></h2><p>Node test runner has 5 test statuses</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;fails&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="number">2</span>, <span class="number">5</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>If the above tests finish, the test summary will show:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">i tests 2</span><br><span class="line">i pass 1</span><br><span class="line">i fail 1</span><br><span class="line">i cancelled 0</span><br><span class="line">i skipped 0</span><br><span class="line">i todo 0</span><br></pre></td></tr></table></figure>
+
+<p>The &quot;pass&quot; and &quot;fail&quot; are obvious. The first test passes, the second one has a failing assertion <code>assert.equal(2, 5)</code> so the test fails. What are the &quot;cancelled&quot;, &quot;skipped&quot;, and &quot;todo&quot; statuses?</p>
+<p>Let&#39;s look at the &quot;todo&quot; and &quot;skipped&quot; tests</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">it.<span class="title function_">todo</span>(<span class="string">&#x27;loads data&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// SKIP: &lt;issue link&gt;</span></span><br><span class="line">it.<span class="title function_">skip</span>(<span class="string">&#x27;stopped working&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="number">2</span>, <span class="number">5</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The &quot;todo&quot; tests are the ones we plan to implement. The skipped tests are the ones that we have, but they are failing for some reason, so we disabled them to investigate. I would advise to add a comment with a GitHub &#x2F; Jira issue link above the skipped tests to communicate to everyone why the test is skipped.</p>
+<p>The &quot;cancelled&quot; tests are special. Consider the following test file where the <code>before</code> hook throws an error</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">before</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;before hook&#x27;</span>)</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;Setup fails&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works again&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The tests <code>works</code> and <code>works again</code> did not even execute - because the <code>before</code> hook failed. Thus these tests were cancelled.</p>
+<p><strong>Tip:</strong> it is fun to compare Node test statuses to <a href="/blog/cypress-test-statuses/" title="Cypress Test Statuses">Cypress Test Statuses</a>.</p>
+<h2><span id="assertions">Assertions</span></h2><p>By default you can use <code>node:test</code> by throwing your errors or by using the built-in <code>node:assert</code> module</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line">assert.<span class="title function_">ok</span>(truthy, message)</span><br><span class="line">assert.<span class="title function_">equal</span>(value, expected, ...)</span><br><span class="line">assert.<span class="title function_">deepEqual</span>(...)</span><br><span class="line">assert.<span class="title function_">match</span>(value, regexp)</span><br><span class="line">assert.<span class="title function_">throws</span>(fn)</span><br><span class="line">assert.<span class="title function_">rejects</span>(asyncFn)</span><br><span class="line"><span class="comment">// plus &quot;assertion.notX...&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>The number of built-in assertions is quite small compared to the assertion libraries like <a target="_blank" rel="noopener" href="https://www.chaijs.com/api/bdd/">Chai</a> or built into <a target="_blank" rel="noopener" href="https://jestjs.io/docs/expect">Jest</a>. Anything more complicated, like checking property inside an object is unavailable</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">expect</span>(&#123; <span class="comment">/* object */</span> &#125;).<span class="property">to</span>.<span class="property">have</span>.<span class="title function_">property</span>(x)</span><br><span class="line"><span class="title function_">expect</span>(&#123; <span class="comment">/* object */</span> &#125;).<span class="property">to</span>.<span class="property">have</span>.<span class="title function_">keys</span>([x, y, z])</span><br><span class="line"><span class="title function_">expect</span>(&#123; <span class="comment">/* large object */</span> &#125;)</span><br><span class="line">  .<span class="property">to</span>.<span class="property">deep</span>.<span class="title function_">include</span>(&#123; ... known properties &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Of course, you can use Chai with <code>node:test</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// import assert from &#x27;node:assert/strict&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; assert &#125; <span class="keyword">from</span> <span class="string">&#x27;chai&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>What I feel is missing still are good and helpful error messages when an assertion fails. For example, lets compare two strings that are different by a single character: <code>Hello</code> and <code>Helloz</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; describe, it &#125; <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;Assertions&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;passes with primitives&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    assert.<span class="title function_">equal</span>(<span class="string">&#x27;Hello&#x27;</span>, <span class="string">&#x27;Helloz&#x27;</span>, <span class="string">&#x27;greeting check&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Here is the error shown in the terminal</p>
+<p><img src="../images/node-test/m1.png" alt="The string difference error"></p>
+<p>Now let&#39;s compare two objects that have different nested property</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;fails objects on purpose&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> person = &#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Joe&#x27;</span> &#125; &#125;</span><br><span class="line">  assert.<span class="title function_">deepEqual</span>(person,</span><br><span class="line">    &#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Anna&#x27;</span> &#125; &#125;, <span class="string">&#x27;people&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The terminal error is not terribly helpful in this case</p>
+<p><img src="../images/node-test/m2.png" alt="The object difference error"></p>
+<p>Let&#39;s take the same test and use <a target="_blank" rel="noopener" href="https://github.com/avajs/ava">Ava</a> test runner and see the error message</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> test <span class="keyword">from</span> <span class="string">&#x27;ava&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">test</span>(<span class="string">&#x27;fails objects on purpose&#x27;</span>, <span class="function">(<span class="params">t</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> person = &#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Joe&#x27;</span> &#125; &#125;</span><br><span class="line">  t.<span class="title function_">deepEqual</span>(person,</span><br><span class="line">    &#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Anna&#x27;</span> &#125; &#125;, <span class="string">&#x27;people&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/ava1.png" alt="Ava test runner has detailed error messages"></p>
+<p>Ava shows great errors and the string difference when comparing two strings</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> test <span class="keyword">from</span> <span class="string">&#x27;ava&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">test</span>(<span class="string">&#x27;passes with primitives&#x27;</span>, <span class="function">(<span class="params">t</span>) =&gt;</span> &#123;</span><br><span class="line">  t.<span class="title function_">is</span>(<span class="string">&#x27;Hello&#x27;</span>, <span class="string">&#x27;Helloz&#x27;</span>, <span class="string">&#x27;greeting check&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/ava3.png" alt="Ava test runner shows color-coded string differences"></p>
+<p><a target="_blank" rel="noopener" href="https://mochajs.org/">Mocha</a> test runner + <a target="_blank" rel="noopener" href="https://www.chaijs.com/">Chai</a> assertion library shows object differences intelligently</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; it &#125; <span class="keyword">from</span> <span class="string">&#x27;mocha&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; expect &#125; <span class="keyword">from</span> <span class="string">&#x27;chai&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;fails objects on purpose&#x27;</span>, <span class="function">(<span class="params">t</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> person = &#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Joe&#x27;</span> &#125; &#125;</span><br><span class="line">  <span class="title function_">expect</span>(person).<span class="property">to</span>.<span class="property">deep</span>.<span class="title function_">equal</span>(</span><br><span class="line">    &#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Anna&#x27;</span> &#125; &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/chai.png" alt="Chai assertion shows good object difference"></p>
+<p>You can use Chai assertions with <code>node:test</code> but the error is still incomplete and is missing any useful information</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; it &#125; <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; expect &#125; <span class="keyword">from</span> <span class="string">&#x27;chai&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;fails objects on purpose&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> person = &#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Joe&#x27;</span> &#125; &#125;</span><br><span class="line">  <span class="title function_">expect</span>(person).<span class="property">to</span>.<span class="property">deep</span>.<span class="title function_">equal</span>(&#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Anna&#x27;</span> &#125; &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/node-chai.png" alt="node:test plus Chai object assertion"></p>
+<p>I think the assertion messages are the weakest link the <code>node:test</code> today compared to other test runners.</p>
+<h3><span id="spok-assertions">spok assertions</span></h3><p>My favorite assertion library for checking objects is <a target="_blank" rel="noopener" href="https://github.com/thlorenz/spok">spok</a>. It now works with <code>node:test</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> test = <span class="built_in">require</span>(<span class="string">&#x27;node:test&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> spok = <span class="built_in">require</span>(<span class="string">&#x27;spok&#x27;</span>).<span class="property">default</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">test</span>(<span class="string">&#x27;complex object&#x27;</span>, <span class="function">(<span class="params">t</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> person = &#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Joe&#x27;</span> &#125; &#125;</span><br><span class="line">  <span class="title function_">spok</span>(t, person, &#123; <span class="attr">name</span>: &#123; <span class="attr">first</span>: <span class="string">&#x27;Anna&#x27;</span> &#125; &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The failed assertion is less than ideal, but does show passing and failing predicates</p>
+<p><img src="../images/node-test/spok.png" alt="node:test plus spok object assertion"></p>
+<p><strong>Tip:</strong> I love <code>spok</code> because it allows comparing the values and types and general predicates for each property in large objects. Here is a typical test and its terminal output.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://github.com/thlorenz/spok</span></span><br><span class="line"><span class="title function_">test</span>(<span class="string">&#x27;my object meets the specifications&#x27;</span>, <span class="function">(<span class="params">t</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">spok</span>(t, object, &#123;</span><br><span class="line">      $topic      : <span class="string">&#x27;spok-example&#x27;</span></span><br><span class="line">    , one          : spok.<span class="title function_">ge</span>(<span class="number">1</span>)</span><br><span class="line">    , two          : <span class="number">2</span></span><br><span class="line">    , three        : spok.<span class="title function_">range</span>(<span class="number">2</span>, <span class="number">4</span>)</span><br><span class="line">    , four         : spok.<span class="title function_">lt</span>(<span class="number">5</span>)</span><br><span class="line">    , helloWorld   : spok.<span class="title function_">startsWith</span>(<span class="string">&#x27;hello&#x27;</span>)</span><br><span class="line">    , anyNum       : spok.<span class="title function_">type</span>(<span class="string">&#x27;number&#x27;</span>)</span><br><span class="line">    , anotherNum   : spok.<span class="property">number</span></span><br><span class="line">    , anArray      : spok.<span class="property">array</span></span><br><span class="line">    , anotherArray : hasThreeElements</span><br><span class="line">    , anObject     : spok.<span class="title function_">ne</span>(<span class="literal">undefined</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/spok2.png" alt="spok assertion library output"></p>
+<p>This is why I constantly use <code>spok</code> in my Cypress tests via <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cy-spok">cy-spok</a> plugin.</p>
+<h2><span id="test-filtering">Test filtering</span></h2><p>You can pick the test to run by part of its title using <code>--test-name-pattern</code> argument, skipping all other tests. If you have three tests with these names:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works @sanity&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works @sanity and @feature-a&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="number">2</span>, <span class="number">2</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;low-priority-test&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="number">3</span>, <span class="number">3</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Then you can run the two tests with the string <code>@sanity</code> in their titles using</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># run tests with &quot;@sanity&quot; in the title</span><br><span class="line">$ node --test --test-name-pattern @sanity</span><br></pre></td></tr></table></figure>
+
+<p>It is a little unclear which tests were skipped, and all files are reported, there is no &quot;pre-filtering&quot; of specs</p>
+<p><img src="../images/node-test/filter1.png" alt="Filtering tests by the title text"></p>
+<p>For example, if we use the <code>spec</code> test reporter, it just reports all the tests, without any indication that some of the tests were skipped</p>
+<p><img src="../images/node-test/filter2.png" alt="No sign that some tests were filtered when using the spec reporter"></p>
+<p>You can run tests with titles matching one of several variants by repeating the <code>--test-name-pattern</code> argument.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># run tests with &quot;@sanity&quot; or &quot;@feature&quot;</span><br><span class="line">$ node --test --test-name-pattern @sanity \</span><br><span class="line">       --test-name-pattern @feature</span><br></pre></td></tr></table></figure>
+
+<h2><span id="continuous-integration">Continuous integration</span></h2><p>Running <code>node:test</code> on CI is really simple - there is nothing to install, just need to use the right Node version. If you are using <a href="/blog/trying-github-actions/" title="GitHub Actions">GitHub Actions</a> the simplest workflow could be:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">ci</span></span><br><span class="line"><span class="attr">on:</span> <span class="string">push</span></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">test</span></span><br><span class="line">  <span class="attr">steps:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v3</span></span><br><span class="line">    <span class="comment"># https://github.com/actions/setup-node</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/setup-node@v3</span></span><br><span class="line">      <span class="attr">with:</span></span><br><span class="line">        <span class="attr">node-version:</span> <span class="number">19.6</span><span class="number">.0</span></span><br><span class="line">        <span class="attr">cache:</span> <span class="string">&#x27;npm&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">ci</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">npm</span> <span class="string">run</span> <span class="string">spec</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/ci1.png" alt="The node tests run very quickly on GitHub Actions"></p>
+<h2><span id="spies-and-stubs">Spies and stubs</span></h2><p>Spying on method calls and changing their behavior during tests is an important feature to have for any testing system. For example, if we want to change the return of the method <code>person.name()</code> we would stub it in our test</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> person = &#123;</span><br><span class="line">  name () &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&#x27;Joe&#x27;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">stub</span>(person, <span class="string">&#x27;name&#x27;</span>).<span class="keyword">return</span>(<span class="string">&#x27;Anna&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>The <a target="_blank" rel="noopener" href="https://sinonjs.org/">Sinon.js</a> is the most popular and powerful JavaScript library for spying and mocking methods in my opinion. The new <code>node:test</code> module includes spying and stubbing API that is pretty good.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; it, mock &#125; <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;returns name&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> person = &#123;</span><br><span class="line">    <span class="title function_">name</span>(<span class="params"></span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="string">&#x27;Joe&#x27;</span></span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// the real behavior</span></span><br><span class="line">  assert.<span class="title function_">equal</span>(person.<span class="title function_">name</span>(), <span class="string">&#x27;Joe&#x27;</span>)</span><br><span class="line">  <span class="comment">// mock the method &quot;person.name&quot;</span></span><br><span class="line">  mock.<span class="title function_">method</span>(person, <span class="string">&#x27;name&#x27;</span>, <span class="function">() =&gt;</span> <span class="string">&#x27;Anna&#x27;</span>)</span><br><span class="line">  assert.<span class="title function_">equal</span>(person.<span class="title function_">name</span>(), <span class="string">&#x27;Anna&#x27;</span>)</span><br><span class="line">  <span class="comment">// confirm the method calls</span></span><br><span class="line">  assert.<span class="title function_">equal</span>(person.<span class="property">name</span>.<span class="property">mock</span>.<span class="property">calls</span>.<span class="property">length</span>, <span class="number">1</span>)</span><br><span class="line">  <span class="comment">// restore the original method</span></span><br><span class="line">  person.<span class="property">name</span>.<span class="property">mock</span>.<span class="title function_">restore</span>()</span><br><span class="line">  assert.<span class="title function_">equal</span>(person.<span class="title function_">name</span>(), <span class="string">&#x27;Joe&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The API is powerful, but the assertions are pretty verbose and it is harder to write method stubs that resolve asynchronously. It is a long way from <a target="_blank" rel="noopener" href="https://sinonjs.org/">Sinon.js</a> + <a target="_blank" rel="noopener" href="https://www.chaijs.com/plugins/chai-sinon/">Chai-Sinon</a> combination.</p>
+<h3><span id="mocking-esm-modules">Mocking ESM modules</span></h3><p>If you need to mock ES6 <code>import</code> and <code>export</code> directives, you will need to bring in a separate module loader. Let&#39;s take an example with 3 files: <code>math.mjs</code>, <code>calculator.mjs</code>, and the spec file.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// math.mjs</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> <span class="title function_">add</span> = (<span class="params">a, b</span>) =&gt; &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;adding %d to %d&#x27;</span>, a, b)</span><br><span class="line">  <span class="keyword">return</span> a + b</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// calculator.mjs</span></span><br><span class="line"><span class="keyword">import</span> &#123; add &#125; <span class="keyword">from</span> <span class="string">&#x27;./math.mjs&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> <span class="title function_">calculate</span> = (<span class="params">op, a, b</span>) =&gt; &#123;</span><br><span class="line">  <span class="keyword">return</span> op === <span class="string">&#x27;+&#x27;</span> ? <span class="title function_">add</span>(a, b) : <span class="title class_">NaN</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// the spec file</span></span><br><span class="line"><span class="keyword">import</span> &#123; it &#125; <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; calculate &#125; <span class="keyword">from</span> <span class="string">&#x27;./calculator.mjs&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;adds two numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="title function_">calculate</span>(<span class="string">&#x27;+&#x27;</span>, <span class="number">2</span>, <span class="number">3</span>), <span class="number">5</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>By default, the test calls <code>calculate</code> which calls the real <code>add</code> function from <code>math.mjs</code>. If you want to mock the exported <code>add</code> function as the <code>calculator.mjs</code> sees it, then you need to bring something like <a target="_blank" rel="noopener" href="https://github.com/iambumblehead/esmock">esmock</a> loader</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// the spec file</span></span><br><span class="line"><span class="keyword">import</span> &#123; it &#125; <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"><span class="keyword">import</span> esmock <span class="keyword">from</span> <span class="string">&#x27;esmock&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;adds two numbers (mocks add)&#x27;</span>, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; calculate &#125; = <span class="keyword">await</span> <span class="title function_">esmock</span>(<span class="string">&#x27;./calculator.mjs&#x27;</span>, &#123;</span><br><span class="line">    <span class="string">&#x27;./math.mjs&#x27;</span>: &#123;</span><br><span class="line">      <span class="attr">add</span>: <span class="function">() =&gt;</span> <span class="number">20</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="title function_">calculate</span>(<span class="string">&#x27;+&#x27;</span>, <span class="number">2</span>, <span class="number">3</span>), <span class="number">20</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Notice that we now import the <code>calculator.mjs</code> module <em>inside</em> the test to be able to change its behavior. We can even construct the <code>math.mjs add</code> export using the <code>node:test</code> mocks</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; it, mock &#125; <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"><span class="keyword">import</span> esmock <span class="keyword">from</span> <span class="string">&#x27;esmock&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;adds two numbers (confirm call)&#x27;</span>, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> add = mock.<span class="title function_">fn</span>(<span class="function">() =&gt;</span> <span class="number">20</span>)</span><br><span class="line">  <span class="keyword">const</span> &#123; calculate &#125; = <span class="keyword">await</span> <span class="title function_">esmock</span>(<span class="string">&#x27;./calculator.mjs&#x27;</span>, &#123;</span><br><span class="line">    <span class="string">&#x27;./math.mjs&#x27;</span>: &#123;</span><br><span class="line">      add,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br><span class="line">  assert.<span class="title function_">equal</span>(<span class="title function_">calculate</span>(<span class="string">&#x27;+&#x27;</span>, <span class="number">2</span>, <span class="number">3</span>), <span class="number">20</span>)</span><br><span class="line">  assert.<span class="title function_">deepEqual</span>(add.<span class="property">mock</span>.<span class="property">calls</span>[<span class="number">0</span>].<span class="property">arguments</span>, [<span class="number">2</span>, <span class="number">3</span>])</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h2><span id="typescript">TypeScript</span></h2><p>To write specs using TypeScript or unit test TS files, <code>node:test</code> relies on 3rd party source file loaders, like <a target="_blank" rel="noopener" href="https://github.com/TypeStrong/ts-node">ts-node</a>.</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ts-test&quot;</span><span class="punctuation">:</span> <span class="string">&quot;node --test --loader ts-node/esm test/**/*.ts&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s write a TS spec</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; it &#125; <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> <span class="title class_">Person</span> = &#123;</span><br><span class="line">  <span class="attr">name</span>: <span class="built_in">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;subtest 1&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;testing the person&#x27;</span>)</span><br><span class="line">  <span class="keyword">const</span> <span class="attr">p</span>: <span class="title class_">Person</span> = &#123;</span><br><span class="line">    <span class="attr">name</span>: <span class="string">&#x27;Joe&#x27;</span>,</span><br><span class="line">  &#125;</span><br><span class="line">  assert.<span class="title function_">deepEqual</span>(p, &#123; <span class="attr">name</span>: <span class="string">&#x27;Joe&#x27;</span> &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>If you run the test, notice the duration. The test is very short: 5ms, but the total test run takes 1 second.</p>
+<p><img src="../images/node-test/ts1.png" alt="TypeScript tests are much slower"></p>
+<p>Loading and transpiling TypeScript code adds overhead. Without TS, the same test would take 100ms total.</p>
+<h2><span id="miscellaneous-features">Miscellaneous features</span></h2><h3><span id="timeouts">Timeouts</span></h3><p>You can specify a timeout limit for each test</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works for 2 seconds&#x27;</span>, &#123; <span class="attr">timeout</span>: <span class="number">1000</span> &#125;, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">await</span> <span class="title function_">delay</span>(<span class="number">2000</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/misc1.png" alt="Test timeout of 1 second exceeded"></p>
+<h3><span id="named-skip">Named skip</span></h3><p>You can give a reason for a test to be skipped.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// instead of this:</span></span><br><span class="line"><span class="comment">// SKIP: reason url</span></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works for 2 seconds&#x27;</span>, ...)</span><br><span class="line"><span class="comment">// do this</span></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works for 2 seconds&#x27;</span>, &#123; <span class="attr">skip</span>: <span class="string">&#x27;Issue url here&#x27;</span> &#125;, ...)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/misc2.png" alt="Shows reason for the skipped test"></p>
+<h3><span id="debugging">Debugging</span></h3><p>I used VSCode to run the tests using the following launch configuration</p>
+<figure class="highlight json"><figcaption><span>.vscode/launch.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;0.2.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;configurations&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;node&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;request&quot;</span><span class="punctuation">:</span> <span class="string">&quot;launch&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Unit test&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;skipFiles&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;&lt;node_internals&gt;/**&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;program&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$&#123;file&#125;&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;--test&quot;</span><span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>I could then launch the debugging session and step through the tests and the code</p>
+<p><img src="../images/node-test/debug.png" alt="Pause inside the test"></p>
+<p>But the test output was ... sub-optimal. I could not even see any error messages from the failed assertions. I tried <a target="_blank" rel="noopener" href="https://marketplace.visualstudio.com/items?itemName=connor4312.nodejs-testing">node:test runner</a> VSCode extension and could get some output from the spec file and summary, but I must say it was underwhelming.</p>
+<p><img src="../images/node-test/extension.png" alt="VSCode node test extension"></p>
+<h2><span id="only-test">Only test</span></h2><p>A weird feature that seems to be a poor substitute for test tags</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works for 2 seconds&#x27;</span>, &#123; <span class="attr">only</span>: <span class="literal">true</span> &#125;, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">await</span> <span class="title function_">delay</span>(<span class="number">2000</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;fails&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;Nope&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>By default both tests run.</p>
+<p><img src="../images/node-test/only1.png" alt="Both tests execute"></p>
+<p>If you run tests with <code>--test-only</code> flag, then the second test without <code>only: true</code> option is skipped (silently)</p>
+<p><img src="../images/node-test/only2.png" alt="Only the tests with only: true option execute"></p>
+<p>I would rather prefer to have <code>it.only</code> to run exclusive tests.</p>
+<h3><span id="done-callback">Done callback</span></h3><p>You can call the callback argument usually called <code>done</code> to signal the end to the test</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;succeeds&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">setTimeout</span>(done, <span class="number">1000</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>If you call <code>done</code> with an <code>Error</code> object, the test fails.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;succeeds&#x27;</span>, <span class="function">(<span class="params">done</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="title function_">done</span>(<span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;A problem&#x27;</span>))</span><br><span class="line">  &#125;, <span class="number">1000</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/done.png" alt="Fail the test by calling done with an error argument"></p>
+<h2><span id="dynamic-tests">Dynamic tests</span></h2><p>You can generate new tests while the tests are running. For example, you can fetch data and for each returned item generate its own test.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> test <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">fetchTestData</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Promise</span>(<span class="function">(<span class="params">resolve</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">      <span class="title function_">resolve</span>([<span class="string">&#x27;first&#x27;</span>, <span class="string">&#x27;second&#x27;</span>, <span class="string">&#x27;third&#x27;</span>])</span><br><span class="line">    &#125;, <span class="number">1000</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">test</span>(<span class="string">&#x27;generated&#x27;</span>, <span class="keyword">async</span> (t) =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> items = <span class="keyword">await</span> <span class="title function_">fetchTestData</span>()</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">const</span> item <span class="keyword">of</span> items) &#123;</span><br><span class="line">    <span class="keyword">await</span> t.<span class="title function_">test</span>(<span class="string">`test <span class="subst">$&#123;item&#125;</span>`</span>, <span class="function">(<span class="params">t</span>) =&gt;</span> &#123;</span><br><span class="line">      assert.<span class="title function_">strictEqual</span>(<span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/node-test/dynamic.png" alt="Generates three tests from three items"></p>
+<h2><span id="code-coverage">Code coverage</span></h2><p>The node test runner can and will benefit from the built-in code coverage added to Node. Imagine testing math functions again</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// math.mjs</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> <span class="title function_">add</span> = (<span class="params">a, b</span>) =&gt; &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;adding %d to %d&#x27;</span>, a, b)</span><br><span class="line">  <span class="keyword">return</span> a + b</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> <span class="title function_">sub</span> = (<span class="params">a, b</span>) =&gt; &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;%d - %d&#x27;</span>, a, b)</span><br><span class="line">  <span class="keyword">return</span> a - b</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// spec file</span></span><br><span class="line"><span class="keyword">import</span> &#123; it &#125; <span class="keyword">from</span> <span class="string">&#x27;node:test&#x27;</span></span><br><span class="line"><span class="keyword">import</span> assert <span class="keyword">from</span> <span class="string">&#x27;node:assert/strict&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; calculate &#125; <span class="keyword">from</span> <span class="string">&#x27;./calculator.mjs&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;adds two numbers&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  assert.<span class="title function_">strictEqual</span>(<span class="title function_">calculate</span>(<span class="string">&#x27;+&#x27;</span>, <span class="number">2</span>, <span class="number">3</span>), <span class="number">5</span>, <span class="string">&#x27;2+3&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>If you run the tests with <code>--experimental-test-coverage</code> command line, the test summary includes the lines covered numbers</p>
+<h2><span id="missing-features">Missing features</span></h2><p>Here are a few features that are present in other test runners, but not in <code>node:test</code></p>
+<ul>
+<li>the number of planned assertions like Ava&#39;s <code>t.plan(2)</code></li>
+<li>mocking clock and timers like Jest&#39;s <code>jest.useFakeTimers()</code></li>
+<li>exit on first failure <code>deno test --fail-fast</code></li>
+<li>expect a failure like in this Ava&#39;s example</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">test.<span class="title function_">failing</span>(<span class="string">&#x27;found a bug&#x27;</span>, <span class="function"><span class="params">t</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// Test will count as passed</span></span><br><span class="line">  t.<span class="title function_">fail</span>()</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h2><span id="summary">Summary</span></h2><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Mocha</th>
+<th>Ava</th>
+<th>Jest</th>
+<th>Node.js TR</th>
+<th>My rating</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Included with Node</td>
+<td>🚫</td>
+<td>🚫</td>
+<td>🚫</td>
+<td>✅</td>
+<td>🎉</td>
+</tr>
+<tr>
+<td>Watch mode</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>🎉</td>
+</tr>
+<tr>
+<td>Reporters</td>
+<td>lots</td>
+<td>via TAP</td>
+<td>lots</td>
+<td>via TAP</td>
+<td></td>
+</tr>
+<tr>
+<td>Assertions</td>
+<td>via Chai ✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>weak</td>
+<td>😑</td>
+</tr>
+<tr>
+<td>Snapshots</td>
+<td>🚫</td>
+<td>✅</td>
+<td>✅</td>
+<td>🚫</td>
+<td></td>
+</tr>
+<tr>
+<td>Hooks</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>grep support</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>spy and stub</td>
+<td>via Sinon ✅</td>
+<td>via Sinon ✅</td>
+<td>✅✅</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>parallel execution</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>code coverage</td>
+<td>via nyc</td>
+<td>via c8</td>
+<td>✅</td>
+<td>✅</td>
+<td>👍</td>
+</tr>
+<tr>
+<td>TS support</td>
+<td>via ts-node</td>
+<td>via ts-node</td>
+<td>via ts-jest</td>
+<td>via ts-node</td>
+<td>🐢</td>
+</tr>
+</tbody></table>
+<p>In general, I would recommend:</p>
+<ul>
+<li>trying <code>node --test</code> on new smaller projects you might start</li>
+<li>do not port any existing projects with already existing tests</li>
+<li>re-evaluate in 6 months because <code>node:test</code> is evolving fast</li>
+</ul>
+<p>Happy <code>node --test</code>ing!</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/trying-node-test-runner/" data-id="clxj6w7ej00k9bjn726bteh6i" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/trying-node-test-runner/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../testing-the-swag-store-course/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Testing The Swag Store Cypress.io Course
+        
+      </div>
+    </a>
+  
+  
+    <a href="../full-cy-code-coverage/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Full Code Coverage For Free</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/trying-node-test-runner/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

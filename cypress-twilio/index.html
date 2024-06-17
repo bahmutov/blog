@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Cypress And Twilio | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="I have signed up for Twilio SMS service. Now I have a valid phone number to use during my end-to-end tests. To check the messages using API, Twilio settings page shows the account ID, the auth token,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cypress And Twilio">
+<meta property="og:url" content="https://glebbahmutov.com/blog/cypress-twilio/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="I have signed up for Twilio SMS service. Now I have a valid phone number to use during my end-to-end tests. To check the messages using API, Twilio settings page shows the account ID, the auth token,">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cypress-twilio/twilio.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cypress-twilio/code.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cypress-twilio/fail.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cypress-twilio/recurse.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/cypress-twilio/retry.png">
+<meta property="article:published_time" content="2023-05-09T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.514Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/cypress-twilio/twilio.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-cypress-twilio" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2023-05-09T04:00:00.000Z" itemprop="datePublished">May 9 2023</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Cypress And Twilio
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Retry checking Twilio SMS inbox to receive SMS messages in your Cypress tests.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>I have signed up for <a target="_blank" rel="noopener" href="https://www.twilio.com/">Twilio SMS service</a>. Now I have a valid phone number to use during my end-to-end tests. To check the messages using API, Twilio settings page shows the account ID, the auth token, and the phone number (I set all field HTML types to &quot;password&quot; to hide them in this screenshot)</p>
+<p><img src="../images/cypress-twilio/twilio.png" alt="Twilio account settings"></p>
+<p>I will put these settings in my <code>.as-a.ini</code> file that I never check into the source code.</p>
+<figure class="highlight ini"><figcaption><span>.as-a.ini</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[cypress-twilio-example]</span></span><br><span class="line"><span class="attr">TWILIO_ACCOUNT_SID</span>=...</span><br><span class="line"><span class="attr">TWILIO_AUTH_TOKEN</span>=...</span><br><span class="line"><span class="attr">TWILIO_PHONE_NUMBER</span>=...</span><br></pre></td></tr></table></figure>
+
+<p>When I start Cypress, I load the above environment values using my <a target="_blank" rel="noopener" href="https://github.com/bahmutov/as-a">as-a</a> tool</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># assuming my current folder is &quot;cypress-twilio-example&quot;</span><br><span class="line">$ as-a . npx cypress open</span><br></pre></td></tr></table></figure>
+
+<blockquote class="pullquote"><p>🎁 You can find my source code in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-twilio-example">bahmutov&#x2F;cypress-twilio-example</a>.</p>
+</blockquote>
+
+<h2><span id="start-the-project">Start the project</span></h2><p>Let&#39;s access the Twilio SMS messages from the Cypress test. We will need to use HTTP API to check the messages, this code runs in Node in your Cypress project. For example, we can begin writing a task code:</p>
+<figure class="highlight js"><figcaption><span>cypress/twilio/check-sms.mjs</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">function</span> <span class="title function_">getTwilioInfo</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="comment">// load up twilio info</span></span><br><span class="line">  <span class="keyword">const</span> <span class="variable constant_">TWILIO_ACCOUNT_SID</span> = process.<span class="property">env</span>.<span class="property">TWILIO_ACCOUNT_SID</span></span><br><span class="line">  <span class="keyword">if</span> (!<span class="variable constant_">TWILIO_ACCOUNT_SID</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;TWILIO_ACCOUNT_SID is not defined&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> <span class="variable constant_">TWILIO_AUTH_TOKEN</span> = process.<span class="property">env</span>.<span class="property">TWILIO_AUTH_TOKEN</span></span><br><span class="line">  <span class="keyword">if</span> (!<span class="variable constant_">TWILIO_AUTH_TOKEN</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;TWILIO_AUTH_TOKEN is not defined&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> <span class="variable constant_">TWILIO_PHONE_NUMBER</span> = process.<span class="property">env</span>.<span class="property">TWILIO_PHONE_NUMBER</span></span><br><span class="line">  <span class="keyword">if</span> (!<span class="variable constant_">TWILIO_PHONE_NUMBER</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;TWILIO_PHONE_NUMBER is not defined&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> &#123; <span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>, <span class="variable constant_">TWILIO_PHONE_NUMBER</span> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">getTwilioSms</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="comment">// <span class="doctag">TODO:</span> call Twilio API and get the code</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><figcaption><span>cypress.config.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; defineConfig &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> &#123; getTwilioInfo, getTwilioSms &#125; <span class="keyword">from</span> <span class="string">&#x27;./cypress/twilio/check-sms.mjs&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="title function_">defineConfig</span>(&#123;</span><br><span class="line">  <span class="attr">e2e</span>: &#123;</span><br><span class="line">    <span class="comment">// baseUrl, etc</span></span><br><span class="line">    <span class="attr">supportFile</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">fixturesFolder</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="title function_">setupNodeEvents</span>(<span class="params">on, config</span>) &#123;</span><br><span class="line">      <span class="comment">// make sure we have Twilio account values</span></span><br><span class="line">      <span class="title function_">getTwilioInfo</span>()</span><br><span class="line"></span><br><span class="line">      <span class="title function_">on</span>(<span class="string">&#x27;task&#x27;</span>, &#123;</span><br><span class="line">        getTwilioSms,</span><br><span class="line">      &#125;)</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h2><span id="twilio-sdk">Twilio SDK</span></h2><p>To check the messages, let&#39;s install <a target="_blank" rel="noopener" href="https://github.com/twilio/twilio-node#readme">Twilio Node.js SDK</a> following <a target="_blank" rel="noopener" href="https://www.twilio.com/docs/sms/quickstart/node">Twilio Node Quick Start Guide</a>.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D twilio</span><br><span class="line">+ twilio@4.11.0</span><br></pre></td></tr></table></figure>
+
+<p>We can list the last 10 SMS messages</p>
+<figure class="highlight js"><figcaption><span>cypress/twilio/check-sms.mjs</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> twilio <span class="keyword">from</span> <span class="string">&#x27;twilio&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">function</span> <span class="title function_">getTwilioInfo</span>(<span class="params"></span>) &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">return</span> &#123; <span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>, <span class="variable constant_">TWILIO_PHONE_NUMBER</span> &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">getTwilioSms</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; <span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>, <span class="variable constant_">TWILIO_PHONE_NUMBER</span> &#125; =</span><br><span class="line">    <span class="title function_">getTwilioInfo</span>()</span><br><span class="line">  <span class="keyword">const</span> client = <span class="title function_">twilio</span>(<span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>)</span><br><span class="line">  <span class="keyword">const</span> messages = <span class="keyword">await</span> client.<span class="property">messages</span>.<span class="title function_">list</span>(&#123;</span><br><span class="line">    <span class="attr">to</span>: <span class="variable constant_">TWILIO_PHONE_NUMBER</span>,</span><br><span class="line">    <span class="attr">limit</span>: <span class="number">10</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="keyword">return</span> messages</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>To quickly test message retrieval, I create another file to simply call <code>getTwilioSms</code> from Node without even opening Cypress</p>
+<figure class="highlight js"><figcaption><span>cypress/twilio/check-sms-cli.mjs</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; getTwilioSms &#125; <span class="keyword">from</span> <span class="string">&#x27;./check-sms.mjs&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">getTwilioSms</span>()</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">messages</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(messages)</span><br><span class="line">  &#125;)</span><br><span class="line">  .<span class="title function_">catch</span>(<span class="function">(<span class="params">err</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">error</span>(err)</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>By default, there are no messages</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ as-a . node ./cypress/twilio/check-sms-cli.mjs</span><br><span class="line">[]</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s text &quot;Hello 1234&quot; to the Twilio test number. Now we are getting a message in the list</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$ as-a . node ./cypress/twilio/check-sms-cli.mjs</span><br><span class="line">[</span><br><span class="line">  &#123;</span><br><span class="line">    body: &#x27;Hello 1234&#x27;,</span><br><span class="line">    numSegments: &#x27;1&#x27;,</span><br><span class="line">    direction: &#x27;inbound&#x27;,</span><br><span class="line">    from: &#x27;...&#x27;,</span><br><span class="line">    to: &#x27;...&#x27;,</span><br><span class="line">    dateUpdated: 2023-05-09T19:57:20.000Z,</span><br><span class="line">    price: null,</span><br><span class="line">    errorMessage: null,</span><br><span class="line">    ...</span><br><span class="line">    dateSent: 2023-05-09T19:57:20.000Z,</span><br><span class="line">    dateCreated: 2023-05-09T19:57:20.000Z,</span><br><span class="line">    errorCode: null,</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>If we send another message &quot;Hello 5678&quot;, it will become the first message in the list</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ as-a . node ./cypress/twilio/check-sms-cli.mjs</span><br><span class="line">[</span><br><span class="line">  &#123;</span><br><span class="line">    body: &#x27;Hello 5678&#x27;,</span><br><span class="line">    ...</span><br><span class="line">  &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    body: &#x27;Hello 1234&#x27;,</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>Ok, great. Let&#39;s limit ourselves to the last message</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">getTwilioSms</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; <span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>, <span class="variable constant_">TWILIO_PHONE_NUMBER</span> &#125; =</span><br><span class="line">    <span class="title function_">getTwilioInfo</span>()</span><br><span class="line">  <span class="keyword">const</span> client = <span class="title function_">twilio</span>(<span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>)</span><br><span class="line">  <span class="keyword">const</span> messages = <span class="keyword">await</span> client.<span class="property">messages</span>.<span class="title function_">list</span>(&#123;</span><br><span class="line">    <span class="attr">to</span>: <span class="variable constant_">TWILIO_PHONE_NUMBER</span>,</span><br><span class="line">    <span class="attr">limit</span>: <span class="number">10</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="comment">// assume there is at least one message</span></span><br><span class="line">  <span class="keyword">return</span> messages[<span class="number">0</span>]?.<span class="property">body</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>We can call this function as a <a href="/blog/powerful-cy-task/" title="Cypress task">Cypress task</a> from the browser test.</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/spec.cy.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;retrieves the last SMS&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">log</span>(<span class="string">&#x27;Checking SMS&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;getTwilioSms&#x27;</span>)</span><br><span class="line">    <span class="comment">// confirm the SMS text follows the expected format</span></span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;match&#x27;</span>, <span class="regexp">/Hello \d&#123;4&#125;/</span>)</span><br><span class="line">    <span class="comment">// extract the code from the string</span></span><br><span class="line">    .<span class="title function_">invoke</span>(<span class="string">&#x27;match&#x27;</span>, <span class="regexp">/Hello (?&lt;code&gt;\d&#123;4&#125;)/</span>)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;groups.code&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;be.a&#x27;</span>, <span class="string">&#x27;string&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s start Cypress</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ as-a . npx cypress open</span><br></pre></td></tr></table></figure>
+
+<p>The test runs and returns the last message and extracts the text code from it</p>
+<p><img src="../images/cypress-twilio/code.png" alt="The extracted code"></p>
+<h2><span id="filter-messages-by-time">Filter messages by time</span></h2><p>We probably do not want to retrieve the last existing message. A test probably does some action that causes a message to be sent, and then needs to confirm it. Thus we want to limit our messages to return items received after a certain time. For example, we could retrieve messages received in the last minute. Using <a target="_blank" rel="noopener" href="https://moment.github.io/luxon/">Luxon</a> library to easily subtract a minute:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">getTwilioSms</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; <span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>, <span class="variable constant_">TWILIO_PHONE_NUMBER</span> &#125; =</span><br><span class="line">    <span class="title function_">getTwilioInfo</span>()</span><br><span class="line">  <span class="keyword">const</span> client = <span class="title function_">twilio</span>(<span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// retrieve one message sent in the last minute</span></span><br><span class="line">  <span class="keyword">const</span> now = <span class="title class_">DateTime</span>.<span class="title function_">now</span>()</span><br><span class="line">  <span class="keyword">const</span> prev = now.<span class="title function_">minus</span>(&#123; <span class="attr">minutes</span>: <span class="number">1</span> &#125;)</span><br><span class="line">  <span class="keyword">const</span> messages = <span class="keyword">await</span> client.<span class="property">messages</span>.<span class="title function_">list</span>(&#123;</span><br><span class="line">    <span class="attr">to</span>: <span class="variable constant_">TWILIO_PHONE_NUMBER</span>,</span><br><span class="line">    <span class="attr">limit</span>: <span class="number">1</span>,</span><br><span class="line">    <span class="attr">dateSent</span>: prev.<span class="title function_">toJSDate</span>(),</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="comment">// assume there is at least one message</span></span><br><span class="line">  <span class="keyword">return</span> messages[<span class="number">0</span>]?.<span class="property">body</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>This is where the things break down. A message might take a while to get delivered. As written now, there will be no message and the function <code>getTwilioSms</code> will return undefined, causing Cypress to fail the test with an error.</p>
+<p><img src="../images/cypress-twilio/fail.png" alt="The test fails if there is no message"></p>
+<p>We can retry checking the SMS inbox in two ways.</p>
+<h2><span id="retry-the-cytask-command">Retry the <code>cy.task</code> command</span></h2><p>Let&#39;s update our <code>getTwilioSms</code> to NOT fail if there are no messages. We must return <code>null</code> to signal to Cypress that there is no value, but it is ok. Thus we can change our return statement:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// assume there is at least one message</span></span><br><span class="line"><span class="keyword">return</span> messages[<span class="number">0</span>]?.<span class="property">body</span> || <span class="literal">null</span></span><br></pre></td></tr></table></figure>
+
+<p>If we do not have a string message, we should wait a little and call Twilio again. We can do this using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-recurse">cypress-recurse</a> plugin:</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/spec.cy.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; recurse &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-recurse&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;retrieves the last SMS&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">log</span>(<span class="string">&#x27;Checking SMS&#x27;</span>)</span><br><span class="line">  <span class="comment">// call the first function that calls cy.task</span></span><br><span class="line">  <span class="comment">// until the second predicate function returns true</span></span><br><span class="line">  <span class="title function_">recurse</span>(<span class="function">() =&gt;</span> cy.<span class="title function_">task</span>(<span class="string">&#x27;getTwilioSms&#x27;</span>), <span class="title class_">Cypress</span>.<span class="property">_</span>.<span class="property">isString</span>, &#123;</span><br><span class="line">    <span class="attr">log</span>: <span class="literal">false</span>, <span class="comment">// no need to log every iteration</span></span><br><span class="line">    <span class="attr">timeout</span>: <span class="number">60_000</span>, <span class="comment">// retry for up to 1 minute</span></span><br><span class="line">    <span class="attr">delay</span>: <span class="number">5_000</span>, <span class="comment">// wait 5 seconds between the tries</span></span><br><span class="line">  &#125;)</span><br><span class="line">    <span class="comment">// recurse yields the result of the command</span></span><br><span class="line">    <span class="comment">// which in our case is the result from the task</span></span><br><span class="line">    <span class="comment">// confirm the SMS text follows the expected format</span></span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;match&#x27;</span>, <span class="regexp">/Hello \d&#123;4&#125;/</span>)</span><br><span class="line">    <span class="comment">// extract the code from the string</span></span><br><span class="line">    .<span class="title function_">invoke</span>(<span class="string">&#x27;match&#x27;</span>, <span class="regexp">/Hello (?&lt;code&gt;\d&#123;4&#125;)/</span>)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;groups.code&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;be.a&#x27;</span>, <span class="string">&#x27;string&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Suppose we text <code>Hello 0001</code> while the test is running, forcing it to call the task <code>getTwilioSms</code> a few times until it yields a string.</p>
+<p><img src="../images/cypress-twilio/recurse.png" alt="The test retries fetching the SMS until a message is received"></p>
+<h2><span id="retry-calling-twilio-api">Retry calling Twilio API</span></h2><p>Instead of retrying the <code>() =&gt; cy.task(&#39;getTwilioSms&#39;)</code> function until it yields a value that passes the predicate <code>Cypress._.isString</code>, we can retry the code in the task itself. The same plugin <code>cypress-recurse</code> has a plain JavaScript function <code>retry</code> you can use to run synchronous or asynchronous functions.</p>
+<figure class="highlight js"><figcaption><span>cypress/twilio/check-sms.mjs</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> twilio <span class="keyword">from</span> <span class="string">&#x27;twilio&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">DateTime</span> &#125; <span class="keyword">from</span> <span class="string">&#x27;luxon&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; retry &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress-recurse/src/retry.js&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">function</span> <span class="title function_">getTwilioInfo</span>(<span class="params"></span>) &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">getTwilioSms</span>(<span class="params"></span>) &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">retryTwilioSms</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; <span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>, <span class="variable constant_">TWILIO_PHONE_NUMBER</span> &#125; =</span><br><span class="line">    <span class="title function_">getTwilioInfo</span>()</span><br><span class="line">  <span class="keyword">const</span> client = <span class="title function_">twilio</span>(<span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// retrieve one message sent in the last minute</span></span><br><span class="line">  <span class="keyword">const</span> now = <span class="title class_">DateTime</span>.<span class="title function_">now</span>()</span><br><span class="line">  <span class="keyword">const</span> prev = now.<span class="title function_">minus</span>(&#123; <span class="attr">minutes</span>: <span class="number">1</span> &#125;).<span class="title function_">toJSDate</span>()</span><br><span class="line"></span><br><span class="line">  <span class="comment">// the result we will return after retries</span></span><br><span class="line">  <span class="keyword">let</span> lastMessage</span><br><span class="line"></span><br><span class="line">  <span class="keyword">await</span> <span class="title function_">retry</span>(</span><br><span class="line">    <span class="comment">// the first argument is a function to retry</span></span><br><span class="line">    <span class="comment">// in our case it yields the list of messages</span></span><br><span class="line">    <span class="function">() =&gt;</span></span><br><span class="line">      client.<span class="property">messages</span>.<span class="title function_">list</span>(&#123;</span><br><span class="line">        <span class="attr">to</span>: <span class="variable constant_">TWILIO_PHONE_NUMBER</span>,</span><br><span class="line">        <span class="attr">limit</span>: <span class="number">1</span>,</span><br><span class="line">        <span class="attr">dateSent</span>: prev,</span><br><span class="line">      &#125;),</span><br><span class="line">    <span class="comment">// the second function is the predicate</span></span><br><span class="line">    <span class="comment">// checking the value resolved by the first function</span></span><br><span class="line">    <span class="function">(<span class="params">messages</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (!messages.<span class="property">length</span>) &#123;</span><br><span class="line">        <span class="comment">// retry again</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// success!</span></span><br><span class="line">      lastMessage = messages[<span class="number">0</span>].<span class="property">body</span></span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// retrying options</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">limit</span>: <span class="number">20</span>, <span class="comment">// retry 20 times</span></span><br><span class="line">      <span class="attr">delay</span>: <span class="number">5_000</span>, <span class="comment">// with 5 second pauses between attempts</span></span><br><span class="line">      <span class="attr">log</span>: <span class="literal">true</span>, <span class="comment">// log basic info about each attempt</span></span><br><span class="line">    &#125;,</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> lastMessage</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The <code>retry(fn, predicate, options)</code> function follows similar syntax to the <code>recurse</code> function, but is implemented using plain JavaScript, and thus can work in Node or browser without using Cypress commands. We can test this function directly by running it from Node. While it is retrying, we can send SMS message <code>Hello 0909</code> and the retries stop.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ as-a . node ./cypress/twilio/check-sms-cli.mjs</span><br><span class="line">attempt 1 of 20 was 🚨</span><br><span class="line">attempt 2 of 20 was 🚨</span><br><span class="line">attempt 3 of 20 was 🚨</span><br><span class="line">attempt 4 of 20 was 🚨</span><br><span class="line">attempt 5 of 20 was ✅</span><br><span class="line">Hello 0909</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s use the new <code>retryTwilioSms</code> as a task</p>
+<figure class="highlight js"><figcaption><span>cypress.config.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; defineConfig &#125; <span class="keyword">from</span> <span class="string">&#x27;cypress&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> &#123;</span><br><span class="line">  getTwilioInfo,</span><br><span class="line">  getTwilioSms,</span><br><span class="line">  retryTwilioSms,</span><br><span class="line">&#125; <span class="keyword">from</span> <span class="string">&#x27;./cypress/twilio/check-sms.mjs&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="title function_">defineConfig</span>(&#123;</span><br><span class="line">  <span class="attr">e2e</span>: &#123;</span><br><span class="line">    <span class="comment">// baseUrl, etc</span></span><br><span class="line">    <span class="attr">supportFile</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">fixturesFolder</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="title function_">setupNodeEvents</span>(<span class="params">on, config</span>) &#123;</span><br><span class="line">      <span class="comment">// make sure we have Twilio account values</span></span><br><span class="line">      <span class="title function_">getTwilioInfo</span>()</span><br><span class="line"></span><br><span class="line">      <span class="title function_">on</span>(<span class="string">&#x27;task&#x27;</span>, &#123;</span><br><span class="line">        getTwilioSms, <span class="comment">// no retries</span></span><br><span class="line">        retryTwilioSms, <span class="comment">// with retries</span></span><br><span class="line">      &#125;)</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The spec can simply assume the task succeeds, but it needs to set the desired maximum task timeout.</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/spec2.cy.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;retrieves the last SMS using retryTwilioSms&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">log</span>(<span class="string">&#x27;Checking SMS&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;retryTwilioSms&#x27;</span>, &#123;</span><br><span class="line">    <span class="attr">timeout</span>: <span class="number">60_000</span>, <span class="comment">// let the task run up to 1 minute</span></span><br><span class="line">  &#125;)</span><br><span class="line">    <span class="comment">// recurse yields the result of the command</span></span><br><span class="line">    <span class="comment">// which in our case is the result from the task</span></span><br><span class="line">    <span class="comment">// confirm the SMS text follows the expected format</span></span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;match&#x27;</span>, <span class="regexp">/Hello \d&#123;4&#125;/</span>)</span><br><span class="line">    <span class="comment">// extract the code from the string</span></span><br><span class="line">    .<span class="title function_">invoke</span>(<span class="string">&#x27;match&#x27;</span>, <span class="regexp">/Hello (?&lt;code&gt;\d&#123;4&#125;)/</span>)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;groups.code&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;be.a&#x27;</span>, <span class="string">&#x27;string&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/cypress-twilio/retry.png" alt="The test calls the cy.task retryTwilioSms and the code inside the task retries"></p>
+<p>We can see the retries again in the terminal output, not in the Cypress Console Log</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">attempt 1 of 20 was 🚨</span><br><span class="line">attempt 2 of 20 was 🚨</span><br><span class="line">attempt 3 of 20 was 🚨</span><br><span class="line">attempt 4 of 20 was ✅</span><br></pre></td></tr></table></figure>
+
+<p>So if you need generic code retries in Node for your End-to-End tests, check out the <code>retry</code> function from <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-recurse">cypress-recurse</a> plugin.</p>
+<p>🎓 The <code>cypress-recurse</code> plugin is explained in several lessons in my <a target="_blank" rel="noopener" href="https://cypress.tips/courses/cypress-plugins">Cypress Plugins</a> course.</p>
+<h2><span id="bonus-extract-function">Bonus: extract function</span></h2><p>Using a local variable to save the value from the predicate function is cumbersome. We can use a separate <code>extract</code> function to take the result yielded by the successful function (the result that passed the predicate) and extract the value to return. Let&#39;s rewrite the task</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">retryTwilioSms</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; <span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>, <span class="variable constant_">TWILIO_PHONE_NUMBER</span> &#125; =</span><br><span class="line">    <span class="title function_">getTwilioInfo</span>()</span><br><span class="line">  <span class="keyword">const</span> client = <span class="title function_">twilio</span>(<span class="variable constant_">TWILIO_ACCOUNT_SID</span>, <span class="variable constant_">TWILIO_AUTH_TOKEN</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// retrieve one message sent in the last minute</span></span><br><span class="line">  <span class="keyword">const</span> now = <span class="title class_">DateTime</span>.<span class="title function_">now</span>()</span><br><span class="line">  <span class="keyword">const</span> prev = now.<span class="title function_">minus</span>(&#123; <span class="attr">minutes</span>: <span class="number">1</span> &#125;).<span class="title function_">toJSDate</span>()</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> lastMessage = <span class="keyword">await</span> <span class="title function_">retry</span>(</span><br><span class="line">    <span class="comment">// the first argument is a function to retry</span></span><br><span class="line">    <span class="comment">// in our case it yields the list of messages</span></span><br><span class="line">    <span class="function">() =&gt;</span></span><br><span class="line">      client.<span class="property">messages</span>.<span class="title function_">list</span>(&#123;</span><br><span class="line">        <span class="attr">to</span>: <span class="variable constant_">TWILIO_PHONE_NUMBER</span>,</span><br><span class="line">        <span class="attr">limit</span>: <span class="number">1</span>,</span><br><span class="line">        <span class="attr">dateSent</span>: prev,</span><br><span class="line">      &#125;),</span><br><span class="line">    <span class="comment">// the second function is the predicate</span></span><br><span class="line">    <span class="comment">// checking the value resolved by the first function</span></span><br><span class="line">    <span class="function">(<span class="params">messages</span>) =&gt;</span> messages.<span class="property">length</span> &gt; <span class="number">0</span>,</span><br><span class="line">    <span class="comment">// retrying options</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">limit</span>: <span class="number">20</span>, <span class="comment">// retry 20 times</span></span><br><span class="line">      <span class="attr">delay</span>: <span class="number">5_000</span>, <span class="comment">// with 5 second pauses between attempts</span></span><br><span class="line">      <span class="attr">log</span>: <span class="literal">true</span>, <span class="comment">// log basic info about each attempt</span></span><br><span class="line">      <span class="title function_">extract</span>(<span class="params">messages</span>) &#123;</span><br><span class="line">        <span class="comment">// success, let&#x27;s extract the value from</span></span><br><span class="line">        <span class="comment">// the result of the last function call</span></span><br><span class="line">        <span class="keyword">return</span> messages[<span class="number">0</span>].<span class="property">body</span></span><br><span class="line">      &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> lastMessage</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/cypress-twilio/" data-id="clxj6w7d7005cbjn7h2lu1xgm" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/cypress-twilio/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../test-a-different-item-every-day/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Test With A Different Item Every Day
+        
+      </div>
+    </a>
+  
+  
+    <a href="../do-not-use-sha/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Do Not Use SHA To Compare HTML During E2E Tests</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/cypress-twilio/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Use Cypress For API Testing | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cypress is known as an End-To-End test runner, but it can happily run component, unit, and even API tests. I have projects that use Cypress just for API testing. It works pretty nicely: rich set of co">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Use Cypress For API Testing">
+<meta property="og:url" content="https://glebbahmutov.com/blog/use-cypress-for-api-testing/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Cypress is known as an End-To-End test runner, but it can happily run component, unit, and even API tests. I have projects that use Cypress just for API testing. It works pretty nicely: rich set of co">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/api1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/api2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/complete.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/delete.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/truncate.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/plugin.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/combine.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/id.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/spok.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/async.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/ci.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/delete-all.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/terminal.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/clock.png">
+<meta property="article:published_time" content="2024-02-08T05:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.617Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/use-cypress-for-api-testing/api1.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-use-cypress-for-api-testing" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2024-02-08T05:00:00.000Z" itemprop="datePublished">Feb 8 2024</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Use Cypress For API Testing
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to write API tests using Cypress end-to-end test runner.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Cypress is known as an End-To-End test runner, but it can happily run component, unit, and even API tests. I have projects that use Cypress just for API testing. It works pretty nicely: rich set of commands and assertions, good user interface, easy to run on CI. Using plugins like <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cy-api">@bahmutov&#x2F;cy-api</a> and <a target="_blank" rel="noopener" href="https://github.com/filiphric/cypress-plugin-api">cypress-plugin-api</a> you can even give API tests nice graphical interface inside the browser.</p>
+<p>In this blog post I will give examples of Cypress api tests using the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/use-cypress-for-api-testing">use-cypress-for-api-testing</a> application as my example. The application is a simple TodoMVC web application on top of REST API. There are endpoints to create, delete, and modify Todo items, plus an endpoint to reset the data:</p>
+<ul>
+<li><code>GET /todos</code> returns all todo items</li>
+<li><code>POST /todos</code> adds a new todo item</li>
+<li><code>PATCH /todos/:id</code> updates the given todo item</li>
+<li><code>DELETE /todos/:id</code> deletes on todo item</li>
+<li><code>POST /reset</code> replaces the entire backend data with the given object</li>
+</ul>
+<p>Let&#39;s write a few API tests.</p>
+<h2><span id="table-of-contents">Table of Contents</span></h2><!-- toc -->
+
+<ul>
+<li><a href="#adding-new-todos">Adding new todos</a></li>
+<li><a href="#update-an-item">Update an item</a></li>
+<li><a href="#delete-an-item">Delete an item</a></li>
+<li><a href="#show-more-data-during-assertions">Show more data during assertions</a></li>
+<li><a href="#show-the-full-request-and-response">Show the full request and response</a></li>
+<li><a href="#complex-data-assertions">Complex data assertions</a></li>
+<li><a href="#async-mode">Async mode</a></li>
+<li><a href="#run-tests-on-ci">Run tests on CI</a></li>
+<li><a href="#loop-through-data">Loop through data</a></li>
+<li><a href="#produce-detailed-report">Produce detailed report</a></li>
+<li><a href="#combine-api-and-web-testing">Combine API and Web testing</a></li>
+<li><a href="#final-thoughts">Final thoughts</a></li>
+<li><a href="#see-also">See also</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="adding-new-todos">Adding new todos</span></h2><p>Let&#39;s write a simple API test that resets all todos, adds a todo, then fetches all items. We will use the core Cypress command <a target="_blank" rel="noopener" href="https://on.cypress.io/request">cy.request</a> to make all HTTP calls</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/api.cy.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;TodoMVC API&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;adds one item&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// clear all existing backend data</span></span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; <span class="attr">todos</span>: [] &#125;)</span><br><span class="line">    <span class="comment">// confirm there are no todo items</span></span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">      .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">    <span class="comment">// add a new todo item</span></span><br><span class="line">    <span class="keyword">const</span> todo = &#123;</span><br><span class="line">      <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">      <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">      <span class="attr">id</span>: <span class="number">1</span>,</span><br><span class="line">    &#125;</span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>, todo)</span><br><span class="line">    <span class="comment">// confirm all todos now has a single item</span></span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">      .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;deep.equal&#x27;</span>, [todo])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The test passes. There is nothing to render in the Cypress application frame on the right, since we never did <code>cy.visit</code> in the test. Still, the Command Log on the left shows every API test command.</p>
+<p><img src="../images/use-cypress-for-api-testing/api1.png" alt="The passing API test"></p>
+<p>If we are using the Cypress interactive mode <code>cypress open</code> we can click on the <code>REQUEST</code> command to see the request and the response. For example, let&#39;s examine the <code>cy.request(&#39;POST&#39;, &#39;/todos&#39;, todo)</code> command</p>
+<p><img src="../images/use-cypress-for-api-testing/api2.png" alt="Inspect the new item sent by the test"></p>
+<p>When using the interactive <code>cypress open</code> mode you can inspect each call by clicking on the command.</p>
+<h2><span id="update-an-item">Update an item</span></h2><p>Once we know our backend API supports adding and fetching new items, let&#39;s confirm that we can complete an item.</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/api.cy.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;TodoMVC API&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;completes an item&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// clear all existing backend data</span></span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; <span class="attr">todos</span>: [] &#125;)</span><br><span class="line">    <span class="comment">// add a new todo item</span></span><br><span class="line">    <span class="keyword">const</span> todo = &#123;</span><br><span class="line">      <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">      <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">      <span class="attr">id</span>: <span class="number">1</span>,</span><br><span class="line">    &#125;</span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>, todo)</span><br><span class="line">    <span class="comment">// complete an item by patching the existing item</span></span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;PATCH&#x27;</span>, <span class="string">&#x27;/todos/1&#x27;</span>, &#123; <span class="attr">completed</span>: <span class="literal">true</span> &#125;)</span><br><span class="line">    <span class="comment">// confirm the item is now completed</span></span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">      .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;deep.equal&#x27;</span>, [</span><br><span class="line">        &#123;</span><br><span class="line">          ...todo,</span><br><span class="line">          <span class="attr">completed</span>: <span class="literal">true</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">      ])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/use-cypress-for-api-testing/complete.png" alt="Complete an item API test"></p>
+<h2><span id="delete-an-item">Delete an item</span></h2><p>Let&#39;s confirm that we can delete an item using an API call. We can take a shortcut and set the backend data using <code>POST /reset</code> instead of creating individual items via <code>POST /todos</code>. We know that adding items is working from the first test.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;TodoMVC API&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;deletes an item&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// set several todos at once</span></span><br><span class="line">    <span class="keyword">const</span> todos = [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">        <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">        <span class="attr">id</span>: <span class="number">1</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title</span>: <span class="string">&#x27;write another test&#x27;</span>,</span><br><span class="line">        <span class="attr">completed</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">id</span>: <span class="number">2</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    ]</span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; todos &#125;)</span><br><span class="line">    <span class="comment">// delete the first item</span></span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;DELETE&#x27;</span>, <span class="string">&#x27;/todos/1&#x27;</span>)</span><br><span class="line">    <span class="comment">// confirm the remaining items</span></span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">      .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;deep.equal&#x27;</span>, [todos[<span class="number">1</span>]])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/use-cypress-for-api-testing/delete.png" alt="Deleting an item via API works"></p>
+<h2><span id="show-more-data-during-assertions">Show more data during assertions</span></h2><p>In our tests we used the built-in Chai assertions like <code>deep.equal</code>. By default, these assertions truncate the data shown in the Command Log. Let&#39;s increase the truncation threshold to see more information.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// show more information in each assertion</span></span><br><span class="line">chai.<span class="property">config</span>.<span class="property">truncateThreshold</span> = <span class="number">300</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;TodoMVC API&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/use-cypress-for-api-testing/truncate.png" alt="Short objects are shown fully in the Chai assertions"></p>
+<h2><span id="show-the-full-request-and-response">Show the full request and response</span></h2><p>Since we have an empty web application frame on the right and want to see more information for each request, let&#39;s redirect the request &#x2F; response to the frame. I will use the <a target="_blank" rel="noopener" href="https://github.com/filiphric/cypress-plugin-api">cypress-plugin-api</a> plugin to give my API tests a nice UI.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://github.com/filiphric/cypress-plugin-api</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-plugin-api&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// show more information in each assertion</span></span><br><span class="line">chai.<span class="property">config</span>.<span class="property">truncateThreshold</span> = <span class="number">300</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;TodoMVC API&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;deletes an item&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// set several todos at once</span></span><br><span class="line">    <span class="keyword">const</span> todos = [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">        <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">        <span class="attr">id</span>: <span class="number">1</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">title</span>: <span class="string">&#x27;write another test&#x27;</span>,</span><br><span class="line">        <span class="attr">completed</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">id</span>: <span class="number">2</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    ]</span><br><span class="line">    cy.<span class="title function_">api</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; todos &#125;)</span><br><span class="line">    <span class="comment">// delete the first item</span></span><br><span class="line">    cy.<span class="title function_">api</span>(<span class="string">&#x27;DELETE&#x27;</span>, <span class="string">&#x27;/todos/1&#x27;</span>)</span><br><span class="line">    <span class="comment">// confirm the remaining items</span></span><br><span class="line">    cy.<span class="title function_">api</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">      .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;deep.equal&#x27;</span>, [todos[<span class="number">1</span>]])</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>We simply imported the plugin and used <code>cy.api</code> instead of <code>cy.request</code> to make the calls. The Cypress UI is now much nicer.</p>
+<p><img src="../images/use-cypress-for-api-testing/plugin.png" alt="cypress-plugin-api reflects each request and response in the web application frame"></p>
+<p>We can even combine <code>cy.request</code> and <code>cy.api</code> to only show the relevant test information. For example, we might not want to see the <code>POST /reset</code> calls while being interested in the other calls in the test:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;completes an item&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// clear all existing backend data</span></span><br><span class="line">  cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; <span class="attr">todos</span>: [] &#125;)</span><br><span class="line">  <span class="comment">// add a new todo item</span></span><br><span class="line">  <span class="keyword">const</span> todo = &#123;</span><br><span class="line">    <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">    <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">id</span>: <span class="number">1</span>,</span><br><span class="line">  &#125;</span><br><span class="line">  cy.<span class="title function_">api</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>, todo)</span><br><span class="line">  <span class="comment">// complete an item by patching the existing item</span></span><br><span class="line">  cy.<span class="title function_">api</span>(<span class="string">&#x27;PATCH&#x27;</span>, <span class="string">&#x27;/todos/1&#x27;</span>, &#123; <span class="attr">completed</span>: <span class="literal">true</span> &#125;)</span><br><span class="line">  <span class="comment">// confirm the item is now completed</span></span><br><span class="line">  cy.<span class="title function_">api</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;deep.equal&#x27;</span>, [</span><br><span class="line">      &#123;</span><br><span class="line">        ...todo,</span><br><span class="line">        <span class="attr">completed</span>: <span class="literal">true</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    ])</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/use-cypress-for-api-testing/combine.png" alt="Combine cy.request and cy.api commands"></p>
+<h2><span id="complex-data-assertions">Complex data assertions</span></h2><p>When creating a new item using <code>POST /todos</code> call, the app sends the item, and the server responds with the same item. If the sent item does not include the <code>id</code> property, the server will assign one. The server signals the success by returning status code 201. Let&#39;s confirm this.</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/api.cy.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;gets an id from the server&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; <span class="attr">todos</span>: [] &#125;)</span><br><span class="line">  <span class="keyword">const</span> todo = &#123;</span><br><span class="line">    <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">    <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">  &#125;</span><br><span class="line">  cy.<span class="title function_">api</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>, todo).<span class="title function_">then</span>(<span class="function">(<span class="params">response</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="title function_">expect</span>(response.<span class="property">status</span>, <span class="string">&#x27;status code&#x27;</span>).<span class="property">to</span>.<span class="title function_">equal</span>(<span class="number">201</span>)</span><br><span class="line">    <span class="comment">// we don&#x27;t know what id the server will assign</span></span><br><span class="line">    <span class="comment">// thus we cannot compare the whole response body</span></span><br><span class="line">    <span class="title function_">expect</span>(response.<span class="property">body</span>, <span class="string">&#x27;body&#x27;</span>).<span class="property">to</span>.<span class="property">deep</span>.<span class="title function_">include</span>(todo)</span><br><span class="line">    <span class="title function_">expect</span>(response.<span class="property">body</span>.<span class="property">id</span>, <span class="string">&#x27;id&#x27;</span>).<span class="property">to</span>.<span class="property">be</span>.<span class="title function_">a</span>(<span class="string">&#x27;number&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/use-cypress-for-api-testing/id.png" alt="The assigned id test"></p>
+<p>The test is becoming verbose, and the Command Log is getting noisy. Let&#39;s use <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cy-spok">cy-spok</a> plugin to make our assertions more powerful.</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/api.cy.ts</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://github.com/filiphric/cypress-plugin-api</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-plugin-api&#x27;</span></span><br><span class="line"><span class="comment">// https://github.com/bahmutov/cy-spok</span></span><br><span class="line"><span class="keyword">import</span> spok <span class="keyword">from</span> <span class="string">&#x27;cy-spok&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;gets an id from the server (cy-spok)&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; <span class="attr">todos</span>: [] &#125;)</span><br><span class="line">  <span class="keyword">const</span> todo = &#123;</span><br><span class="line">    <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">    <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">  &#125;</span><br><span class="line">  cy.<span class="title function_">api</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>, todo).<span class="title function_">should</span>(</span><br><span class="line">    <span class="title function_">spok</span>(&#123;</span><br><span class="line">      <span class="attr">status</span>: <span class="number">201</span>,</span><br><span class="line">      <span class="attr">body</span>: &#123;</span><br><span class="line">        ...todo,</span><br><span class="line">        <span class="attr">id</span>: spok.<span class="property">number</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    &#125;),</span><br><span class="line">  )</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Using a single <code>cy-spok</code> assertion we can match complex objects with nested properties and predicate checks.</p>
+<p><img src="../images/use-cypress-for-api-testing/spok.png" alt="The nice cy-spok assertions"></p>
+<h2><span id="async-mode">Async mode</span></h2><p>Often API tests get something from the server and use that piece of data to make new calls. For example, if we want to get the ID of the created item to delete it, we could write the following test</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;deletes the created item using its id&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; <span class="attr">todos</span>: [] &#125;)</span><br><span class="line">  <span class="keyword">const</span> todo = &#123;</span><br><span class="line">    <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">    <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">  &#125;</span><br><span class="line">  cy.<span class="title function_">api</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>, todo)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;body.id&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;be.a&#x27;</span>, <span class="string">&#x27;number&#x27;</span>)</span><br><span class="line">    <span class="comment">// any time we get something from the application</span></span><br><span class="line">    <span class="comment">// we need to &quot;pass it forward&quot; into the next command</span></span><br><span class="line">    .<span class="title function_">then</span>(<span class="function">(<span class="params">id</span>) =&gt;</span> &#123;</span><br><span class="line">      cy.<span class="title function_">api</span>(<span class="string">&#x27;DELETE&#x27;</span>, <span class="string">`/todos/<span class="subst">$&#123;id&#125;</span>`</span>)</span><br><span class="line">        .<span class="title function_">its</span>(<span class="string">&#x27;status&#x27;</span>)</span><br><span class="line">        .<span class="title function_">should</span>(<span class="string">&#x27;equal&#x27;</span>, <span class="number">200</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Anytime the test gets something from the application, it needs to pass it forward to the <code>cy.then(callback)</code> or to the next assertion. Some people are intimidated by such coding style; they miss <code>async / await</code> syntax. For them I wrote <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-await">cypress-await</a> plugin that allows you to use the <code>await</code> syntax with the Cypress command chains. Here is how we can rewrite the above test:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://github.com/filiphric/cypress-plugin-api</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-plugin-api&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;deletes the created item using its id (cypress-await)&#x27;</span>, <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">await</span> cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; <span class="attr">todos</span>: [] &#125;)</span><br><span class="line">  <span class="keyword">const</span> todo = &#123;</span><br><span class="line">    <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">    <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> id = <span class="keyword">await</span> cy</span><br><span class="line">    .<span class="title function_">api</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>, todo)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;body.id&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;be.a&#x27;</span>, <span class="string">&#x27;number&#x27;</span>)</span><br><span class="line">  <span class="keyword">await</span> cy.<span class="title function_">log</span>(<span class="string">`deleting todo <span class="subst">$&#123;id&#125;</span>`</span>)</span><br><span class="line">  <span class="keyword">await</span> cy</span><br><span class="line">    .<span class="title function_">api</span>(<span class="string">&#x27;DELETE&#x27;</span>, <span class="string">`/todos/<span class="subst">$&#123;id&#125;</span>`</span>)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;status&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;equal&#x27;</span>, <span class="number">200</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The test works the same, but it might be more intuitive to read.</p>
+<p><img src="../images/use-cypress-for-api-testing/async.png" alt="Using await in Cypress tests via cypress-await plugin"></p>
+<p><strong>Bonus:</strong> cypress-await plugin includes a sync mode which allows you to drop the verbose <code>await</code> in front of every <code>cy</code> command. The test runs the same and becomes simply:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// sync mode from cypress-await</span></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;deletes the created item using its id (cypress-await)&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, &#123; <span class="attr">todos</span>: [] &#125;)</span><br><span class="line">  <span class="keyword">const</span> todo = &#123;</span><br><span class="line">    <span class="attr">title</span>: <span class="string">&#x27;write a test&#x27;</span>,</span><br><span class="line">    <span class="attr">completed</span>: <span class="literal">false</span>,</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> id = cy</span><br><span class="line">    .<span class="title function_">api</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>, todo)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;body.id&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;be.a&#x27;</span>, <span class="string">&#x27;number&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">log</span>(<span class="string">`deleting todo <span class="subst">$&#123;id&#125;</span>`</span>)</span><br><span class="line">  cy.<span class="title function_">api</span>(<span class="string">&#x27;DELETE&#x27;</span>, <span class="string">`/todos/<span class="subst">$&#123;id&#125;</span>`</span>)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;status&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;equal&#x27;</span>, <span class="number">200</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h2><span id="run-tests-on-ci">Run tests on CI</span></h2><p>We want to run API tests on CI from day one. Let&#39;s use <a href="/blog/trying-github-actions/" title="GitHub Actions">GitHub Actions</a>. We can use <a target="_blank" rel="noopener" href="https://github.com/cypress-io/github-action">cypress-io&#x2F;github-action</a> to manage dependencies, caching, and running Cypress for us:</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/ci.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">ci</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">tests:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-22.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v4</span></span><br><span class="line">      <span class="comment"># Install NPM dependencies, cache them correctly</span></span><br><span class="line">      <span class="comment"># and run all Cypress tests</span></span><br><span class="line">      <span class="comment"># https://github.com/cypress-io/github-action</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">run</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v6</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="comment"># check the spec types</span></span><br><span class="line">          <span class="attr">build:</span> <span class="string">npm</span> <span class="string">run</span> <span class="string">lint</span></span><br><span class="line">          <span class="comment"># start the application before running Cypress</span></span><br><span class="line">          <span class="attr">start:</span> <span class="string">npm</span> <span class="string">start</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/use-cypress-for-api-testing/ci.png" alt="Running Cypress tests on GitHub Actions"></p>
+<p>Beautiful. Want even more power? Learn how to run tests in parallel using GitHub Actions in <a target="_blank" rel="noopener" href="https://youtu.be/jvBzNs0pRXU">this video</a>. In general, Cypress API tests running in the browser are slower than an equivalent Node-only API tests. But the debugging is faster, and on CI I can parallelize the tests using a one minute change; see <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-split">cypress-split</a> and <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-workflows">cypress-workflows</a>.</p>
+<h2><span id="loop-through-data">Loop through data</span></h2><p>Because Cypress queues up its commands, it is easy to iterate over collections. For example, let&#39;s see how we can delete each item one by one</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/delete.cy.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://github.com/filiphric/cypress-plugin-api</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-plugin-api&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// show more information in each assertion</span></span><br><span class="line">chai.<span class="property">config</span>.<span class="property">truncateThreshold</span> = <span class="number">300</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;TodoMVC API&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">beforeEach</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// load the fixture with four todos</span></span><br><span class="line">    cy.<span class="title function_">fixture</span>(<span class="string">&#x27;four-todos&#x27;</span>).<span class="title function_">as</span>(<span class="string">&#x27;data&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// we can access the fixture data using &quot;this.data&quot;</span></span><br><span class="line">  <span class="comment">// inside the &quot;it... function () &#123;&#125;&quot;</span></span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;deletes all items one by one&#x27;</span>, <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="title function_">expect</span>(<span class="variable language_">this</span>.<span class="property">data</span>, <span class="string">&#x27;loaded todos&#x27;</span>)</span><br><span class="line">      .<span class="property">to</span>.<span class="property">have</span>.<span class="title function_">property</span>(<span class="string">&#x27;todos&#x27;</span>)</span><br><span class="line">      .<span class="property">and</span>.<span class="property">have</span>.<span class="title function_">length</span>(<span class="number">4</span>)</span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, <span class="variable language_">this</span>.<span class="property">data</span>)</span><br><span class="line">    <span class="comment">// confirm there are four todo items</span></span><br><span class="line">    cy.<span class="title function_">api</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">      .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">    <span class="comment">// delete each item one by one</span></span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">data</span>.<span class="property">todos</span>.<span class="title function_">forEach</span>(<span class="function">(<span class="params">todo</span>) =&gt;</span> &#123;</span><br><span class="line">      cy.<span class="title function_">api</span>(<span class="string">&#x27;DELETE&#x27;</span>, <span class="string">`/todos/<span class="subst">$&#123;todo.id&#125;</span>`</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="comment">// there should be no todos left</span></span><br><span class="line">    cy.<span class="title function_">api</span>(<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;/todos&#x27;</span>)</span><br><span class="line">      .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The expression to delete each Todo item simply queues up 4 Cypress commands:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// delete each item one by one</span></span><br><span class="line"><span class="variable language_">this</span>.<span class="property">data</span>.<span class="property">todos</span>.<span class="title function_">forEach</span>(<span class="function">(<span class="params">todo</span>) =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">api</span>(<span class="string">&#x27;DELETE&#x27;</span>, <span class="string">`/todos/<span class="subst">$&#123;todo.id&#125;</span>`</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/use-cypress-for-api-testing/delete-all.png" alt="Deleting each todo one by one"></p>
+<h2><span id="produce-detailed-report">Produce detailed report</span></h2><p>Since API tests do not use the browser to show the web page, there is less information to go on when the test fails. We can produce detailed terminal log (stdout and even JSON) using the plugin <a target="_blank" rel="noopener" href="https://github.com/archfz/cypress-terminal-report">cypress-terminal-report</a>. Here is an example terminal report output for the above &quot;deletes all items one by one&quot; test produced.</p>
+<p><img src="../images/use-cypress-for-api-testing/terminal.png" alt="Terminal report for the API test"></p>
+<h2><span id="combine-api-and-web-testing">Combine API and Web testing</span></h2><p>Finally, a nice feature of Cypress API tests is how easy it is to combine them with the UI web tests. Let&#39;s see one such example. The example application reloads all todos every minute:</p>
+<figure class="highlight js"><figcaption><span>todomvc/app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// how would you test the periodic loading of todos?</span></span><br><span class="line"><span class="built_in">setInterval</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">$store</span>.<span class="title function_">dispatch</span>(<span class="string">&#x27;loadTodos&#x27;</span>)</span><br><span class="line">&#125;, <span class="number">60_000</span>)</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s write a test that <em>quickly</em> tests this feature. We will create the initial data using API calls, then visit the site and confirm the initial list is visible. Then we can delete an item using an API call, fast-forward the app clock by 1 minute, and confirm the web view has updated and shows N - 1 todos.</p>
+<figure class="highlight js"><figcaption><span>cypress/e2e/mixed-test.cy.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// show more information in each assertion</span></span><br><span class="line">chai.<span class="property">config</span>.<span class="property">truncateThreshold</span> = <span class="number">300</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;TodoMVC API&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;reloads the todos every minute&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    cy.<span class="title function_">fixture</span>(<span class="string">&#x27;four-todos&#x27;</span>).<span class="title function_">then</span>(<span class="function">(<span class="params">data</span>) =&gt;</span> &#123;</span><br><span class="line">      cy.<span class="title function_">request</span>(<span class="string">&#x27;POST&#x27;</span>, <span class="string">&#x27;/reset&#x27;</span>, data)</span><br><span class="line">    &#125;)</span><br><span class="line">    cy.<span class="title function_">clock</span>()</span><br><span class="line">    cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">get</span>(<span class="string">&#x27;.todo-list li&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">    <span class="comment">// delete the first todo</span></span><br><span class="line">    <span class="comment">// use cy.request and not cy.api to avoid</span></span><br><span class="line">    <span class="comment">// overwriting the web application</span></span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;DELETE&#x27;</span>, <span class="string">&#x27;/todos/101&#x27;</span>)</span><br><span class="line">    <span class="comment">// advance the clock by 1 minute</span></span><br><span class="line">    cy.<span class="title function_">tick</span>(<span class="number">60_000</span>)</span><br><span class="line">    <span class="comment">// confirm the new data has loaded</span></span><br><span class="line">    cy.<span class="title function_">get</span>(<span class="string">&#x27;.todo-list li&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">3</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>I am using <a target="_blank" rel="noopener" href="https://on.cypress.io/clock">cy.clock</a> and <a target="_blank" rel="noopener" href="https://on.cypress.io/tick">cy.tick</a> commands to control the web application&#39;s clock. In between, we are deleting the data using the <code>cy.request(&#39;DELETE&#39;, &#39;/todos/101&#39;)</code> command.</p>
+<p><img src="../images/use-cypress-for-api-testing/clock.png" alt="Test time-depending app features by controlling the clock"></p>
+<p>For more clock examples, see <a href="https://glebbahmutov.com/cypress-examples/commands/spies-stubs-clocks.html">Spies, Stubs &amp; Clocks</a>.</p>
+<h2><span id="final-thoughts">Final thoughts</span></h2><p>Cypress can be a powerful API testing tool. It has good API, assertions, and a visual interactive test runner great for seeing the test run. It also can be extended using open source plugins to provide even better API testing experience.</p>
+<h2><span id="see-also">See also</span></h2><ul>
+<li>🎓 Course <a target="_blank" rel="noopener" href="https://cypress.tips/courses/cypress-plugins">Cypress Plugins</a> has lessons covering <code>cy-api</code>, <code>cy-spok</code>, <code>cypress-plugin-api</code>, and lots of other plugins</li>
+<li>🎓 Course <a target="_blank" rel="noopener" href="https://cypress.tips/courses/network-testing">Cypress Network Testing Exercises</a> teaches advanced network testing through hands-on exercises</li>
+<li><a href="/blog/test-using-apis/" title="You Should Test More Using APIs">You Should Test More Using APIs</a></li>
+<li><a href="/blog/ui-to-api-to-app-actions/" title="Change E2E Tests From UI To API To App Actions">Change E2E Tests From UI To API To App Actions</a></li>
+<li><a href="/blog/api-testing-with-server-logs/" title="Black box API testing with server logs">Black box API testing with server logs</a></li>
+<li><a href="/blog/realworld-app-action/" title="How to write end-to-end test using app and api actions">How to write end-to-end test using app and api actions</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/use-cypress-for-api-testing/" data-id="clxj6w7fx00lebjn776j12ee9" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/use-cypress-for-api-testing/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../quick-changed-specs/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Quickly Run The Changed Specs on GitHub Actions
+        
+      </div>
+    </a>
+  
+  
+    <a href="../flakiness-example/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Cypress Flakiness Examples</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/use-cypress-for-api-testing/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

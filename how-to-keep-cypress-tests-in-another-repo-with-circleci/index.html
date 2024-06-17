@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>How to Keep Cypress Tests in Another Repo While Using CircleCI | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Imagine you are developing a web application and deploying it to preview environments using Vercel. How do you run the tests that reside in a separate repo? This blog post teaches you how to trigger C">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to Keep Cypress Tests in Another Repo While Using CircleCI">
+<meta property="og:url" content="https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Imagine you are developing a web application and deploying it to preview environments using Vercel. How do you run the tests that reside in a separate repo? This blog post teaches you how to trigger C">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/vercel-comment.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/finished.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/workflow.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/test-artifacts.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/trigger-tests.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/pipelines.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/info-13.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/url-13.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/deployment.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/unique.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/skip-message.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/skip-workflow.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/recorded.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/repo-access.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/gh-integration.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/commit-check.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/failed-status-checks.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/comment.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/thumbnail-to-dashboard.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/rerun-from-failed.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/fixed-comment.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/test-history.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/status.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/common1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/common2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/common3.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/common-status-branch-rule.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/separate-circleci/baseUrl.png">
+<meta property="article:published_time" content="2021-07-03T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.533Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta property="article:tag" content="circle">
+<meta property="article:tag" content="github">
+<meta property="article:tag" content="ci">
+<meta property="article:tag" content="vercel">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/separate-circleci/vercel-comment.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-how-to-keep-cypress-tests-in-another-repo-with-circleci" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2021-07-03T04:00:00.000Z" itemprop="datePublished">Jul 3 2021</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      How to Keep Cypress Tests in Another Repo While Using CircleCI
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to keep the tests in sync with the features, while keeping them in separate repositories and running CircleCI workflows.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Imagine you are developing a web application and deploying it to preview environments using <a target="_blank" rel="noopener" href="https://vercel.com/">Vercel</a>. How do you run the tests that reside in a separate repo? This blog post teaches you how to trigger CircleCI workflows after deployment.</p>
+<p><strong>Note:</strong> I have written a similar blog post <a href="/blog/how-to-keep-cypress-tests-in-another-repo/" title="How to Keep Cypress Tests in Another Repo While Using GitHub Actions">How to Keep Cypress Tests in Another Repo While Using GitHub Actions</a> that shows the solution when using Netlify and GitHub Actions.</p>
+<blockquote class="pullquote"><p>🎁 You can find the example application in the repository <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-no-tests-vercel">bahmutov&#x2F;todomvc-no-tests-vercel</a> and its end-to-end tests in the repository <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-tests-circleci">bahmutov&#x2F;todomvc-tests-circleci</a>. You can see the deployed application at <a target="_blank" rel="noopener" href="https://todomvc-no-tests-vercel.vercel.app/">https://todomvc-no-tests-vercel.vercel.app/</a> and see CircleCI workflows at <a target="_blank" rel="noopener" href="https://app.circleci.com/pipelines/github/bahmutov/todomvc-tests-circleci">https://app.circleci.com/pipelines/github/bahmutov/todomvc-tests-circleci</a>. You can find the recorded tests on Cypress Dashboard <a target="_blank" rel="noopener" href="https://dashboard.cypress.io/projects/15cjtg/runs">here</a>.</p>
+</blockquote>
+
+<!-- toc -->
+
+<ul>
+<li><a href="#the-application">The application</a></li>
+<li><a href="#the-tests">The tests</a></li>
+<li><a href="#the-tests-workflow">The tests workflow</a></li>
+<li><a href="#trigger-circleci-pipeline">Trigger CircleCI pipeline</a></li>
+<li><a href="#trigger-the-tests-on-the-different-branch">Trigger the tests on the different branch</a></li>
+<li><a href="#shortcomings">Shortcomings</a></li>
+<li><a href="#the-deployment-event">The deployment event</a></li>
+<li><a href="#merging-the-pull-requests">Merging the pull requests</a></li>
+<li><a href="#the-remaining-problem">The remaining problem</a><ul>
+<li><a href="#workaround">Workaround</a></li>
+</ul>
+</li>
+<li><a href="#update-1-record-tests-on-cypress-dashboard">Update 1: record tests on Cypress Dashboard</a></li>
+<li><a href="#update-2-add-the-cypress-github-integration">Update 2: add the Cypress GitHub integration</a></li>
+<li><a href="#update-3-trigger-the-circleci-pipeline-correctly">Update 3: trigger the CircleCI pipeline correctly</a></li>
+<li><a href="#update-4-the-downsides">Update 4: The downsides</a></li>
+<li><a href="#update-5-github-commit-status">Update 5: GitHub commit status</a></li>
+<li><a href="#update-6-common-github-commit-status">Update 6: Common GitHub commit status</a></li>
+<li><a href="#update-7-specify-baseurl-in-the-pull-request-text">Update 7: specify baseUrl in the pull request text</a></li>
+<li><a href="#update-8-set-cypress-environment-variables">Update 8: set Cypress environment variables</a></li>
+<li><a href="#update-9-checkbox-to-skip-running-all-tests">Update 9: checkbox to skip running all tests</a></li>
+<li><a href="#see-also">See also</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="the-application">The application</span></h2><p>Every pull request opened in the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-no-tests-vercel">bahmutov&#x2F;todomvc-no-tests-vercel</a> is automatically deployed to Vercel at the URL that follows the pattern</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://$&#123;VERCEL_PROJECT_NAME&#125;-git-$&#123;GITHUB_HEAD_REF&#125;-$&#123;VERCEL_TEAM_NAME&#125;.vercel.app/</span><br></pre></td></tr></table></figure>
+
+<p>For example, <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-no-tests-vercel/pull/3">pull request #3</a> from branch named <code>pr3</code> shows the following Vercel comment after the deploy:</p>
+<p><img src="../images/separate-circleci/vercel-comment.png" alt="Vercel deployment comment"></p>
+<h2><span id="the-tests">The tests</span></h2><p>The developer would normally run the end-to-end tests against the application running locally. Thus the <code>baseUrl</code> in the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-tests-circleci/blob/main/cypress.json">cypress.json</a> file points at the local app by default.</p>
+<figure class="highlight json"><figcaption><span>cypress.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;baseUrl&quot;</span><span class="punctuation">:</span> <span class="string">&quot;http://localhost:3000&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;fixturesFolder&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;supportFile&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;pluginsFile&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>I wrote a simple end-to-end test that you can find in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-tests-circleci/tree/main/cypress/integration">cypress&#x2F;integration</a> folder.</p>
+<figure class="highlight js"><figcaption><span>spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;works&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  <span class="comment">// application starts with 3 todos</span></span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">3</span>)</span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;[data-cy=new-todo]&#x27;</span>).<span class="title function_">type</span>(<span class="string">&#x27;Add tests!&#123;enter&#125;&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;.todo&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">4</span>)</span><br><span class="line">    .<span class="title function_">eq</span>(<span class="number">3</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;include.text&#x27;</span>, <span class="string">&#x27;Add tests!&#x27;</span>)</span><br><span class="line"></span><br><span class="line">  cy.<span class="title function_">contains</span>(<span class="string">&#x27;.todo&#x27;</span>, <span class="string">&#x27;Learn about React&#x27;</span>)</span><br><span class="line">    .<span class="title function_">contains</span>(<span class="string">&#x27;[data-cy=complete]&#x27;</span>, <span class="string">&#x27;Complete&#x27;</span>)</span><br><span class="line">    .<span class="title function_">click</span>()</span><br><span class="line">  cy.<span class="title function_">contains</span>(<span class="string">&#x27;.todo&#x27;</span>, <span class="string">&#x27;Learn about React&#x27;</span>).<span class="title function_">find</span>(<span class="string">&#x27;[data-cy=remove]&#x27;</span>).<span class="title function_">click</span>()</span><br><span class="line">  cy.<span class="title function_">get</span>(<span class="string">&#x27;.todo&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length&#x27;</span>, <span class="number">3</span>)</span><br><span class="line">  cy.<span class="title function_">contains</span>(<span class="string">&#x27;.todo&#x27;</span>, <span class="string">&#x27;Learn about React&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;not.exist&#x27;</span>)</span><br><span class="line"></span><br><span class="line">  cy.<span class="title function_">screenshot</span>(<span class="string">&#x27;finished&#x27;</span>, &#123; <span class="attr">capture</span>: <span class="string">&#x27;runner&#x27;</span> &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/separate-circleci/finished.png" alt="The screenshot finished.png"></p>
+<h2><span id="the-tests-workflow">The tests workflow</span></h2><p>We want to run our tests on CircleCI using <a target="_blank" rel="noopener" href="https://github.com/cypress-io/circleci-orb">Cypress CircleCI Orb</a> and we want to trigger the pipeline using <a target="_blank" rel="noopener" href="https://circleci.com/docs/api/v2/#operation/triggerPipeline">CircleCI API</a>. To pass the URL to test, we can use pipeline parameters. The workflow file is shown below. I like having a separate &quot;info&quot; just just to print the received pipeline parameters.</p>
+<figure class="highlight yml"><figcaption><span>.circleci/config.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># to use orbs, must use version &gt;= 2.1</span></span><br><span class="line"><span class="attr">version:</span> <span class="number">2.1</span></span><br><span class="line"><span class="attr">orbs:</span></span><br><span class="line">  <span class="comment"># import Cypress orb by specifying an exact version x.y.z</span></span><br><span class="line">  <span class="comment"># or the latest version 1.x.x using &quot;@1&quot; syntax</span></span><br><span class="line">  <span class="comment"># https://github.com/cypress-io/circleci-orb</span></span><br><span class="line">  <span class="attr">cypress:</span> <span class="string">cypress-io/cypress@1</span></span><br><span class="line"></span><br><span class="line"><span class="attr">parameters:</span></span><br><span class="line">  <span class="attr">TEST_BRANCH:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">    <span class="attr">default:</span> <span class="string">&#x27;main&#x27;</span></span><br><span class="line">  <span class="comment"># by default, test the production deployment</span></span><br><span class="line">  <span class="attr">TEST_URL:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">    <span class="attr">default:</span> <span class="string">&#x27;https://todomvc-no-tests-vercel.vercel.app/&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">info:</span></span><br><span class="line">    <span class="attr">machine:</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">ubuntu-2004:202104-01</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">print</span> <span class="string">variables</span></span><br><span class="line">          <span class="attr">command:</span> <span class="string">|</span></span><br><span class="line"><span class="string">            echo &quot;TEST_BRANCH is &lt;&lt; pipeline.parameters.TEST_BRANCH &gt;&gt;&quot;</span></span><br><span class="line"><span class="string">            echo &quot;TEST_URL is &lt;&lt; pipeline.parameters.TEST_URL &gt;&gt;&quot;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">  <span class="comment"># preview deploys might take a little bit to be ready</span></span><br><span class="line">  <span class="comment"># this job pings the TEST_URL to check if the deployment has finished</span></span><br><span class="line">  <span class="attr">wait-for-deploy:</span></span><br><span class="line">    <span class="attr">machine:</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">ubuntu-2004:202104-01</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="comment"># we don&#x27;t really need to check TEST_URL,</span></span><br><span class="line">      <span class="comment"># since we only run the entire workflow when it is present</span></span><br><span class="line">      <span class="comment"># but I like to remember how to use the Circle halt command</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">unless:</span></span><br><span class="line">          <span class="attr">condition:</span> <span class="string">&lt;&lt;</span> <span class="string">pipeline.parameters.TEST_URL</span> <span class="string">&gt;&gt;</span></span><br><span class="line">          <span class="attr">steps:</span></span><br><span class="line">            <span class="comment"># https://circleci.com/docs/2.0/configuration-reference/#ending-a-job-from-within-a-step</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">run:</span> <span class="string">circleci-agent</span> <span class="string">step</span> <span class="string">halt</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">wait</span> <span class="string">for</span> <span class="string">deployment</span></span><br><span class="line">          <span class="attr">command:</span> <span class="string">|</span></span><br><span class="line"><span class="string">            echo &quot;Using wait-on to check if the URL &lt;&lt; pipeline.parameters.TEST_URL &gt;&gt; responds&quot;</span></span><br><span class="line"><span class="string">            echo &quot;See https://www.npmjs.com/package/wait-on&quot;</span></span><br><span class="line"><span class="string">            npx wait-on --verbose \</span></span><br><span class="line"><span class="string">              --interval 10000 --timeout 60000 \</span></span><br><span class="line"><span class="string">              &lt;&lt; pipeline.parameters.TEST_URL &gt;&gt;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="attr">workflows:</span></span><br><span class="line">  <span class="attr">e2e:</span></span><br><span class="line">    <span class="comment"># only run the workflow when TEST_URL is set</span></span><br><span class="line">    <span class="attr">when:</span> <span class="string">&lt;&lt;</span> <span class="string">pipeline.parameters.TEST_URL</span> <span class="string">&gt;&gt;</span></span><br><span class="line">    <span class="attr">jobs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">info</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">wait-for-deploy</span></span><br></pre></td></tr></table></figure>
+
+<p>I am including a job &quot;wait-for-deploy&quot; to ping the <code>TEST_URL</code> every 10 seconds until it responds. When this job finishes successfully, the preview deploy is ready to be tested. Let&#39;s add another job to the workflow to run after <code>wait-for-deploy</code> is done.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">info</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">wait-for-deploy</span></span><br><span class="line"></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">cypress/run:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">E2E</span> <span class="string">tests</span></span><br><span class="line">      <span class="attr">requires:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">wait-for-deploy</span></span><br><span class="line">      <span class="attr">config:</span> <span class="string">&#x27;baseUrl=&lt;&lt; pipeline.parameters.TEST_URL &gt;&gt;&#x27;</span></span><br><span class="line">      <span class="comment"># save videos and screenshots on Circle as artifacts</span></span><br><span class="line">      <span class="attr">store_artifacts:</span> <span class="literal">true</span></span><br><span class="line">      <span class="comment"># we do not need to save the workspace after the tests are done</span></span><br><span class="line">      <span class="attr">no-workspace:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>We are using the job <code>run</code> defined in the imported orb <a target="_blank" rel="noopener" href="https://github.com/cypress-io/circleci-orb"><code>cypress: cypress-io/cypress@1</code></a> and control it via parameters like <code>config</code> and <code>store_artifacts</code>. Let&#39;s run this workflow on CircleCI.</p>
+<p><img src="../images/separate-circleci/workflow.png" alt="The finished CircleCI workflow"></p>
+<p>You can click on the &quot;Cypress E2E tests&quot; job to see the stored test artifacts: movies and screenshots.</p>
+<p><img src="../images/separate-circleci/test-artifacts.png" alt="The stored test artifacts"></p>
+<p><strong>Tip:</strong> while storing test artifacts is possible, <a target="_blank" rel="noopener" href="https://www.cypress.io/dashboard/">Cypress Dashboard</a> does a much better job showing them.</p>
+<p><strong>Tip 2:</strong> it is easy to mess up YML CI configuration syntax. Luckily, you can use <a target="_blank" rel="noopener" href="https://circleci.com/docs/2.0/local-cli/">CircleCI CLI</a> utility to validate the config file syntax before pushing the code to the remote repository.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ circleci config validate .circleci/config.yml</span><br><span class="line">Error: Error calling workflow: <span class="string">&#x27;e2e&#x27;</span></span><br><span class="line">Error calling job: <span class="string">&#x27;test&#x27;</span></span><br><span class="line">Unknown variable(s): TEST_BRANCH</span><br><span class="line"><span class="comment"># fix the syntax error and verify again</span></span><br><span class="line">$ circleci config validate .circleci/config.yml</span><br><span class="line">Config file at .circleci/config.yml is valid.</span><br></pre></td></tr></table></figure>
+
+<h2><span id="trigger-circleci-pipeline">Trigger CircleCI pipeline</span></h2><p>Let&#39;s get back to the application repository. We need to trigger the testing pipeline. The first solution is to use a GitHub Actions workflow.</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/pr.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># every time we open a pull request, or a commit is pushed to it</span></span><br><span class="line"><span class="comment"># Vercel deploys the site to a preview environment</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">pull</span></span><br><span class="line"><span class="attr">on:</span> <span class="string">pull_request</span></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">trigger-tests:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="comment"># trigger CircleCI pipeline to run E2E tests</span></span><br><span class="line">      <span class="comment"># https://circleci.com/docs/api/v2/#operation/triggerPipeline</span></span><br><span class="line"></span><br><span class="line">      <span class="comment"># the preview URL follows the format:</span></span><br><span class="line">      <span class="comment"># https://&lt;project name&gt;-git-&lt;branch name&gt;-&lt;team name&gt;.vercel.app/</span></span><br><span class="line">      <span class="comment"># https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Trigger</span> <span class="string">CircleCI</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">          export VERCEL_PROJECT_NAME=todomvc-no-tests-vercel</span></span><br><span class="line"><span class="string">          export VERCEL_TEAM_NAME=gleb-bahmutov</span></span><br><span class="line"><span class="string">          export PREVIEW_URL=https://$&#123;VERCEL_PROJECT_NAME&#125;-git-$&#123;GITHUB_HEAD_REF&#125;-$&#123;VERCEL_TEAM_NAME&#125;.vercel.app/</span></span><br><span class="line"><span class="string">          echo &quot;Vercel deployment URL is $&#123;PREVIEW_URL&#125;&quot;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">          <span class="comment"># --silent option to not print request progress</span></span><br><span class="line">          <span class="string">curl</span> <span class="string">-u</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.CIRCLE_CI_API_TOKEN</span> <span class="string">&#125;&#125;:</span> <span class="string">\</span></span><br><span class="line">            <span class="string">--silent</span> <span class="string">\</span></span><br><span class="line">            <span class="string">--data</span> <span class="string">parameters[TEST_BRANCH]=$&#123;GITHUB_HEAD_REF&#125;</span> <span class="string">\</span></span><br><span class="line">            <span class="string">--data</span> <span class="string">parameters[TEST_URL]=$&#123;PREVIEW_URL&#125;</span> <span class="string">\</span></span><br><span class="line">            <span class="string">https://circleci.com/api/v2/project/gh/bahmutov/todomvc-tests-circleci/pipeline</span></span><br></pre></td></tr></table></figure>
+
+<p>We will need a project or a personal CircleCI API token to trigger the pipeline. We can store it privately using GitHub Actions secrets tab. The <code>parameters</code> fields will be set as pipeline params on CircleCI. We are passing the current branch name and Vercel PR preview URL we have formed ourselves.</p>
+<p><img src="../images/separate-circleci/trigger-tests.png" alt="Trigger CircleCI pipeline from GitHub Actions"></p>
+<p>The trigger works. We can look at the list of pipelines to see the pipeline #13. The triggered pipelines do not have a commit message.</p>
+<p><img src="../images/separate-circleci/pipelines.png" alt="Pipeline #13 on CircleCI"></p>
+<p>The <code>info</code> job shows the parameters passed from GitHub.</p>
+<p><img src="../images/separate-circleci/info-13.png" alt="Pipeline parameters printed by the &quot;info&quot; job"></p>
+<p>The screenshot image in the test artifacts in the &quot;Cypress E2E tests&quot; job shows the preview URL was tested.</p>
+<p><img src="../images/separate-circleci/url-13.png" alt="Cypress tests ran against the preview environment"></p>
+<h2><span id="trigger-the-tests-on-the-different-branch">Trigger the tests on the different branch</span></h2><p>When developing the application feature, the programmer probably has updated or new tests in the corresponding branch in the test repo. Thus when testing the pull request against the branch <code>feature-X</code> we want to check out a branch with the same name from the test repo before running tests. Here is how we can do this via reusable CircleCI commands and Cypress Orb <code>post-checkout</code> parameter:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># to use orbs, must use version &gt;= 2.1</span></span><br><span class="line"><span class="attr">version:</span> <span class="number">2.1</span></span><br><span class="line"><span class="attr">orbs:</span></span><br><span class="line">  <span class="comment"># import Cypress orb by specifying an exact version x.y.z</span></span><br><span class="line">  <span class="comment"># or the latest version 1.x.x using &quot;@1&quot; syntax</span></span><br><span class="line">  <span class="attr">cypress:</span> <span class="string">cypress-io/cypress@1</span></span><br><span class="line"></span><br><span class="line"><span class="attr">parameters:</span></span><br><span class="line">  <span class="comment"># by default test everything using the current default branch</span></span><br><span class="line">  <span class="comment"># but if the pipeline is triggered via API, you can pass the branch name</span></span><br><span class="line">  <span class="comment"># to check out and run tests from.</span></span><br><span class="line">  <span class="attr">TEST_BRANCH:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">    <span class="attr">default:</span> <span class="string">&#x27;main&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># https://circleci.com/docs/2.0/reusing-config/#authoring-reusable-commands</span></span><br><span class="line"><span class="attr">commands:</span></span><br><span class="line">  <span class="attr">switch_branch:</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">|</span></span><br><span class="line"><span class="string">      Changes the current branch to the latest commit on the specific branch.</span></span><br><span class="line"><span class="string">      NOTE: if the branch does not exist, does nothing.</span></span><br><span class="line"><span class="string"></span>    <span class="attr">parameters:</span></span><br><span class="line">      <span class="attr">BRANCH_NAME:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">        <span class="attr">default:</span> <span class="string">&#x27;&#x27;</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">when:</span></span><br><span class="line">          <span class="attr">condition:</span> <span class="string">&lt;&lt;</span> <span class="string">parameters.BRANCH_NAME</span> <span class="string">&gt;&gt;</span></span><br><span class="line">          <span class="attr">steps:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">run:</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">Checkout</span> <span class="string">branch</span> <span class="string">&lt;&lt;</span> <span class="string">parameters.BRANCH_NAME</span> <span class="string">&gt;&gt;</span></span><br><span class="line">              <span class="attr">command:</span> <span class="string">|</span></span><br><span class="line"><span class="string">                echo &quot;Switching to branch &lt;&lt; parameters.BRANCH_NAME &gt;&gt; if it exists&quot;</span></span><br><span class="line"><span class="string">                git checkout &lt;&lt; parameters.BRANCH_NAME &gt;&gt; || true</span></span><br><span class="line"><span class="string">                git pull origin &lt;&lt; parameters.BRANCH_NAME &gt;&gt; || true</span></span><br><span class="line"><span class="string"></span>  <span class="attr">print_git:</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">|</span></span><br><span class="line"><span class="string">      Prints the current git branch and the commit hash.</span></span><br><span class="line"><span class="string"></span>    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">Print</span> <span class="string">current</span> <span class="string">Git</span> <span class="string">info</span></span><br><span class="line">          <span class="comment"># looks like Cypress default executor does not have</span></span><br><span class="line">          <span class="comment"># a very recent Git version, thus we cannot use &quot;--show-current&quot;</span></span><br><span class="line">          <span class="attr">command:</span> <span class="string">|</span></span><br><span class="line"><span class="string">            echo &quot;current branch is: $(git branch -a)&quot;</span></span><br><span class="line"><span class="string">            echo &quot;current commit is: $(git rev-parse --short HEAD)&quot;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="attr">workflows:</span></span><br><span class="line">  <span class="attr">e2e:</span></span><br><span class="line">    <span class="attr">jobs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">cypress/run:</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">E2E</span> <span class="string">tests</span></span><br><span class="line">          <span class="comment"># switch to the test branch before installing and running tests</span></span><br><span class="line">          <span class="attr">post-checkout:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">switch_branch:</span></span><br><span class="line">                <span class="attr">BRANCH_NAME:</span> <span class="string">&lt;&lt;</span> <span class="string">pipeline.parameters.TEST_BRANCH</span> <span class="string">&gt;&gt;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">print_git</span></span><br><span class="line">          <span class="comment"># we do not need to keep the workspace around</span></span><br><span class="line">          <span class="comment"># since there are no other jobs that depend on it</span></span><br><span class="line">          <span class="attr">no-workspace:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Note:</strong> the above fragment comes from the repository <a target="_blank" rel="noopener" href="https://github.com/bahmutov/circleci-checkout-experiment">bahmutov&#x2F;circleci-checkout-experiment</a> where I experimented with CircleCI to ensure this specific way of running tests from the test branch works.</p>
+<h2><span id="shortcomings">Shortcomings</span></h2><p>The approach to testing the preview deployments described above works, but has a bad drawback. It tests the <em>branch</em> preview URL, and not the individual deploys. Imagine the pull request has several commits, each triggering a test run. Imagine that building and deploying the preview URL takes 5 minutes, while the tests only take 1 minute. The sequence of events can be see in the table below.</p>
+<table>
+<thead>
+<tr>
+<th>wall clock</th>
+<th>event</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>00:00</td>
+<td>very first deploy to the branch &quot;my-feature&quot; with commit A</td>
+</tr>
+<tr>
+<td>00:01</td>
+<td>open pull request &quot;merge-my-feature&quot; from branch &quot;my-feature&quot;</td>
+</tr>
+<tr>
+<td>00:01</td>
+<td>Vercel starts building and deploying &quot;<a target="_blank" rel="noopener" href="https://merge-my-feature/">https://merge-my-feature</a>...&quot; preview</td>
+</tr>
+<tr>
+<td>00:01</td>
+<td>GitHub Actions trigger CircleCI pipeline with <code>TEST_URL=https://merge-my-feature...</code></td>
+</tr>
+<tr>
+<td>00:01</td>
+<td>Job <code>wait-for-deploy</code> starts pinging &quot;<a target="_blank" rel="noopener" href="https://merge-my-feature/">https://merge-my-feature</a>...&quot; url</td>
+</tr>
+<tr>
+<td>00:06</td>
+<td>Vercel deploys &quot;<a target="_blank" rel="noopener" href="https://merge-my-feature/">https://merge-my-feature</a>...&quot; url</td>
+</tr>
+<tr>
+<td>00:06</td>
+<td>Job <code>wait-for-deploy</code> finishes after receiving 200 response from &quot;<a target="_blank" rel="noopener" href="https://merge-my-feature/">https://merge-my-feature</a>...&quot; url</td>
+</tr>
+<tr>
+<td>00:06</td>
+<td>Job <code>Cypress E2E tests</code> runs tests against the &quot;<a target="_blank" rel="noopener" href="https://merge-my-feature/">https://merge-my-feature</a>...&quot; url</td>
+</tr>
+<tr>
+<td>00:10</td>
+<td>user makes another push to the branch &quot;my-feature&quot; with commit B</td>
+</tr>
+<tr>
+<td>00:10</td>
+<td>Vercel starts building and deploying &quot;<a target="_blank" rel="noopener" href="https://merge-my-feature/">https://merge-my-feature</a>...&quot; preview</td>
+</tr>
+<tr>
+<td>00:10</td>
+<td>GitHub Actions trigger CircleCI pipeline with <code>TEST_URL=https://merge-my-feature...</code></td>
+</tr>
+<tr>
+<td>00:10</td>
+<td>Job <code>wait-for-deploy</code> starts pinging &quot;<a target="_blank" rel="noopener" href="https://merge-my-feature/">https://merge-my-feature</a>...&quot; url.</td>
+</tr>
+<tr>
+<td>00:10</td>
+<td>Job <code>wait-for-deploy</code> finishes almost immediately because the url responds. The preview still has commit A code.</td>
+</tr>
+<tr>
+<td>00:10</td>
+<td>Job <code>Cypress E2E tests</code> runs tests against the &quot;<a target="_blank" rel="noopener" href="https://merge-my-feature/">https://merge-my-feature</a>...&quot; url</td>
+</tr>
+<tr>
+<td>00:16</td>
+<td>Vercel deploys &quot;<a target="_blank" rel="noopener" href="https://merge-my-feature/">https://merge-my-feature</a>...&quot; url, but nothing tests the deployed commit B code</td>
+</tr>
+</tbody></table>
+<p>If we trigger the CircleCI pipeline <em>immediately</em> from GitHub Actions, then the second commit will trigger running the tests. The tests will start quickly because the job <code>wait-for-deploy</code> hits the already deployed <em>branch</em> preview URL, the tests pass. Then the Vercel preview happens - and it never gets tested!</p>
+<p>Thus we need something better - we need to trigger the CircleCI pipeline <em>after</em> Vercel successfully deploys.</p>
+<h2><span id="the-deployment-event">The deployment event</span></h2><p>Luckily, Vercel GitHub integration delivers a <code>deployment_status</code> event as I described in <a href="/blog/develop-preview-test/" title="Test the Preview Vercel Deploys">Test the Preview Vercel Deploys</a>. Let&#39;s first look at the events delivered by Vercel to GitHub Actions.</p>
+<figure class="highlight yml"><figcaption><span>info.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># print info from deployment events sent by Vercel</span></span><br><span class="line"><span class="comment"># https://glebbahmutov.com/blog/develop-preview-test/</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">info</span></span><br><span class="line"><span class="comment"># https://docs.github.com/en/actions/reference/events-that-trigger-workflows</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">deployment</span>, <span class="string">deployment_status</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">show-event:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Dump</span> <span class="string">GitHub</span> <span class="string">context</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="attr">GITHUB_CONTEXT:</span> <span class="string">$&#123;&#123;</span> <span class="string">toJson(github)</span> <span class="string">&#125;&#125;</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">echo</span> <span class="string">&quot;$GITHUB_CONTEXT&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>The <code>deployment_status</code> event is delivered twice: first with the status <code>pending</code>, then with the status <code>success</code>. The event also has the unique URL of that deploy - because <a href="/blog/immutable-deploys-with-data-and-testing/" title="Vercel does immutable deploys">Vercel does immutable deploys</a>.</p>
+<p><img src="../images/separate-circleci/deployment.png" alt="The deployment_status event has immutable deployment URL"></p>
+<p>Thus we can trigger the CircleCI pipelines using a unique URL after the deployment has finished, see <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-no-tests-vercel/blob/main/.github/workflows/deploy.yml">deploy.yml</a></p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/deploy.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">deploy</span></span><br><span class="line"><span class="attr">on:</span> <span class="string">deployment_status</span></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">trigger-tests-after-deploy:</span></span><br><span class="line">    <span class="comment"># only runs this job on successful deploy</span></span><br><span class="line">    <span class="comment"># https://glebbahmutov.com/blog/develop-preview-test/</span></span><br><span class="line">    <span class="attr">if:</span> <span class="string">github.event.deployment_status.state</span> <span class="string">==</span> <span class="string">&#x27;success&#x27;</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="comment"># trigger CircleCI pipeline to run E2E tests</span></span><br><span class="line">      <span class="comment"># https://circleci.com/docs/api/v2/#operation/triggerPipeline</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Trigger</span> <span class="string">CircleCI</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">          echo &quot;Vercel unique deployment URL is $&#123;&#123; github.event.deployment_status.target_url &#125;&#125;&quot;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">          <span class="comment"># --silent option to not print request progress</span></span><br><span class="line">          <span class="string">curl</span> <span class="string">-u</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.CIRCLE_CI_API_TOKEN</span> <span class="string">&#125;&#125;:</span> <span class="string">\</span></span><br><span class="line">            <span class="string">--silent</span> <span class="string">\</span></span><br><span class="line">            <span class="string">--data</span> <span class="string">parameters[TEST_BRANCH]=$&#123;GITHUB_HEAD_REF&#125;</span> <span class="string">\</span></span><br><span class="line">            <span class="string">--data</span> <span class="string">parameters[TEST_URL]=$&#123;&#123;</span> <span class="string">github.event.deployment_status.target_url</span> <span class="string">&#125;&#125;</span> <span class="string">\</span></span><br><span class="line">            <span class="string">https://circleci.com/api/v2/project/gh/bahmutov/todomvc-tests-circleci/pipeline</span></span><br></pre></td></tr></table></figure>
+
+<p>The above GitHub Action workflow triggers the CircleCI pipeline with unique URL which you can see in the test screenshot.</p>
+<p><img src="../images/separate-circleci/unique.png" alt="The deployment preview URL"></p>
+<h2><span id="merging-the-pull-requests">Merging the pull requests</span></h2><p>When we modify the code and the tests in two repos, we have two open pull requests. Which one do we merge first? It is a little bit of a chicken and an egg problem.</p>
+<ol>
+<li>We cannot merge the application pull request first - if it runs the tests before we merge the pull request in the test repo, the tests will fail, since they are still original tests.</li>
+<li>We cannot merge the test pull request first, since the application code is still the original source, and not what the tests expect to see.</li>
+</ol>
+<p>We can try to time it and merge the code first, then while it is building merge the test pull request, hoping it would hit the the deployed updated application. But I would suggest a simpler approach.</p>
+<ol>
+<li>Merge the tests first, but skip the build using the <code>[skip ci]</code> text in the commit subject, see <a target="_blank" rel="noopener" href="https://circleci.com/docs/2.0/skip-build/">CircleCI docs for example</a>. In the screenshot below I am squashing 3 commits in the test repo into a single commit that should not trigger the tests.</li>
+</ol>
+<p><img src="../images/separate-circleci/skip-message.png" alt="Merging the test pull request first while skipping the CI build"></p>
+<p>The CircleCI shows the test commit was noted, but did not trigger the workflow.</p>
+<p><img src="../images/separate-circleci/skip-workflow.png" alt="CircleCI did not build the commit with the message &quot;[skip ci]&quot;"></p>
+<ol start="2">
+<li>Merge the code change pull request. It will trigger the tests that are now match the code.</li>
+</ol>
+<p>Problem solved.</p>
+<h2><span id="the-remaining-problem">The remaining problem</span></h2><p>Our implementation is <em>almost</em> perfect. The tests are triggered correctly, the deployment URLs are unique - but we cannot pass the branch to the CircleCI pipeline! The <code>TEST_BRANCH</code> parameter is empty because the <code>deployment_status</code> event has no &quot;memory&quot; of the branch that has triggered the deployment, and the GitHub environment has no <code>GITHUB_HEAD_REF</code> set - because GH does not &quot;know&quot; which branch you are testing or deploying.</p>
+<p>I wish Vercel included this information in the event details, since their system knows which branch has been deployed. We could use this information to checkout or trigger the right branch in the test repository. Then we could modify the application in branch <code>feature-X</code> while updating the tests in the separate repo using the same branch name <code>feature-X</code>. When the preview URL has been deployed we would run the tests from branch <code>feature-X</code>.</p>
+<h3><span id="workaround">Workaround</span></h3><p>The Vercel deployment event has the commit SHA. If you dump the GitHub event object, check the <code>sha</code> property:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;token&quot;: &quot;***&quot;,</span><br><span class="line">  &quot;job&quot;: &quot;show-event&quot;,</span><br><span class="line">  &quot;ref&quot;: &quot;&quot;,</span><br><span class="line">  &quot;sha&quot;: &quot;7202eca208589fabacb2f35ac5d8dd46fcb8a12f&quot;,</span><br><span class="line">  &quot;repository&quot;: &quot;bahmutov/todomvc-no-tests-vercel&quot;,</span><br><span class="line">  &quot;repository_owner&quot;: &quot;bahmutov&quot;,</span><br><span class="line">  &quot;repositoryUrl&quot;: &quot;git://github.com/bahmutov/todomvc-no-tests-vercel.git&quot;,</span><br><span class="line">  &quot;run_id&quot;: &quot;1004603109&quot;,</span><br><span class="line">  &quot;run_number&quot;: &quot;24&quot;,</span><br><span class="line">  &quot;retention_days&quot;: &quot;90&quot;,</span><br><span class="line">  &quot;actor&quot;: &quot;vercel[bot]&quot;,</span><br><span class="line">  &quot;workflow&quot;: &quot;info&quot;,</span><br><span class="line">  &quot;head_ref&quot;: &quot;&quot;,</span><br><span class="line">  &quot;base_ref&quot;: &quot;&quot;,</span><br><span class="line">  &quot;event_name&quot;: &quot;deployment_status&quot;,</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>We can check out the full repository and find the branch name the commit belongs to (assuming the pull request commit really belongs to one branch)</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">echo &quot;Deployed commit $&#123;&#123; github.sha &#125;&#125;&quot;</span><br><span class="line">export BRANCH_NAME=$(git show -s --pretty=%D HEAD | tr -s &#x27;,&#x27; &#x27;\n&#x27; | sed &#x27;s/^ //&#x27; | grep -e &#x27;origin/&#x27; | head -1 | sed &#x27;s/\origin\///g&#x27;)</span><br><span class="line">echo &quot;Deployed branch $&#123;BRANCH_NAME&#125;&quot;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="update-1-record-tests-on-cypress-dashboard">Update 1: record tests on Cypress Dashboard</span></h2><p><a target="_blank" rel="noopener" href="https://on.cypress.io/dashboard-introduction">Cypress Dashboard</a> is very useful for showing the results of tests and quickly diagnosing the failed ones. I have set up the test recording, you can see the run results <a target="_blank" rel="noopener" href="https://dashboard.cypress.io/projects/15cjtg/runs">here</a>. The CircleCI <code>cypress/run</code> job gets a few extra parameters:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">cypress/run:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">E2E</span> <span class="string">tests</span></span><br><span class="line">    <span class="string">...</span></span><br><span class="line">    <span class="comment"># record test results on Cypress Dashboard</span></span><br><span class="line">    <span class="attr">record:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">group:</span> <span class="string">e2e</span></span><br><span class="line">    <span class="comment"># tag the recording with the branch name to make it easier to find</span></span><br><span class="line">    <span class="attr">tags:</span> <span class="string">&#x27;&lt;&lt; pipeline.parameters.TEST_BRANCH &gt;&gt;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>We can include the results Markdown badge in both the tests repo&#39;s <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-tests-circleci#readme">README</a>, and in in the TodoMVC application&#39;s <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-no-tests-vercel#readme">README file</a>.</p>
+<p><img src="../images/separate-circleci/recorded.png" alt="Recorded test runs"></p>
+<p>Note: when recording test results on Cypress Dashboard, I usually disable storing the videos and screenshots as test artifacts on CI, since it is no longer useful.</p>
+<h2><span id="update-2-add-the-cypress-github-integration">Update 2: add the Cypress GitHub integration</span></h2><p>After recording tests on Cypress Dashboard, I have installed <a target="_blank" rel="noopener" href="https://on.cypress.io/github-integration">Cypress GitHub Integration App</a> in the test repo. You can give the app access to all your repos, or just select ones.</p>
+<p><img src="../images/separate-circleci/repo-access.png" alt="Cypress GH App repo access"></p>
+<blockquote class="pullquote"><p>🔐 Note that the app only needs read and write access to the commit statuses and pull requests, no source code access. For more, read <a target="_blank" rel="noopener" href="https://docs.cypress.io/faq/questions/dashboard-faq#What-does-Cypress-record">What does Cypress record?</a> and <a target="_blank" rel="noopener" href="https://www.cypress.io/security">Cypress Security page</a>.</p>
+</blockquote>
+
+<p>Once we gave the Cypress GH app access to our repository, we can link the Dashboard project back to the repository and enable pull request comments and status checks.</p>
+<p><img src="../images/separate-circleci/gh-integration.png" alt="Enable the Cypress GH integration PR checks"></p>
+<p>Let&#39;s work on a new application feature - let&#39;s change a selector for the &quot;remove todo&quot; button.</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="deletion">- &lt;button data-cy=&quot;remove&quot; ...&gt;x&lt;/button&gt;</span></span><br><span class="line"><span class="addition">+ &lt;button data-cy=&quot;destroy&quot; ...&gt;x&lt;/button&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>We have opened a new pull request in the application repo with this change. The status checks on the application repo are all green - because our GitHub integration is connected to the separate repo. On the separate repo we see a status check on the <em>last commit to the main branch</em> - because that&#39;s the commit the CircleCI pipeline has run against when triggered.</p>
+<p><img src="../images/separate-circleci/commit-check.png" alt="A new commit status check appears in the test repo"></p>
+<p>Let&#39;s open a repo with the same branch name as the branch in the application.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">git checkout -b rename-attribute</span></span><br><span class="line">Switched to a new branch &#x27;rename-attribute&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>We can update the test to pass against the updated application.</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="deletion">- cy.contains(&#x27;.todo&#x27;, &#x27;Learn about React&#x27;).find(&#x27;[data-cy=remove]&#x27;).click()</span></span><br><span class="line"><span class="addition">+ cy.contains(&#x27;.todo&#x27;, &#x27;Learn about React&#x27;).find(&#x27;[data-cy=destroy]&#x27;).click()</span></span><br></pre></td></tr></table></figure>
+
+<p>But now we have a problem - we need to trigger the pipeline with the tests on the branch <code>rename-attribute</code> in the <code>todomvc-tests-circleci</code> repo in order for the Cypress GH Integration to tie the test results to the right pull request. We can trigger the pipeline using <a target="_blank" rel="noopener" href="https://circleci.com/docs/api/v2/#operation/triggerPipeline">the branch name</a>, plus we can use a fallback - if there is no branch with the given test name, trigger the default pipeline. Our deployment status GitHub Actions workflow is thus:</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/deploy.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">...</span></span><br><span class="line"><span class="comment"># trigger CircleCI pipeline to run E2E tests</span></span><br><span class="line"><span class="comment"># https://circleci.com/docs/api/v2/#operation/triggerPipeline</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Trigger</span> <span class="string">CircleCI</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    echo &quot;Vercel unique deployment URL is $&#123;&#123; github.event.deployment_status.target_url &#125;&#125;&quot;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">    <span class="string">echo</span> <span class="string">&quot;Deployed commit $<span class="template-variable">&#123;&#123; github.sha &#125;&#125;</span>&quot;</span></span><br><span class="line">    <span class="string">export</span> <span class="string">BRANCH_NAME=$(git</span> <span class="string">show</span> <span class="string">-s</span> <span class="string">--pretty=%D</span> <span class="string">HEAD</span> <span class="string">|</span> <span class="string">tr</span> <span class="string">-s</span> <span class="string">&#x27;,&#x27;</span> <span class="string">&#x27;\n&#x27;</span> <span class="string">|</span> <span class="string">sed</span> <span class="string">&#x27;s/^ //&#x27;</span> <span class="string">|</span> <span class="string">grep</span> <span class="string">-e</span> <span class="string">&#x27;origin/&#x27;</span> <span class="string">|</span> <span class="string">head</span> <span class="number">-1</span> <span class="string">|</span> <span class="string">sed</span> <span class="string">&#x27;s/\origin\///g&#x27;</span><span class="string">)</span></span><br><span class="line">    <span class="string">echo</span> <span class="string">&quot;Deployed branch $&#123;BRANCH_NAME&#125;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="string">export</span> <span class="string">TEST_PIPELINE_URL=https://circleci.com/api/v2/project/gh/bahmutov/todomvc-tests-circleci/pipeline</span></span><br><span class="line">    <span class="comment"># --silent option to not print request progress</span></span><br><span class="line">    <span class="comment"># if the test repo does not have branch with the same name</span></span><br><span class="line">    <span class="comment"># trigger the default branch pipeline</span></span><br><span class="line">    <span class="string">curl</span> <span class="string">-u</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.CIRCLE_CI_API_TOKEN</span> <span class="string">&#125;&#125;:</span> <span class="string">\</span></span><br><span class="line">      <span class="string">--silent</span> <span class="string">\</span></span><br><span class="line">      <span class="string">--data</span> <span class="string">branch=$&#123;BRANCH_NAME&#125;</span> <span class="string">\</span></span><br><span class="line">      <span class="string">--data</span> <span class="string">parameters[TEST_BRANCH]=$&#123;BRANCH_NAME&#125;</span> <span class="string">\</span></span><br><span class="line">      <span class="string">--data</span> <span class="string">parameters[TEST_URL]=$&#123;&#123;</span> <span class="string">github.event.deployment_status.target_url</span> <span class="string">&#125;&#125;</span> <span class="string">\</span></span><br><span class="line">      <span class="string">$&#123;TEST_PIPELINE_URL&#125;</span> <span class="string">||</span> <span class="string">\</span></span><br><span class="line">    <span class="string">curl</span> <span class="string">-u</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.CIRCLE_CI_API_TOKEN</span> <span class="string">&#125;&#125;:</span> <span class="string">\</span></span><br><span class="line">      <span class="string">--silent</span> <span class="string">\</span></span><br><span class="line">      <span class="string">--data</span> <span class="string">parameters[TEST_BRANCH]=$&#123;BRANCH_NAME&#125;</span> <span class="string">\</span></span><br><span class="line">      <span class="string">--data</span> <span class="string">parameters[TEST_URL]=$&#123;&#123;</span> <span class="string">github.event.deployment_status.target_url</span> <span class="string">&#125;&#125;</span> <span class="string">\</span></span><br><span class="line">      <span class="string">$&#123;TEST_PIPELINE_URL&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s say a test fails, because the application renamed the <code>data-cy</code> attribute back to <code>remove</code>. Then the pull request <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-tests-circleci/pull/3">#3</a> shows the test results and the details for the failed test, including a screenshot thumbnail and a link to the test result on the Dashboard.</p>
+<p><img src="../images/separate-circleci/failed-status-checks.png" alt="Failed status checks"></p>
+<p><img src="../images/separate-circleci/comment.png" alt="Cypress comments with results on the PR"></p>
+<p>My favorite part in all of this, is clicking on the failed test&#39;s thumbnail, seeing the application screenshot at the moment of failure, then inspecting the test history to see if the test was modified recently (it was).</p>
+<p><img src="../images/separate-circleci/thumbnail-to-dashboard.gif" alt="Going from the PR comment to the test screenshot and history"></p>
+<p>Maybe we need to change it back to make it work... I have changed the test command back to <code>.find(&#39;[data-cy=remove]&#39;)</code> and committed the test while skipping the CI.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">g <span class="keyword">done</span> <span class="string">&quot;change test back [skip ci]&quot;</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">git push</span></span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s re-run the CircleCI pipeline - but we can re-run the failed E2E test job only.</p>
+<p><img src="../images/separate-circleci/rerun-from-failed.gif" alt="Re-running the failed E2E test job in the pipeline"></p>
+<p>The updated test fixes the pipeline and the test comment is updated.</p>
+<p><img src="../images/separate-circleci/fixed-comment.png" alt="The Cypress tests have been fixed"></p>
+<p>Again, we can click on the comment to inspect the test run, including the test change history.</p>
+<p><img src="../images/separate-circleci/test-history.png" alt="The test has been updated twice"></p>
+<h2><span id="update-3-trigger-the-circleci-pipeline-correctly">Update 3: trigger the CircleCI pipeline correctly</span></h2><p>After experimenting with triggering the CircleCI pipeline, I found that using <code>curl</code> with the fallback branch is really tricky. If the branch is not found, the request fails but the status code is 200, since curl receives an object. To make it robust I have written a little utility <a target="_blank" rel="noopener" href="https://github.com/bahmutov/trigger-circleci-pipeline">trigger-circleci-pipeline</a> that you can use to trigger a pipeline run on a given branch with fallback to the default branch.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">assuming the environment variable CIRCLE_CI_API_TOKEN</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">has your personal CircleCI token, trigger a workflow</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="keyword">in</span> the CircleCI project bahmutov/todomvc-tests-circleci</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">and pass pipeline parameters</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">npx trigger-circleci-pipeline \</span></span><br><span class="line"><span class="language-bash">    --org bahmutov --project todomvc-tests-circleci --branch <span class="variable">$&#123;BRANCH_NAME&#125;</span> \</span></span><br><span class="line"><span class="language-bash">    --parameters TEST_URL=<span class="variable">$&#123;TEST_URL&#125;</span>,TEST_BRANCH=<span class="variable">$&#123;BRANCH_NAME&#125;</span></span></span><br></pre></td></tr></table></figure>
+
+<h2><span id="update-4-the-downsides">Update 4: The downsides</span></h2><p>Nothing in life is truly free, so keeping the tests in a separate repo does come with downsides.</p>
+<ul>
+<li>mental and documentation overhead. Want to add a feature? Please read how to open two pull requests, how to name the branches, and of course, remember how to merge the tests and the code - the order matters. The code and its tests are disjoint, but they should be together so the tests validate the code change. It is like a summer camp - you want the team leads to stay with the campers in the same cabin, otherwise all hell breaks loose.</li>
+<li>working on the tests and need to add a <code>data-cy</code> attribute to an element? Oops, need to open a matching pull request, make sure they are linked to each other, and merged in the right order. This discourages small testability improvements.</li>
+<li>the CI needs to know how to trigger the second workflow. Yes, I wrote <a target="_blank" rel="noopener" href="https://github.com/bahmutov/trigger-circleci-pipeline">trigger-circleci-pipeline</a>, but why would you want a separate authentication and parameter passing headache?</li>
+<li>re-running the tests from a branch of the test repo ... runs them against the main branch of the code. Yup, need to remember to add the <code>TEST_URL</code> when starting the workflow manually, also do not forget to add a parameter to tag the recorded Dashboard run. Mental overhead.</li>
+<li>merging means juggling the two pull requests. Need to revert the code change? Remember - you need to find and revert the companion tests. Otherwise you get a failed test run. Oops, it should not count, but here it is - blaring to everyone &quot;failed test, failed test!&quot;</li>
+<li>every time a code pull requests lives longer than a few hours, its tests fall behind other tests, and might fail when running because there is a mismatch between some element logic. Your PR has no tests, so you run the default tests? Oops, the latest tests already assume the code changes YOUR PR does not have yet. Better constantly merge the main branch before pushing. Ohh, you merged the latest code, but forgot to merge the latest tests too? Too bad, the tests failed.</li>
+<li>want to review a pull request, go and find the matching test pull request too. Do not forget to copy &#x2F; paste all the links around, because one thing we all do very well is copy &#x2F; pasting Jira &amp; GitHub URLs around.</li>
+<li>if you use Cypress Dashboard with GitHub Integration - well, it comments on the test pull request, and does not block or post status on the code pull request. You could write some glue code to re-post the GitHub status from the test pull request to the code pull request. You would need authentication, and the test results, and ignore the failed Cypress run exit code to run your utility... but why would you write all that glue code if you could simply ... run tests in the same repo so it all just works<sup>TM</sup>?</li>
+<li>speaking of Cypress Dashboard. When tests are triggered, the information shown in the Dashboard ... has the last commit <em>of the test repo</em>, which says nothing about the <em>code tested</em>. Seeing unrelated commit messages, not being able to jump to the application code really is unfortunate.</li>
+<li>writing end-to-end tests is <em>the start</em> of the quality journey. You want to know <em>what</em> you are testing, and <em>what</em> you have missed. <a href="../tags/code-coverage/">Code coverage</a> from E2E tests is a very effective way to discover features the tests have missed. Instrumenting the code in the same repository while doing the testing is probably ten times easier than trying to instrument the built web application and mapping the results back to code.</li>
+<li>you probably will want to start sharing some code from the application with the tests, like constants, translations, TS types, API and database connections. This requires the tests to be close to the application.</li>
+<li>finally, Cypress has killer <a target="_blank" rel="noopener" href="https://on.cypress.io/component-testing">component tests</a>. You can only write and run those from the same repository, since the component tests import the ... source components.</li>
+</ul>
+<p>Ultimately, I believe that becoming familiar with end-to-end tests and making a proof of concept allows for using the tests in a repo separate from the web application. But you do want to eventually merge the tests to live closer to the code to make the entire process as simple as possible. After all, your mental energy should be directed towards the feature work, not towards the repo juggling.</p>
+<h2><span id="update-5-github-commit-status">Update 5: GitHub commit status</span></h2><p>When the tests run in one repo, you can send the statuses back to the original application repo. You do need to send the commit SHA to know where to set the status though. For example, I am using the CircleCI pipeline parameter <code>TEST_COMMIT</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">TEST_COMMIT:</span></span><br><span class="line">  <span class="attr">description:</span> <span class="string">&#x27;Source commit SHA if known to report status checks&#x27;</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">  <span class="attr">default:</span> <span class="string">&#x27;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>Inside the test project, you can use my plugin <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-set-github-status">cypress-set-github-status</a> that registers itself inside the plugin process.</p>
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = <span class="function">(<span class="params">on, config</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// when we are done, post the status to GitHub</span></span><br><span class="line">  <span class="comment">// application repo, using the passed commit SHA</span></span><br><span class="line">  <span class="comment">// https://github.com/bahmutov/cypress-set-github-status</span></span><br><span class="line">  <span class="built_in">require</span>(<span class="string">&#x27;cypress-set-github-status&#x27;</span>)(on, config, &#123;</span><br><span class="line">    <span class="attr">owner</span>: <span class="string">&#x27;bahmutov&#x27;</span>,</span><br><span class="line">    <span class="attr">repo</span>: <span class="string">&#x27;todomvc-no-tests-vercel&#x27;</span>,</span><br><span class="line">    <span class="attr">commit</span>: config.<span class="property">env</span>.<span class="property">testCommit</span> || process.<span class="property">env</span>.<span class="property">TEST_COMMIT</span>,</span><br><span class="line">    <span class="attr">token</span>: process.<span class="property">env</span>.<span class="property">GITHUB_TOKEN</span> || process.<span class="property">env</span>.<span class="property">PERSONAL_GH_TOKEN</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>To authenticate, we are using a personal GitHub token. Each commit in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-no-tests-vercel">bahmutov&#x2F;todomvc-no-tests-vercel</a> will trigger the CircleCI run in the tests repo, but it will set the pending status for each machine and then the final test result. The &quot;Details&quot; link leads to the Cypress Dashboard run (if the run was recorded), or to the CI job.</p>
+<p><img src="../images/separate-circleci/status.png" alt="The tests statuses in the app repo"></p>
+<p>I picked the single status per CI machine because GitHub has a limit of 100 statuses per commit, which can be exceeded with lots of specs or tests. But the number of machines running tests in parallel is unlikely to surpass the limit.</p>
+<h2><span id="update-6-common-github-commit-status">Update 6: Common GitHub commit status</span></h2><p>When using multiple machine statuses above, each context is different. Thus you cannot have a branch status check to require before merging the pull request. You need to have a single status check with a pre-determined context to make required. This is what a <em>common github commit status</em> can provide.</p>
+<ol>
+<li>First, before running the test jobs create a pending commit status. For example, in <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-tests-circleci">todomvc-tests-circleci</a> the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-tests-circleci/blob/main/.circleci/config.yml">.circleci&#x2F;config.yml</a> <code>cypress/install</code> job uses <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-set-github-status">cypress-set-github-status</a> bin <code>set-gh-status</code> to create it</li>
+</ol>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">cypress/install:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">install</span></span><br><span class="line">    <span class="comment"># after install, set the pending commit status right away</span></span><br><span class="line">    <span class="attr">post-install:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">run:</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">Set</span> <span class="string">common</span> <span class="string">commit</span> <span class="string">status</span></span><br><span class="line">          <span class="attr">command:</span> <span class="string">|</span></span><br><span class="line"><span class="string">            if [[ ! -z &quot;&lt;&lt; pipeline.parameters.TEST_COMMIT &gt;&gt;&quot; ]]; then</span></span><br><span class="line"><span class="string">              echo &quot;Setting commit status to pending&quot;</span></span><br><span class="line"><span class="string">              npx set-gh-status \</span></span><br><span class="line"><span class="string">                --owner bahmutov --repo todomvc-no-tests-vercel \</span></span><br><span class="line"><span class="string">                --sha &lt;&lt; pipeline.parameters.TEST_COMMIT &gt;&gt; --status pending \</span></span><br><span class="line"><span class="string">                --context &quot;Cypress E2E tests&quot; --description &quot;Running tests...&quot;</span></span><br><span class="line"><span class="string">            else</span></span><br><span class="line"><span class="string">              echo &quot;No commit to set status for&quot;</span></span><br><span class="line"><span class="string">            fi</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>In the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-tests-circleci/blob/main/cypress/plugins/index.js">plugins file</a>, we add the <code>commonStatus</code> property using the same context as above. In my case, I am using &quot;Cypress E2E tests&quot; to name the common GH status.</li>
+</ol>
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// when we are done, post the status to GitHub</span></span><br><span class="line"><span class="comment">// application repo, using the passed commit SHA</span></span><br><span class="line"><span class="comment">// https://github.com/bahmutov/cypress-set-github-status</span></span><br><span class="line"><span class="built_in">require</span>(<span class="string">&#x27;cypress-set-github-status&#x27;</span>)(on, config, &#123;</span><br><span class="line">  <span class="attr">owner</span>: <span class="string">&#x27;bahmutov&#x27;</span>,</span><br><span class="line">  <span class="attr">repo</span>: <span class="string">&#x27;todomvc-no-tests-vercel&#x27;</span>,</span><br><span class="line">  <span class="attr">commit</span>: config.<span class="property">env</span>.<span class="property">testCommit</span> || process.<span class="property">env</span>.<span class="property">TEST_COMMIT</span>,</span><br><span class="line">  <span class="attr">token</span>: process.<span class="property">env</span>.<span class="property">GITHUB_TOKEN</span> || process.<span class="property">env</span>.<span class="property">PERSONAL_GH_TOKEN</span>,</span><br><span class="line">  <span class="comment">// after setting the individual job status, also</span></span><br><span class="line">  <span class="comment">// update the common E2E test status check</span></span><br><span class="line">  <span class="attr">commonStatus</span>: <span class="string">&#x27;Cypress E2E tests&#x27;</span>,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>When the PR <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-no-tests-vercel/pull/12">#12</a> deploys, it triggers the tests in the tests repo. The install job immediately sets the pending &quot;Cypress E2E tests&quot; status.</p>
+<p><img src="../images/separate-circleci/common1.png" alt="The Cypress E2E tests status is pending before the tests start"></p>
+<p>Then the <code>cypress/run</code> jobs start, each can report its own status with machine number.</p>
+<p><img src="../images/separate-circleci/common2.png" alt="Individual machine commit statuses"></p>
+<p>The first successful test run changes the common GH commit status to &quot;successful&quot;. If a test run fails, it changes the common commit status to &quot;failed&quot; - it stays failed. Thus you can use the common GH status to block the pull request.</p>
+<p><img src="../images/separate-circleci/common3.png" alt="All Cypress tests finished successfully, the common GH status remained green"></p>
+<p>With this common GH status, you can set up the required status check and configure the branch protection rule</p>
+<p><img src="../images/separate-circleci/common-status-branch-rule.png" alt="Require the common status to succeed before merging the PR"></p>
+<h2><span id="update-7-specify-baseurl-in-the-pull-request-text">Update 7: specify baseUrl in the pull request text</span></h2><p>Using <a target="_blank" rel="noopener" href="https://github.com/bahmutov/grep-tests-from-pull-requests">grep-tests-from-pull-requests</a> you can also extract the <code>baseUrl</code> to run the tests against. Just list it by itself in the text of the pull request:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">baseUrl &lt;URL&gt;</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/separate-circleci/baseUrl.png" alt="Read the baseUrl from the pull request"></p>
+<p>It makes sense to specify the default base URL in the project&#39;s <a target="_blank" rel="noopener" href="https://github.com/bahmutov/todomvc-tests-circleci/blob/main/.github/PULL_REQUEST_TEMPLATE.md">PULL_REQUEST_TEMPLATE.md</a>. The user can edit that URL and run the tests again by pushing new commits. Watch the entire process in the video below.</p>
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/xIIF5joixaU" title="YouTube video player" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</center>
+
+<h2><span id="update-8-set-cypress-environment-variables">Update 8: set Cypress environment variables</span></h2><p>Editing the pull request text is simple, and if one can re-run the tests, the tests can extract additional information from the pull request text, besides the <code>baseUrl</code>. I have added reading additional <code>CYPRESS_</code> variable values and setting them into the <code>config.env</code> object to make them available using the <code>Cypress.env(key)</code> command. For example, if the pull request has lines starting with <code>CYPRESS_</code> like these:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Set additional Cypress environment variables</span><br><span class="line"></span><br><span class="line">CYPRESS_num=1</span><br><span class="line">CYPRESS_correct=true</span><br><span class="line"></span><br><span class="line">And one more</span><br><span class="line"></span><br><span class="line">CYPRESS_FRIENDLY_GREETING=Hello</span><br></pre></td></tr></table></figure>
+
+<p>Then Cypress will have the following object automatically added when it runs:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ Cypress.env()</span><br><span class="line">&#123;num: 1, correct: true, FRIENDLY_GREETING: &quot;Hello&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="update-9-checkbox-to-skip-running-all-tests">Update 9: checkbox to skip running all tests</span></h2><p>Sometimes it is convenient to skip running the test jobs completely. The plugin <a href></a> has a script to find the following checkbox in the pull request body.</p>
+<figure class="highlight md"><figcaption><span>.github/PULL_REQUEST_TEMPLATE.md</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="section"># Summary</span></span><br><span class="line"></span><br><span class="line"><span class="section">## Tests to run</span></span><br><span class="line"></span><br><span class="line">Maybe we should not be running any E2E tests?</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> [x] run Cypress tests</span><br></pre></td></tr></table></figure>
+
+<p>The user can uncheck the checkbox and the CI script can halt itself if the bin command exits with code 1 (meaning the user does not want to run Cypress tests). For example, this Bash command will halt the current CircleCI job if the above checkbox is unchecked.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">if [[ ! -z &quot;$CIRCLE_PULL_REQUEST&quot; ]]; then</span><br><span class="line">  if npx should-pr-run-cypress-tests --pr-url $CIRCLE_PULL_REQUEST; then</span><br><span class="line">    echo &quot;Should be running Cypress tests ✅&quot;</span><br><span class="line">  else</span><br><span class="line">    echo &quot;Skipping Cypress tests 😴&quot;</span><br><span class="line">    circleci-agent step halt</span><br><span class="line">  fi</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+
+<p><strong>Tip:</strong> the command <code>circleci-agent step halt</code> only stops the current job. You might want to <a target="_blank" rel="noopener" href="https://discuss.circleci.com/t/does-circleci-step-halt-works-with-version-2-1/36674/4">cancel the entire workflow instead</a>.</p>
+<h2><span id="see-also">See also</span></h2><ul>
+<li><a href="/blog/how-to-keep-cypress-tests-in-another-repo/" title="How to Keep Cypress Tests in Another Repo While Using GitHub Actions">How to Keep Cypress Tests in Another Repo While Using GitHub Actions</a></li>
+<li><a href="/blog/tested-ecommerce/" title="Deploy E-Commerce Site to Netlify and Test Using GitHub Actions">Deploy E-Commerce Site to Netlify and Test Using GitHub Actions</a></li>
+<li>my other <a href="../tags/vercel">Vercel blog posts</a></li>
+<li>my other <a href="../tags/circle">CircleCI blog posts</a></li>
+<li>plugin <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-set-github-status">cypress-set-github-status</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/" data-id="clxj6w7dj008tbjn7ft7j8pho" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/ci/" rel="tag">ci</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/circle/" rel="tag">circle</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/github/" rel="tag">github</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/vercel/" rel="tag">vercel</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../why-cy-log-prints-nothing/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Why cy.log Prints Nothing
+        
+      </div>
+    </a>
+  
+  
+    <a href="../cypress-second-tab/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Deal with Second Tab in Cypress</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/how-to-keep-cypress-tests-in-another-repo-with-circleci/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

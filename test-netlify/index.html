@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Test Sites Deployed To Netlify Using netlify-plugin-cypress | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Example repo The first test Run tests on Netlify Testing Netlify functions Failing tests and artifacts Recording to Cypress Dashboard Cypress GitHub App and status checks Bonus: automate dependency">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Test Sites Deployed To Netlify Using netlify-plugin-cypress">
+<meta property="og:url" content="https://glebbahmutov.com/blog/test-netlify/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Example repo The first test Run tests on Netlify Testing Netlify functions Failing tests and artifacts Recording to Cypress Dashboard Cypress GitHub App and status checks Bonus: automate dependency">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/test.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/test.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/deploy-log.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/pr1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/joke.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/joke-passes.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/pr2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/pr3.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/pr3-deploy.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/pr3-log.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/setup.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/deploy-key.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/badge.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/dashboard-run.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/gh-app-install.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/trigger-deploy.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/gh-pr.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/branch-rule.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/pr-required.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/updated-test.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/master-issue.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/pin-dependencies.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/test-netlify/badges.png">
+<meta property="article:published_time" content="2021-02-08T05:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.599Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta property="article:tag" content="ci">
+<meta property="article:tag" content="cypress dashboard">
+<meta property="article:tag" content="11ty">
+<meta property="article:tag" content="netlify">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/test-netlify/test.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-test-netlify" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2021-02-08T05:00:00.000Z" itemprop="datePublished">Feb 8 2021</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Test Sites Deployed To Netlify Using netlify-plugin-cypress
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Test a site after deploying it to Netlify preview or production environment.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#example-repo">Example repo</a></li>
+<li><a href="#the-first-test">The first test</a></li>
+<li><a href="#run-tests-on-netlify">Run tests on Netlify</a></li>
+<li><a href="#testing-netlify-functions">Testing Netlify functions</a></li>
+<li><a href="#failing-tests-and-artifacts">Failing tests and artifacts</a></li>
+<li><a href="#recording-to-cypress-dashboard">Recording to Cypress Dashboard</a></li>
+<li><a href="#cypress-github-app-and-status-checks">Cypress GitHub App and status checks</a></li>
+<li><a href="#bonus-automate-dependency-updates">Bonus: automate dependency updates</a><ul>
+<li><a href="#version-badges">Version badges</a></li>
+</ul>
+</li>
+<li><a href="#see-more">See more</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="example-repo">Example repo</span></h2><p>I have cloned the <a target="_blank" rel="noopener" href="https://templates.netlify.com/template/eleventy-starter-with-functions/">Eleventy starter with serverless functions</a> under my GitHub repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/eleventyone">bahmutov&#x2F;eleventyone</a>. The site is deployed automatically from GitHub to Netlify and you can see it under <a target="_blank" rel="noopener" href="https://eleventyone-test.netlify.app/">https://eleventyone-test.netlify.app/</a>.</p>
+<p><img src="/blog/images/test-netlify/test.png" alt="The first test"></p>
+<p>Any time I open a Pull Request a new preview is deployed at Netlify automatically. I would like to run end-to-end tests against the deployed URL. Let&#39;s see how to do this.</p>
+<h2><span id="the-first-test">The first test</span></h2><p>First, install Cypress test runner as a dev dependency</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D cypress</span><br><span class="line">+ cypress@6.4.0</span><br></pre></td></tr></table></figure>
+
+<p>Second, let&#39;s write a few tests. We have the page itself which can be served locally using <code>npm run dev</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ npm run dev</span><br><span class="line">&gt; cross-env ELEVENTY_ENV=dev eleventy --serve</span><br><span class="line">...</span><br><span class="line">[Browsersync] Access URLs:</span><br><span class="line"> -----------------------------------</span><br><span class="line">       Local: http://localhost:8080</span><br><span class="line">    External: http://10.0.0.126:8080</span><br><span class="line"> -----------------------------------</span><br><span class="line">          UI: http://localhost:3001</span><br><span class="line"> UI External: http://localhost:3001</span><br><span class="line"> -----------------------------------</span><br><span class="line">[Browsersync] Serving files from: dist</span><br></pre></td></tr></table></figure>
+
+<p>Great, we need to make sure this page loads and at least displays the heading text.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;Demo site&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;loads&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;EleventyOne&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Our Cypress settings file <code>cypress.json</code> specifies the base url when running locally. It also says that our project uses no fixtures, no plugins, and no support file.</p>
+<figure class="highlight json"><figcaption><span>cypress.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;baseUrl&quot;</span><span class="punctuation">:</span> <span class="string">&quot;http://localhost:8080&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;fixturesFolder&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;supportFile&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;pluginsFile&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Run Cypress from the second terminal to run the test with <code>npx cypress open</code>.</p>
+<p><img src="/blog/images/test-netlify/test.png" alt="The first test"></p>
+<h2><span id="run-tests-on-netlify">Run tests on Netlify</span></h2><p>Let&#39;s plugin into the <a target="_blank" rel="noopener" href="https://www.netlify.com/products/build/">Netlify build system</a> to run our Cypress test <em>after</em> the deploy. We will install the <a target="_blank" rel="noopener" href="https://github.com/cypress-io/netlify-plugin-cypress">netlify-plugin-cypress</a> as another dev dependency.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D netlify-plugin-cypress</span><br><span class="line">+ netlify-plugin-cypress@1.8.1</span><br></pre></td></tr></table></figure>
+
+<p>Update the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/eleventyone/blob/master/netlify.toml">netlify.toml</a> file to include the <code>netlify-plugin-cypress</code> and tell it to skip tests <em>before</em> the deployment and run them <em>after</em> the deployment using <code>onSuccess</code> event.</p>
+<figure class="highlight toml"><figcaption><span>netlify.toml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[build.environment]</span></span><br><span class="line">  <span class="comment"># cache Cypress binary in local &quot;node_modules&quot; folder</span></span><br><span class="line">  <span class="comment"># so Netlify caches it</span></span><br><span class="line">  <span class="attr">CYPRESS_CACHE_FOLDER</span> = <span class="string">&quot;./node_modules/CypressBinary&quot;</span></span><br><span class="line">  <span class="comment"># set TERM variable for terminal output</span></span><br><span class="line">  <span class="attr">TERM</span> = <span class="string">&quot;xterm&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># run Cypress E2E tests</span></span><br><span class="line"><span class="section">[[plugins]]</span></span><br><span class="line"><span class="attr">package</span> = <span class="string">&quot;netlify-plugin-cypress&quot;</span></span><br><span class="line">  <span class="section">[plugins.inputs]</span></span><br><span class="line">    <span class="comment"># skip the default tests before the deploy</span></span><br><span class="line">    <span class="attr">skip</span> = <span class="literal">true</span></span><br><span class="line">  <span class="section">[plugins.inputs.onSuccess]</span></span><br><span class="line">    <span class="comment"># run tests after the deploy</span></span><br><span class="line">    <span class="attr">enable</span> = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>When Netlify runs its deploy, it will show the new messages from the Cypress plugin. The log shows the tests executing against the deployed URL and successfully passing.</p>
+<p><img src="/blog/images/test-netlify/deploy-log.png" alt="Passing tests against the preview URL"></p>
+<p>Let&#39;s merge this pull <a target="_blank" rel="noopener" href="https://github.com/bahmutov/eleventyone/pull/1">#1</a> request since it is passing.</p>
+<p><img src="/blog/images/test-netlify/pr1.png" alt="Netlify status check on GitHub pull request"></p>
+<p>After GitHub has finished merging the code, Netlify builds the production version of the site, again running the E2E tests.</p>
+<h2><span id="testing-netlify-functions">Testing Netlify functions</span></h2><p>Our site includes a couple Netlify functions. For example, we can ask for a joke and <a target="_blank" rel="noopener" href="https://github.com/bahmutov/eleventyone/blob/master/src/functions/fetch-joke.js">functions&#x2F;fetch-joke.js</a> delivers one. To run both the static site and the Netlify functions locally we need to install <a target="_blank" rel="noopener" href="https://cli.netlify.com/">netlify CLI</a>:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D netlify-cli</span><br><span class="line">+ netlify-cli@3.5.0</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s change our <code>package.json</code> to include the <code>dev:netlify</code> script:</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;start&quot;</span><span class="punctuation">:</span> <span class="string">&quot;npm run dev&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;dev&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cross-env ELEVENTY_ENV=dev eleventy --serve&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;build&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cross-env ELEVENTY_ENV=prod eleventy&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;seed&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cross-env ELEVENTY_ENV=seed eleventy&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;dev:netlify&quot;</span><span class="punctuation">:</span> <span class="string">&quot;netlify dev&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Start the local Netlify environment from the first terminal using <code>npm run dev:netlify</code>:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&gt; netlify dev</span><br><span class="line"></span><br><span class="line">◈ Netlify Dev ◈</span><br><span class="line">◈ Injected netlify.toml file env var: CYPRESS_CACHE_FOLDER</span><br><span class="line">◈ Ignored netlify.toml file env var: TERM (defined in process)</span><br><span class="line">◈ Ignored general context env var: LANG (defined in process)</span><br><span class="line">◈ Ignored general context env var: LC_ALL (defined in process)</span><br><span class="line">◈ Overriding command with setting derived from netlify.toml [dev] block: npm run start</span><br><span class="line">◈ Functions server is listening on 49254</span><br><span class="line">◈ Starting Netlify Dev with eleventy</span><br><span class="line">...</span><br><span class="line">   ┌─────────────────────────────────────────────────┐</span><br><span class="line">   │                                                 │</span><br><span class="line">   │   ◈ Server now ready on http://localhost:8888   │</span><br><span class="line">   │                                                 │</span><br><span class="line">   └─────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p>Notice that Netlify proxies Eleventy to :8888 locally. Thus we should update the local base url to <code>http://localhost:8888</code> in <code>cypress.json</code> file. The <code>netlify.toml</code> file defines an API redirect to the function:</p>
+<figure class="highlight toml"><figcaption><span>netlify.toml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[[redirects]]</span></span><br><span class="line">  <span class="attr">from</span> = <span class="string">&quot;/api/*&quot;</span></span><br><span class="line">  <span class="attr">to</span> = <span class="string">&quot;/.netlify/functions/:splat&quot;</span></span><br><span class="line">  <span class="attr">status</span> = <span class="number">200</span></span><br></pre></td></tr></table></figure>
+
+<p>Thus our Cypress test can use <a target="_blank" rel="noopener" href="https://on.cypress.io/request">cy.request</a> like this:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">it.<span class="title function_">only</span>(<span class="string">&#x27;delivers jokes&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">request</span>(<span class="string">&#x27;/api/fetch-joke&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>I like working on a single test using <code>it.only</code> while writing the test. Cypress watches the spec file automatically and reruns the test on any changes. The Command Log shows the Netlify function returning a joke:</p>
+<p><img src="/blog/images/test-netlify/joke.png" alt="Inspecting the response from the Netlify function"></p>
+<p>We need to grab the <code>body</code> of the response object, then parse it as JSON, and then confirm the <code>msg</code> property is an non-empty string.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">it.<span class="title function_">only</span>(<span class="string">&#x27;delivers jokes&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">request</span>(<span class="string">&#x27;/api/fetch-joke&#x27;</span>)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="title class_">JSON</span>.<span class="property">parse</span>)</span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;msg&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;be.a&#x27;</span>, <span class="string">&#x27;string&#x27;</span>)</span><br><span class="line">    .<span class="title function_">and</span>(<span class="string">&#x27;be.not.empty&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Great, the test passes.</p>
+<p><img src="/blog/images/test-netlify/joke-passes.png" alt="Testing the joke returned by the Netlify function"></p>
+<p>The PR <a target="_blank" rel="noopener" href="https://github.com/bahmutov/eleventyone/pull/2">pull&#x2F;2</a> is green.</p>
+<p><img src="/blog/images/test-netlify/pr2.png" alt="The new API test passes against the preview URL"></p>
+<p>Let&#39;s ship it 🚢</p>
+<p><strong>Tip:</strong> for more on how Cypress can run API tests read <a target="_blank" rel="noopener" href="https://www.cypress.io/blog/2017/11/07/add-gui-to-your-e2e-api-tests/">Add GUI to your E2E API tests</a> and <a href="/blog/api-testing-with-server-logs/" title="Black box API testing with server logs">Black box API testing with server logs</a> blog posts.</p>
+<h2><span id="failing-tests-and-artifacts">Failing tests and artifacts</span></h2><p>Now let&#39;s imagine a pull request that fails its tests. For example, if we change the landing page to have a different title &quot;Netlify Cypress Tests&quot; the tests would fail. Yet the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/eleventyone/pull/3">pull&#x2F;3</a> still shows the passing Netlify check!</p>
+<p><img src="/blog/images/test-netlify/pr3.png" alt="Green Netlify status check on PR 3"></p>
+<p>The Netlify tab shows a warning</p>
+<p><img src="/blog/images/test-netlify/pr3-deploy.png" alt="Failed E2E tests show up as a warning"></p>
+<p>We can see the failed tests in the log, yet Netlify does not change the status of the deploy - after all, the deployment was successful! Related question: Cypress captures screenshots on test failures and a video of the test run, where can we see these test artifacts, marked with green arrows the screenshot below?</p>
+<p><img src="/blog/images/test-netlify/pr3-log.png" alt="Deployment log shows saved error screenshot and video files"></p>
+<p>Let&#39;s see those test artifacts.</p>
+<h2><span id="recording-to-cypress-dashboard">Recording to Cypress Dashboard</span></h2><p>Most CI systems, including the Netlify Build, struggle to store and show the test artifacts well enough. Thus the simplest solution to record test results and store the test artifacts is to use the <a target="_blank" rel="noopener" href="https://on.cypress.io/dashboard-introduction">Cypress Dashboard</a>. Let&#39;s set up the test recording for this project. We can set up recording by going to the &quot;Runs&quot; tab in the Test Runner</p>
+<p><img src="/blog/images/test-netlify/setup.png" alt="Click &quot;Connect to Dashboard&quot; button to set up project recording"></p>
+<p>We should set the displayed record key as an environment variable <code>CYPRESS_RECORD_KEY</code> in the deploy environment variables.</p>
+<p><img src="/blog/images/test-netlify/deploy-key.png" alt="Adding the record key to the Netlify deployment settings"></p>
+<p>Then just add the <code>record = true</code> input parameter to our netlify-plugin-cypress&#39;s settings:</p>
+<figure class="highlight toml"><figcaption><span>netlify</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># run Cypress E2E tests</span></span><br><span class="line"><span class="section">[[plugins]]</span></span><br><span class="line"><span class="attr">package</span> = <span class="string">&quot;netlify-plugin-cypress&quot;</span></span><br><span class="line">  <span class="section">[plugins.inputs]</span></span><br><span class="line">    <span class="comment"># skip the default tests before the deploy</span></span><br><span class="line">    <span class="attr">skip</span> = <span class="literal">true</span></span><br><span class="line">  <span class="section">[plugins.inputs.onSuccess]</span></span><br><span class="line">    <span class="comment"># run tests after the deploy</span></span><br><span class="line">    <span class="attr">enable</span> = <span class="literal">true</span></span><br><span class="line">    <span class="attr">record</span> = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Tip:</strong> grab the project&#39;s dashboard badge and add it to the README&#39;s markdown. At first it shows &quot;no tests found&quot;, but will be updated after the first test run in the selected branch.</p>
+<p><img src="/blog/images/test-netlify/badge.png" alt="Cypress badge settings"></p>
+<p>After we push the code we can see the test results including the error screenshot and the video of the test run.</p>
+<p><img src="/blog/images/test-netlify/dashboard-run.gif" alt="Cypress badge settings"></p>
+<h2><span id="cypress-github-app-and-status-checks">Cypress GitHub App and status checks</span></h2><p>Now let&#39;s make sure the pull request does not have all green status checks when the E2E tests fail. Install the <a target="_blank" rel="noopener" href="https://on.cypress.io/github-integration">Cypress GitHub App</a> and give it access to the repo.</p>
+<p><img src="/blog/images/test-netlify/gh-app-install.png" alt="Cypress GitHub App settings"></p>
+<p><strong>Tip:</strong> Cypress has the GitLab and BitBucket integrations in beta testing.</p>
+<p>Let&#39;s trigger a new deployment - we can can do it right from the Netlify page.</p>
+<p><img src="/blog/images/test-netlify/trigger-deploy.gif" alt="Trigger the deploy from the Netlify page"></p>
+<p>After the deploy runs, you will see a GitHub comment posted by the Cypress app. It shows a failing test with a screenshot thumbnail. You also now have a red status check from the Cypress app - you know the pull request is breaking its tests.</p>
+<p><img src="/blog/images/test-netlify/gh-pr.gif" alt="Cypress GitHub App"></p>
+<p>Let&#39;s require the passing tests before the pull request can be merged. Under the GitHub repo&#39;s settings check these options and mark both status checks required.</p>
+<p><img src="/blog/images/test-netlify/branch-rule.png" alt="Require successful deploy and passing tests for pull requests"></p>
+<p>Now switch back to the pull request #3 to see the updated message - the PR cannot be merged until we fix the tests.</p>
+<p><img src="/blog/images/test-netlify/pr-required.png" alt="Pull request with failing tests cannot be merged"></p>
+<p>Let&#39;s update the test and push it.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;Netlify Cypress Tests&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>Beautiful - our site is good again.</p>
+<p><img src="/blog/images/test-netlify/updated-test.png" alt="The tests have been fixed"></p>
+<h2><span id="bonus-automate-dependency-updates">Bonus: automate dependency updates</span></h2><p>This blog post describes the testing of this project as of February 2021. I would like the project and its tests to keep working without becoming obsolete for the future readers. Thus I recommend setting up Renovate bot to <a href="/blog/keep-examples-up-to-date/" title="Keep Examples Up To Date">Keep Examples Up To Date</a>. In the repo&#39;s root create <code>renovate.json</code> file that once a week checks for new versions and opens a pull request. If the checks are green, the version update pull request gets automatically merged. We are only interested in a few dependencies, like Cypress, <code>netlify-plugin-cypress</code> and the <code>@11ty/eleventy</code> package.</p>
+<figure class="highlight json"><figcaption><span>renovate.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;extends&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;config:base&quot;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;automerge&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;prHourlyLimit&quot;</span><span class="punctuation">:</span> <span class="number">2</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;updateNotScheduled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;timezone&quot;</span><span class="punctuation">:</span> <span class="string">&quot;America/New_York&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;schedule&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;every weekend&quot;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;masterIssue&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;labels&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="string">&quot;type: dependencies&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="string">&quot;renovate&quot;</span></span><br><span class="line">  <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;packageRules&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;packagePatterns&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="string">&quot;*&quot;</span></span><br><span class="line">      <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;excludePackagePatterns&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="string">&quot;@11ty/eleventy&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="string">&quot;cypress&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="string">&quot;netlify-plugin-cypress&quot;</span></span><br><span class="line">      <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Of course, to automatically upgrade dependencies we need to have more tests, thus I will add a few E2E tests to check the page navigation.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;Demo site&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;loads&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;Netlify Cypress Tests&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;delivers jokes&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">request</span>(<span class="string">&#x27;/api/fetch-joke&#x27;</span>)</span><br><span class="line">      .<span class="title function_">its</span>(<span class="string">&#x27;body&#x27;</span>)</span><br><span class="line">      .<span class="title function_">then</span>(<span class="title class_">JSON</span>.<span class="property">parse</span>)</span><br><span class="line">      .<span class="title function_">its</span>(<span class="string">&#x27;msg&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;be.a&#x27;</span>, <span class="string">&#x27;string&#x27;</span>)</span><br><span class="line">      .<span class="title function_">and</span>(<span class="string">&#x27;be.not.empty&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;navigates directly&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    cy.<span class="title function_">visit</span>(<span class="string">&#x27;/about&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;About&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;navigates via links&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">get</span>(<span class="string">&#x27;.nav li&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length.gt&#x27;</span>, <span class="number">1</span>)</span><br><span class="line">      .<span class="title function_">contains</span>(<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;about&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;have.attr&#x27;</span>, <span class="string">&#x27;href&#x27;</span>, <span class="string">&#x27;/about&#x27;</span>).<span class="title function_">click</span>()</span><br><span class="line">    cy.<span class="title function_">location</span>(<span class="string">&#x27;pathname&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;include&#x27;</span>, <span class="string">&#x27;/about&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;About&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    cy.<span class="title function_">get</span>(<span class="string">&#x27;.nav li&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.length.gt&#x27;</span>, <span class="number">1</span>)</span><br><span class="line">      .<span class="title function_">contains</span>(<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;home&#x27;</span>)</span><br><span class="line">      .<span class="title function_">should</span>(<span class="string">&#x27;have.attr&#x27;</span>, <span class="string">&#x27;href&#x27;</span>, <span class="string">&#x27;/&#x27;</span>).<span class="title function_">click</span>()</span><br><span class="line">    cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;Netlify Cypress Tests&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>I activated the <a target="_blank" rel="noopener" href="https://www.whitesourcesoftware.com/free-developer-tools/renovate/">RenovateApp</a> and it will keep my repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/eleventyone">bahmutov&#x2F;eleventyone</a> up-to-date from now on. You can immediately see the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/eleventyone/issues/5">master issue</a> the RenovateApp opens that describes the actions it wants to take:</p>
+<p><img src="/blog/images/test-netlify/master-issue.png" alt="RenovateApp keeps master issue open"></p>
+<p>Most of the time the RenovateApp&#39;s actions are automatic and it can be trusted to merge its own pull requests, since our E2E tests against the deployed URLs give me enough confidence.</p>
+<p><img src="/blog/images/test-netlify/pin-dependencies.png" alt="RenovateApp opens a pull request to pin dependencies"></p>
+<h3><span id="version-badges">Version badges</span></h3><p>Because the versions of Cypress and <code>netlify-plugin-cypress</code> are important to anyone reading this blog post and looking at the source code, I like showing the current versions right in the README. To create a badge and update it after the RenovateApp upgrades dependencies, I use my own <a target="_blank" rel="noopener" href="https://github.com/bahmutov/dependency-version-badge">dependency-version-badge</a> utility. I like running it using GitHub Actions. Here is my workflow file</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/badges.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">badges</span></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="comment"># update README badge only if the README file changes</span></span><br><span class="line">    <span class="comment"># or if the package.json file changes, or this file changes</span></span><br><span class="line">    <span class="attr">branches:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">master</span></span><br><span class="line">    <span class="attr">paths:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">README.md</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">package.json</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">.github/workflows/badges.yml</span></span><br><span class="line">  <span class="attr">schedule:</span></span><br><span class="line">    <span class="comment"># update badges every night</span></span><br><span class="line">    <span class="comment"># because we have a few badges that are linked</span></span><br><span class="line">    <span class="comment"># to the external repositories</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">cron:</span> <span class="string">&#x27;0 3 * * *&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">badges:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Badges</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span> <span class="string">🛎</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v2</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Update</span> <span class="string">version</span> <span class="string">badges</span> <span class="string">🏷</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">npx</span> <span class="string">-p</span> <span class="string">dependency-version-badge</span> <span class="string">update-badge</span> <span class="string">cypress</span> <span class="string">netlify-plugin-cypress</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Commit</span> <span class="string">any</span> <span class="string">changed</span> <span class="string">files</span> <span class="string">💾</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">stefanzweifel/git-auto-commit-action@v4</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">commit_message:</span> <span class="string">Updated</span> <span class="string">badges</span></span><br><span class="line">          <span class="attr">branch:</span> <span class="string">master</span></span><br><span class="line">          <span class="attr">file_pattern:</span> <span class="string">README.md</span></span><br></pre></td></tr></table></figure>
+
+<p>The above CI job runs when the listed files change and once at night. It keeps the version badges up-to-date in the README file.</p>
+<p><img src="/blog/images/test-netlify/badges.png" alt="README badges for the project"></p>
+<p>Happy Testing!</p>
+<h2><span id="see-more">See more</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/cypress-io/netlify-plugin-cypress">netlify-plugin-cypress</a></li>
+<li>Read <a href="/blog/gatsby-netlify-circle-and-cypress/" title="Gatsby Netlify Circle and Cypress">Gatsby Netlify Circle and Cypress</a></li>
+<li>Read <a target="_blank" rel="noopener" href="https://cypress.io/blog/2020/03/30/run-cypress-tests-on-netlify-using-a-single-line/">Run Cypress Tests on Netlify Using a Single Line</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/test-netlify/" data-id="clxj6w7ec00ilbjn73ras9jxv" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/test-netlify/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/11ty/" rel="tag">11ty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/ci/" rel="tag">ci</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/netlify/" rel="tag">netlify</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../test-monorepo-apps/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          How to Test Monorepo Apps Using Cypress GitHub Action
+        
+      </div>
+    </a>
+  
+  
+    <a href="../form-validation-in-cypress/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">HTML Form Validation in Cypress</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/test-netlify/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

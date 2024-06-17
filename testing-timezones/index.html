@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Testing Time Zones in Parallel | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Application The test Iteration Incorrect TZ env Correct process.env Do not delete the screenshots   Recording to Cypress Dashboard Continuous Integration Load balancing Parallelization Use more mac">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Testing Time Zones in Parallel">
+<meta property="og:url" content="https://glebbahmutov.com/blog/testing-timezones/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Application The test Iteration Incorrect TZ env Correct process.env Do not delete the screenshots   Recording to Cypress Dashboard Continuous Integration Load balancing Parallelization Use more mac">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/app.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/new-york.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/tokyo.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/setup.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/recorded.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/runs.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/run5.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/dashboard-screenshots.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/ci.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/waterfall.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/waterfall-index.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/ci-3.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/group-3.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/calculator.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/run-times.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/first-group.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/testing-timezones/last-group.png">
+<meta property="article:published_time" content="2021-02-12T05:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.606Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta property="article:tag" content="github">
+<meta property="article:tag" content="ci">
+<meta property="article:tag" content="cypress dashboard">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/testing-timezones/app.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-testing-timezones" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2021-02-12T05:00:00.000Z" itemprop="datePublished">Feb 12 2021</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Testing Time Zones in Parallel
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Running the same Cypress tests with different browser time zones in parallel
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#application">Application</a></li>
+<li><a href="#the-test">The test</a></li>
+<li><a href="#iteration">Iteration</a><ul>
+<li><a href="#incorrect-tz-env">Incorrect TZ env</a></li>
+<li><a href="#correct-processenv">Correct process.env</a></li>
+<li><a href="#do-not-delete-the-screenshots">Do not delete the screenshots</a></li>
+</ul>
+</li>
+<li><a href="#recording-to-cypress-dashboard">Recording to Cypress Dashboard</a></li>
+<li><a href="#continuous-integration">Continuous Integration</a></li>
+<li><a href="#load-balancing">Load balancing</a><ul>
+<li><a href="#parallelization">Parallelization</a></li>
+<li><a href="#use-more-machines">Use more machines</a></li>
+</ul>
+</li>
+<li><a href="#see-more">See more</a></li>
+</ul>
+<!-- tocstop -->
+
+<p>This blog post shows step by step how to execute the same tests for different browser time zone settings. Then I show how to correctly record all test results into the same logical Dashboard run. We then execute the tests in parallel on the continuous integration service to speed them up. The approach described in this blog post will be useful to everyone trying to run specs against different environments, or with different browser settings.</p>
+<blockquote class="pullquote"><p>🧭 You can find the source code for this blog post in the repository <a target="_blank" rel="noopener" href="https://github.com/bahmutov/test-timezones-example">bahmutov&#x2F;test-timezones-example</a>.</p>
+</blockquote>
+
+<h2><span id="application">Application</span></h2><p>Let&#39;s take a simple page that prints the local time.</p>
+<p><img src="/blog/images/testing-timezones/app.png" alt="Page shows local time"></p>
+<figure class="highlight js"><figcaption><span>app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">document</span>.<span class="title function_">getElementById</span>(</span><br><span class="line">  <span class="string">&#x27;timezone&#x27;</span>,</span><br><span class="line">).<span class="property">textContent</span> = <span class="title class_">Intl</span>.<span class="title class_">DateTimeFormat</span>().<span class="title function_">resolvedOptions</span>().<span class="property">timeZone</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> date = <span class="keyword">new</span> <span class="title class_">Date</span>()</span><br><span class="line"><span class="comment">// let&#x27;s have consistent formatting in a specific locale</span></span><br><span class="line"><span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&#x27;local-time&#x27;</span>).<span class="property">textContent</span> =</span><br><span class="line">  date.<span class="title function_">toLocaleString</span>(<span class="string">&#x27;en-GB&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>The output depends on the browser&#39;s time zone, so how do run our tests &quot;around the world&quot;?</p>
+<h2><span id="the-test">The test</span></h2><p>Our test will just confirm the time zone text is present, we won&#39;t do anything more complicated than that.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// get the current time zone name</span></span><br><span class="line"><span class="keyword">const</span> timeZone = <span class="title class_">Intl</span>.<span class="title class_">DateTimeFormat</span>()</span><br><span class="line">  .<span class="title function_">resolvedOptions</span>()</span><br><span class="line">  .<span class="property">timeZone</span>.<span class="title function_">replace</span>(<span class="string">&#x27;/&#x27;</span>, <span class="string">&#x27;-&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;Page&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;shows the timestamp&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    cy.<span class="title function_">visit</span>(<span class="string">&#x27;index.html&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">get</span>(<span class="string">&#x27;#timezone&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>).<span class="title function_">and</span>(<span class="string">&#x27;not.be.empty&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">get</span>(<span class="string">&#x27;#local-time&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>).<span class="title function_">and</span>(<span class="string">&#x27;not.be.empty&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">screenshot</span>(<span class="string">`timestamp-<span class="subst">$&#123;timeZone&#125;</span>`</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>We confirm the presence of the text and take a screenshot of the app. Because we plan to run the same test in multiple time zones, we add the time zone name to the file name (after remove the <code>/</code> characters).</p>
+<p>By default my laptop sitting in Boston executes the test and shows the following:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">npx cypress open</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/blog/images/testing-timezones/new-york.png" alt="Page shows local time in New York time zone"></p>
+<p>How does this test run in Tokyo? Let&#39;s find out - on Mac &#x2F; Linux open Cypress with <code>TZ</code> environment variable set to the desired time zone.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">TZ=Asia/Tokyo npx cypress open</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/blog/images/testing-timezones/tokyo.png" alt="Page shows local time in Tokyo"></p>
+<p>Nice, so we can vary the <code>TZ</code> value while running Cypress to get the browser to use the desired time zone.</p>
+<h2><span id="iteration">Iteration</span></h2><p>If we have a list of time zones, we can iterate over them and run Cypress tests with each time zone. We can write our code in JavaScript by using <a target="_blank" rel="noopener" href="https://on.cypress.io/module-api">Cypress NPM module</a>.</p>
+<h3><span id="incorrect-tz-env">Incorrect TZ env</span></h3><p>First, let me show the iteration that DOES NOT WORK. This script uses the <code>env</code> property of <code>cypress.run</code> to pass the time zone. This is INCORRECT.</p>
+<figure class="highlight js"><figcaption><span>test-timezones.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// we want to test the following timezones</span></span><br><span class="line"><span class="keyword">const</span> timeZones = [</span><br><span class="line">  <span class="string">`America/New_York`</span>,</span><br><span class="line">  <span class="string">`Europe/Berlin`</span>,</span><br><span class="line">  <span class="string">`Europe/London`</span>,</span><br><span class="line">  <span class="string">`Asia/Tokyo`</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://on.cypress.io/module-api</span></span><br><span class="line"><span class="keyword">const</span> cypress = <span class="built_in">require</span>(<span class="string">&#x27;cypress&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="title function_">runTests</span> = (<span class="params">timeZone</span>) =&gt; &#123;</span><br><span class="line">  <span class="keyword">return</span> cypress.<span class="title function_">run</span>(&#123;</span><br><span class="line">    <span class="comment">// 🔥 THIS IS INCORRECT</span></span><br><span class="line">    <span class="attr">env</span>: &#123;</span><br><span class="line">      <span class="attr">TZ</span>: timeZone,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">testTimeZones</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">for</span> <span class="keyword">await</span> (timeZone <span class="keyword">of</span> timeZones) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;testing timezone %s&#x27;</span>, timeZone)</span><br><span class="line">    <span class="keyword">await</span> <span class="title function_">runTests</span>(timeZone)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">testTimeZones</span>().<span class="title function_">then</span>(</span><br><span class="line">  <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;all done&#x27;</span>)</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="function">(<span class="params">err</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">error</span>(err)</span><br><span class="line">    process.<span class="title function_">exit</span>(<span class="number">1</span>)</span><br><span class="line">  &#125;,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+
+<p>Let&#39;s launch the above script</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">node ./test-timezones.js</span></span><br><span class="line">testing timezone America/New_York</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  (Screenshots)</span><br><span class="line">  cypress/screenshots/spec.js/timestamp-America-New_York.png</span><br><span class="line"></span><br><span class="line">testing timezone Europe/Berlin</span><br><span class="line">  ...</span><br><span class="line">  (Screenshots)</span><br><span class="line">  cypress/screenshots/spec.js/timestamp-America-New_York.png</span><br><span class="line"></span><br><span class="line">testing timezone Europe/London</span><br><span class="line">  ...</span><br><span class="line">  (Screenshots)</span><br><span class="line">  cypress/screenshots/spec.js/timestamp-America-New_York.png</span><br><span class="line"></span><br><span class="line">testing timezone Asia/Tokyo</span><br><span class="line">  ...</span><br><span class="line">  (Screenshots)</span><br><span class="line">  cypress/screenshots/spec.js/timestamp-America-New_York.png</span><br><span class="line"></span><br><span class="line">all done</span><br></pre></td></tr></table></figure>
+
+<p>Hmm, we can see from the screenshots that all specs used the same <code>America/New_York</code> time zone, even though we have set the Cypress environment variable <code>TZ</code>:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="title function_">runTests</span> = (<span class="params">timeZone</span>) =&gt; &#123;</span><br><span class="line">  <span class="keyword">return</span> cypress.<span class="title function_">run</span>(&#123;</span><br><span class="line">    <span class="comment">// 🔥 THIS IS INCORRECT</span></span><br><span class="line">    <span class="attr">env</span>: &#123;</span><br><span class="line">      <span class="attr">TZ</span>: timeZone,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>When we call <code>cypress.run(&#123; env: &#123; TZ: ... &#125; &#125;)</code> to pass the time zone, it is NOT the same as setting the process environment variable before launching the child browser process. <code>cypress.run(&#123; env: ... &#125;)</code> simply passes the variable values and populates the <a target="_blank" rel="noopener" href="https://on.cypress.io/env">Cypress.env</a> object.</p>
+<h3><span id="correct-processenv">Correct process.env</span></h3><p>Thus we need an alternate approach. When Cypress launches the child browser process, it inherits the parent&#39;s environment variables. Thus we simply need to change the <code>process.env.TZ</code> before running Cypress!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="title function_">runTests</span> = (<span class="params">timeZone</span>) =&gt; &#123;</span><br><span class="line">  process.<span class="property">env</span>.<span class="property">TZ</span> = timeZone</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> cypress.<span class="title function_">run</span>()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s run the tests</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">node ./test-timezones.js</span></span><br><span class="line">testing timezone America/New_York</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  (Screenshots)</span><br><span class="line">  cypress/screenshots/spec.js/timestamp-America-New_York.png</span><br><span class="line"></span><br><span class="line">testing timezone Europe/Berlin</span><br><span class="line">  ...</span><br><span class="line">  (Screenshots)</span><br><span class="line">  cypress/screenshots/spec.js/timestamp-Europe-Berlin.png</span><br><span class="line"></span><br><span class="line">testing timezone Europe/London</span><br><span class="line">  ...</span><br><span class="line">  (Screenshots)</span><br><span class="line">  cypress/screenshots/spec.js/timestamp-Europe-London.png</span><br><span class="line"></span><br><span class="line">testing timezone Asia/Tokyo</span><br><span class="line">  ...</span><br><span class="line">  (Screenshots)</span><br><span class="line">  cypress/screenshots/spec.js/timestamp-Asia-Tokyo.png</span><br><span class="line"></span><br><span class="line">all done</span><br></pre></td></tr></table></figure>
+
+<p>Super, the time zone is set correct for every test run.</p>
+<h3><span id="do-not-delete-the-screenshots">Do not delete the screenshots</span></h3><p>Hmm, the test run correctly, but we only have the screenshot from the last run</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">ls</span> cypress/screenshots/spec.js/</span></span><br><span class="line">timestamp-Asia-Tokyo.png</span><br></pre></td></tr></table></figure>
+
+<p>Cypress removes <code>cypress/videos</code> and <code>cypress/screenshots</code> before its run, but we do not want that. We want to preserve all screenshots from all test runs. Thus we need to tell Cypress to keep the test artifacts:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="title function_">runTests</span> = (<span class="params">timeZone</span>) =&gt; &#123;</span><br><span class="line">  process.<span class="property">env</span>.<span class="property">TZ</span> = timeZone</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> cypress.<span class="title function_">run</span>(&#123;</span><br><span class="line">    <span class="attr">config</span>: &#123;</span><br><span class="line">      <span class="attr">trashAssetsBeforeRuns</span>: <span class="literal">false</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ node ./test-timezones.js</span><br><span class="line">testing timezone America/New_York</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">$ ls -la cypress/screenshots/spec.js/</span><br><span class="line"></span><br><span class="line">-rw-r--r--  1 gleb  staff  11558 Feb 12 10:09 timestamp-America-New_York.png</span><br><span class="line">-rw-r--r--  1 gleb  staff  10690 Feb 12 10:09 timestamp-Asia-Tokyo.png</span><br><span class="line">-rw-r--r--  1 gleb  staff  10744 Feb 12 10:09 timestamp-Europe-Berlin.png</span><br><span class="line">-rw-r--r--  1 gleb  staff  10898 Feb 12 10:09 timestamp-Europe-London.png</span><br></pre></td></tr></table></figure>
+
+<p>If we want, we can delete the <code>cypress/screenshots</code> and other folders from our <code>test-timezones.js</code> script ourselves.</p>
+<h2><span id="recording-to-cypress-dashboard">Recording to Cypress Dashboard</span></h2><p>Let&#39;s set our project to record test results to the <a target="_blank" rel="noopener" href="https://on.cypress.io/dashboard-introduction">Cypress Dashboard</a>. From the Cypress screen click &quot;Runs&quot; tab. I picked the organization and set the project&#39;s visibility to public.</p>
+<p><img src="/blog/images/testing-timezones/setup.png" alt="Setting up the project to record to the Cypress Dashboard"></p>
+<blockquote class="pullquote"><p>👀 You can see the Cypress Dashboard for this project <a target="_blank" rel="noopener" href="https://dashboard.cypress.io/projects/7n3hov">here</a></p>
+</blockquote>
+
+<p>The next screen gives me the <code>CYPRESS_RECORD_KEY</code> value - I should keep it secret. Because I want to record to the Dashboard from my local laptop first, I will use <a target="_blank" rel="noopener" href="https://github.com/bahmutov/as-a">as-a</a> utility. I added another section to the local hidden file <code>~/.as-a/.as-a.ini</code> for my current project:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[test-timezones-example]</span></span><br><span class="line"><span class="attr">CYPRESS_RECORD_KEY</span>=******</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s change the <code>test-timezones.js</code> to record test results.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="title function_">runTests</span> = (<span class="params">timeZone</span>) =&gt; &#123;</span><br><span class="line">  process.<span class="property">env</span>.<span class="property">TZ</span> = timeZone</span><br><span class="line"></span><br><span class="line">  <span class="comment">// we can remove cypress/screenshots ourselves</span></span><br><span class="line">  <span class="keyword">return</span> cypress.<span class="title function_">run</span>(&#123;</span><br><span class="line">    <span class="attr">record</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">config</span>: &#123;</span><br><span class="line">      <span class="attr">trashAssetsBeforeRuns</span>: <span class="literal">false</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>I will run the script with <code>CYPRESS_RECORD_KEY</code> set as environment variable from my local laptop</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">as-a test-timezones-example node ./test-timezones.js</span></span><br></pre></td></tr></table></figure>
+
+<p>Nice, Cypress shows the tests being record on the dashboard by showing the run URL</p>
+<p><img src="/blog/images/testing-timezones/recorded.png" alt="Recorded run"></p>
+<p>Unfortunately, every new <code>cypress.run</code> call creates its own run on the Dashboard. Four time zones generated four separate recorded runs.</p>
+<p><img src="/blog/images/testing-timezones/runs.png" alt="Separate recorded runs"></p>
+<p>Cypress Dashboard has <em>no idea</em> that you want to group all these separate <code>cypress.run</code> results into a single logical run. But we can certainly do this - by providing the same <a target="_blank" rel="noopener" href="http://on.cypress.io/parallelization#Linking-CI-machines-for-parallelization-or-grouping"><code>ciBuildId</code></a> for these runs. For example, the local timestamp would be a good unique ID we could use. We should also distinguish the separate test groups inside the single run by using the <code>group</code> parameter - the time zone itself would be a good group name.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> cypress = <span class="built_in">require</span>(<span class="string">&#x27;cypress&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> ciBuildId = <span class="title class_">Number</span>(<span class="keyword">new</span> <span class="title class_">Date</span>())</span><br><span class="line"><span class="keyword">const</span> <span class="title function_">runTests</span> = (<span class="params">timeZone</span>) =&gt; &#123;</span><br><span class="line">  process.<span class="property">env</span>.<span class="property">TZ</span> = timeZone</span><br><span class="line"></span><br><span class="line">  <span class="comment">// we can remove cypress/screenshots ourselves</span></span><br><span class="line">  <span class="keyword">return</span> cypress.<span class="title function_">run</span>(&#123;</span><br><span class="line">    <span class="attr">record</span>: <span class="literal">true</span>,</span><br><span class="line">    ciBuildId,</span><br><span class="line">    <span class="attr">group</span>: timeZone,</span><br><span class="line">    <span class="attr">config</span>: &#123;</span><br><span class="line">      <span class="attr">trashAssetsBeforeRuns</span>: <span class="literal">false</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Super, now all test go into the same logical Dashboard run <code>#5</code>, as the end of the terminal output shows.</p>
+<p><img src="/blog/images/testing-timezones/run5.png" alt="All test runs were recorded in the same logical run #5"></p>
+<p>We can see the 4 groups of tests and inspect the uploaded screenshots from the Dashboard. Notice the different timestamps shown in the local time zone.</p>
+<p><img src="/blog/images/testing-timezones/dashboard-screenshots.gif" alt="Viewing the uploaded test screenshots"></p>
+<h2><span id="continuous-integration">Continuous Integration</span></h2><p>Of course, we want to run these tests on CI, instead of my local laptop. I will set up <a href="/blog/trying-github-actions/" title="GitHub Actions">GitHub Actions</a> to run the tests by using <a target="_blank" rel="noopener" href="https://github.com/cypress-io/github-action">cypress-io&#x2F;github-action</a>.</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/e2e.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">e2e</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">cypress-run:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">run</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span> <span class="string">🛎</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v2</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">tests</span> <span class="string">🧪</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v2</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="comment"># use our custom command to run tests</span></span><br><span class="line">          <span class="attr">command:</span> <span class="string">node</span> <span class="string">./test-timezones</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="comment"># pass the Dashboard record key as an environment variable</span></span><br><span class="line">          <span class="attr">CYPRESS_RECORD_KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.CYPRESS_RECORD_KEY</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="comment"># pass GitHub token to allow accurately detecting a build vs a re-run build</span></span><br><span class="line">          <span class="attr">GITHUB_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.GITHUB_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>I will need to set the <code>CYPRESS_RECORD_KEY</code> in the project&#39;s settings on GitHub to be able to record. But I do not need to use the timestamp to link the separate <code>cypress.run</code> calls into a single logical recorded run - because Cypress automatically uses an appropriate <a target="_blank" rel="noopener" href="https://on.cypress.io/parallelization#CI-Build-ID-environment-variables-by-provider">CI variable</a>. Thus my test script can set the <code>ciBuildId</code> only when not running on CI:</p>
+<figure class="highlight js"><figcaption><span>test-timezones.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> cypress = <span class="built_in">require</span>(<span class="string">&#x27;cypress&#x27;</span>)</span><br><span class="line"><span class="comment">// on CI let Cypress use an appropriate environment variable</span></span><br><span class="line"><span class="comment">// to link separate cypress runs into a single logical run</span></span><br><span class="line"><span class="keyword">const</span> ciBuildId = process.<span class="property">env</span>.<span class="property">CI</span> ? <span class="literal">null</span> : <span class="title class_">Number</span>(<span class="keyword">new</span> <span class="title class_">Date</span>())</span><br><span class="line"><span class="keyword">const</span> <span class="title function_">runTests</span> = (<span class="params">timeZone</span>) =&gt; &#123;</span><br><span class="line">  process.<span class="property">env</span>.<span class="property">TZ</span> = timeZone</span><br><span class="line"></span><br><span class="line">  <span class="comment">// we can remove cypress/screenshots ourselves</span></span><br><span class="line">  <span class="keyword">return</span> cypress.<span class="title function_">run</span>(&#123;</span><br><span class="line">    <span class="attr">record</span>: <span class="literal">true</span>,</span><br><span class="line">    ciBuildId,</span><br><span class="line">    <span class="attr">group</span>: timeZone,</span><br><span class="line">    <span class="attr">config</span>: &#123;</span><br><span class="line">      <span class="attr">trashAssetsBeforeRuns</span>: <span class="literal">false</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>GitHub Actions executes the workflow and records the test results to Cypress Dashboard</p>
+<p><img src="/blog/images/testing-timezones/ci.png" alt="Record CI run"></p>
+<h2><span id="load-balancing">Load balancing</span></h2><p>Now imagine our application grew and we have more end-to-end tests, and each test takes longer to run. We simulate this by addding <code>cy.wait(10000)</code> to our test and by cloning the spec file several times.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec-f.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// get the current time zone name</span></span><br><span class="line"><span class="keyword">const</span> timeZone = <span class="title class_">Intl</span>.<span class="title class_">DateTimeFormat</span>()</span><br><span class="line">  .<span class="title function_">resolvedOptions</span>()</span><br><span class="line">  .<span class="property">timeZone</span>.<span class="title function_">replace</span>(<span class="string">&#x27;/&#x27;</span>, <span class="string">&#x27;-&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="title function_">describe</span>(<span class="string">&#x27;Page F&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">it</span>(<span class="string">&#x27;shows the timestamp&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    cy.<span class="title function_">visit</span>(<span class="string">&#x27;index.html&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">get</span>(<span class="string">&#x27;#timezone&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>).<span class="title function_">and</span>(<span class="string">&#x27;not.be.empty&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">get</span>(<span class="string">&#x27;#local-time&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>).<span class="title function_">and</span>(<span class="string">&#x27;not.be.empty&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">screenshot</span>(<span class="string">`timestamp-F-<span class="subst">$&#123;timeZone&#125;</span>`</span>)</span><br><span class="line">    cy.<span class="title function_">wait</span>(<span class="number">10000</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Now we have to wait for single CI machine to go through each time zone and then run every spec file one by one ... The Dashboard clearly shows the waterfall of specs being executed one by one (I had to zoom out a lot of show 4 time zone groups with 6 specs in each group)</p>
+<p><img src="/blog/images/testing-timezones/waterfall.png" alt="Testing a group of specs for each time zone using a single machine"></p>
+<p><strong>Tip:</strong> it helps to prefix group name with an index to arrange them in order on the Dashboard</p>
+<figure class="highlight js"><figcaption><span>test-timezones.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> index = <span class="number">0</span></span><br><span class="line"><span class="keyword">const</span> <span class="title function_">runTests</span> = (<span class="params">timeZone</span>) =&gt; &#123;</span><br><span class="line">  process.<span class="property">env</span>.<span class="property">TZ</span> = timeZone</span><br><span class="line"></span><br><span class="line">  index += <span class="number">1</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// we can remove cypress/screenshots ourselves</span></span><br><span class="line">  <span class="keyword">return</span> cypress.<span class="title function_">run</span>(&#123;</span><br><span class="line">    <span class="attr">record</span>: <span class="literal">true</span>,</span><br><span class="line">    ciBuildId,</span><br><span class="line">    <span class="attr">group</span>: <span class="string">`<span class="subst">$&#123;index&#125;</span> <span class="subst">$&#123;timeZone&#125;</span>`</span>,</span><br><span class="line">    <span class="attr">config</span>: &#123;</span><br><span class="line">      <span class="attr">trashAssetsBeforeRuns</span>: <span class="literal">false</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Now the groups are shown in the Dashboard in their order of execution</p>
+<p><img src="/blog/images/testing-timezones/waterfall-index.gif" alt="Waterfall of specs using group index"></p>
+<p>Let&#39;s execute the specs for each group in parallel!</p>
+<h3><span id="parallelization">Parallelization</span></h3><p>Cypress Dashboard provides <a target="_blank" rel="noopener" href="https://on.cypress.io/parallelization">parallelization</a> where multiple Test Runners can join the single logical run and split the specs amongst themselves. The dashboard API tells each Cypress Test Runner the next spec to run. Let&#39;s update our test script:</p>
+<figure class="highlight js"><figcaption><span>test-timezones.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> cypress.<span class="title function_">run</span>(&#123;</span><br><span class="line">  <span class="attr">record</span>: <span class="literal">true</span>,</span><br><span class="line">  ciBuildId,</span><br><span class="line">  <span class="attr">group</span>: <span class="string">`<span class="subst">$&#123;index&#125;</span> <span class="subst">$&#123;timeZone&#125;</span>`</span>,</span><br><span class="line">  <span class="comment">// load balance specs in each group</span></span><br><span class="line">  <span class="attr">parallel</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="attr">config</span>: &#123;</span><br><span class="line">    <span class="attr">trashAssetsBeforeRuns</span>: <span class="literal">false</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>We only needed to add <code>parallel: true</code> to the <code>cypress.run(&#123; &#125;)</code> options - that&#39;s it. The specs in each group will be split amongst multiple CI machines automatically.</p>
+<p><strong>Tip:</strong> when running the same script <code>parallel: true</code> would not make much difference, since only a single machine is running.</p>
+<p>We need to spawn several CI containers to load balance our specs. On GitHub Actions we can use the <code>strategy: matrix</code> to do this following <a target="_blank" rel="noopener" href="https://github.com/cypress-io/github-action#parallel">the parallel example</a>. Our updated workflow file is:</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/e2e.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">e2e</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">cypress-run:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">run</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">strategy:</span></span><br><span class="line">      <span class="comment"># when one test fails, DO NOT cancel the other</span></span><br><span class="line">      <span class="comment"># containers, because this will kill Cypress processes</span></span><br><span class="line">      <span class="comment"># leaving the Dashboard hanging ...</span></span><br><span class="line">      <span class="comment"># https://github.com/cypress-io/github-action/issues/48</span></span><br><span class="line">      <span class="attr">fail-fast:</span> <span class="literal">false</span></span><br><span class="line">      <span class="attr">matrix:</span></span><br><span class="line">        <span class="comment"># spawn 3 CI containers</span></span><br><span class="line">        <span class="attr">containers:</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span> <span class="string">🛎</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v2</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Cypress</span> <span class="string">tests</span> <span class="string">🧪</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v2</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="comment"># use our custom command to run tests</span></span><br><span class="line">          <span class="attr">command:</span> <span class="string">node</span> <span class="string">./test-timezones</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="comment"># pass the Dashboard record key as an environment variable</span></span><br><span class="line">          <span class="attr">CYPRESS_RECORD_KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.CYPRESS_RECORD_KEY</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="comment"># pass GitHub token to allow accurately detecting a build vs a re-run build</span></span><br><span class="line">          <span class="attr">GITHUB_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.GITHUB_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s push the code - GitHub UI shows the 3 machines running our code as part of the job</p>
+<p><img src="/blog/images/testing-timezones/ci-3.png" alt="GitHub Action job with 3 machines"></p>
+<p>Each group on the Dashboard shows how the specs are executing in parallel, notice the &quot;1&quot;, &quot;2&quot;, and &quot;3&quot; indices of the machines participating in the group.</p>
+<p><img src="/blog/images/testing-timezones/group-3.png" alt="Specs in the group were split across three machines"></p>
+<h3><span id="use-more-machines">Use more machines</span></h3><p>Want an even faster run? Click on the parallelization calculator button to see the projected time savings for different number of machines.</p>
+<p><img src="/blog/images/testing-timezones/calculator.png" alt="Parallelization calculator"></p>
+<p>Each group cannot run faster than its longest spec, and there are only 6 specs - thus the fastest we can get is to bring 6 machines into the mix. Let&#39;s do it.</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/e2e.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">matrix:</span></span><br><span class="line">  <span class="comment"># spawn 6 CI containers</span></span><br><span class="line">  <span class="attr">containers:</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]</span><br></pre></td></tr></table></figure>
+
+<p>And push the code again.</p>
+<p><img src="/blog/images/testing-timezones/run-times.png" alt="Run times for different number of machines"></p>
+<p>Our run time has dropped further. Let&#39;s drill down into individual spec timings using the Dashboard chart. As you can see, the very first group <code>1 America/New_York</code> had 5 machines execute the tests - the 6th machine did not join the group in time. Thus the very first machine had to execute two specs, and the total group duration was 22 seconds.</p>
+<p><img src="/blog/images/testing-timezones/first-group.png" alt="Five machines participated in the first group"></p>
+<p>Because CIs take different time to spin the containers, some machines might be &quot;late to the party&quot;. That&#39;s fine - all machines were working to execute the second, third, and the fourth group. Look at the last group where all 6 specs were executed in parallel by 6 CI machines, finishing the group in 14 seconds.</p>
+<p><img src="/blog/images/testing-timezones/last-group.png" alt="Six machines participated in the last group"></p>
+<h2><span id="see-more">See more</span></h2><ul>
+<li><a href="/blog/parallel-cypress-tests-gh-action/" title="Split Long GitHub Action Workflow Into Parallel Cypress Jobs">Split Long GitHub Action Workflow Into Parallel Cypress Jobs</a></li>
+<li><a href="/blog/cypress-geolocation/" title="Debugging Cypress Geolocation Problem">Debugging Cypress Geolocation Problem</a></li>
+<li><a href="/blog/circle-ram-disk/" title="Start CircleCI Machines Faster by Using RAM Disk">Start CircleCI Machines Faster by Using RAM Disk</a></li>
+<li><a href="/blog/split-spec/" title="Make Cypress Run Faster by Splitting Specs">Make Cypress Run Faster by Splitting Specs</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/testing-timezones/" data-id="clxj6w7ef00jcbjn7fexp0r91" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/testing-timezones/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/ci/" rel="tag">ci</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/github/" rel="tag">github</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../onbeforeunload/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          window.onbeforeunload and Cypress
+        
+      </div>
+    </a>
+  
+  
+    <a href="../test-monorepo-apps/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">How to Test Monorepo Apps Using Cypress GitHub Action</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/testing-timezones/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

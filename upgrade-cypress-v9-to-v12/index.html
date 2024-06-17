@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Upgrade Cypress From Version 9 to Version 12 | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Recently I have made two large-scale transitions from Cypress v9.7.0 to the latest version 12.7.0. The first project was the example tests I used for my Cypress Network Testing Exercises course. You c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Upgrade Cypress From Version 9 to Version 12">
+<meta property="og:url" content="https://glebbahmutov.com/blog/upgrade-cypress-v9-to-v12/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Recently I have made two large-scale transitions from Cypress v9.7.0 to the latest version 12.7.0. The first project was the example tests I used for my Cypress Network Testing Exercises course. You c">
+<meta property="og:locale">
+<meta property="article:published_time" content="2023-03-13T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.616Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-upgrade-cypress-v9-to-v12" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2023-03-13T04:00:00.000Z" itemprop="datePublished">Mar 13 2023</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Upgrade Cypress From Version 9 to Version 12
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How we have upgraded Cypress from v9.7.0 to v12.7.0 with code examples.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Recently I have made two large-scale transitions from Cypress v9.7.0 to the latest version 12.7.0. The first project was the example tests I used for my <a target="_blank" rel="noopener" href="https://cypress.tips/courses/network-testing">Cypress Network Testing Exercises course</a>. You can find the example source code before the transition set up for v9 in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/fastify-example-tests">bahmutov&#x2F;fastify-example-tests</a> and after the transition in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/fastify-example-tests-new">bahmutov&#x2F;fastify-example-tests-new</a>. The second transition was for my day job at Mercari US. Altogether, both projects had about 400 spec files with 800 end-to-end tests.</p>
+<p>I had several reasons for upgrading:</p>
+<ul>
+<li>I wanted to use the <a href="/blog/cypress-v12/" title="new query commands">new query commands</a> from my plugin <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-map">cypress-map</a></li>
+<li>we started hitting the error <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress/issues/22291">#22291</a> a lot, both running Cypress v9.7.0 locally and on CI</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">TypeError: Cannot read properties of undefined (reading &#x27;isServer&#x27;)</span><br><span class="line">    at TLSWrap.onerror (node:_tls_wrap:411:27)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>I was sick to my stomach of hitting the error <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress/issues/21428">#21428</a></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">TypeError: ErrorConstructor is not a constructor</span><br></pre></td></tr></table></figure>
+
+<p>There were several obstacles why we postponed upgrading for so long</p>
+<ul>
+<li>we use <strong>a lot</strong> of Cypress plugins (almost all plugins described in my course <a target="_blank" rel="noopener" href="https://cypress.tips/courses/cypress-plugins">Cypress Plugins</a>!) and some of them did not support Cypress v12 yet. For example, my own <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-if">cypress-if</a> plugin <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-if/issues/58">does not support v12 still</a>. The plugins I could control, like <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cyclope">cyclope</a> I could <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cyclope/pull/76">upgrade</a> to make work with Cypress v12.</li>
+<li>Cypress team changed how <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress/issues/23400">cy.log works</a> for some reason</li>
+<li>upgrade requires time and effort. All code using <code>cy.if</code> and <code>cy.then(cy.log)</code> has to be updated</li>
+</ul>
+<h2><span id="strategy">Strategy</span></h2><p>Ok, here is how the transition worked. We first renamed <code>cypress/integration</code> folder to <code>cypress/integration-all</code>. We took a few simple specs and moved them to the old <code>cypress/integration</code> folder. This way we could migrate and run only a few specs at a time, and even work in parallel as a team. We split up and each engineer ported one subfolder at a time</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">cypress/</span><br><span class="line">  integration-all/</span><br><span class="line">    feature-b/ ... specs</span><br><span class="line">    feature-c/ ... specs</span><br><span class="line">    feature-d/ ... specs</span><br><span class="line">    feature-e/ ... specs</span><br><span class="line">    ...</span><br><span class="line">  integration/</span><br><span class="line">    feature-a/ ... specs</span><br></pre></td></tr></table></figure>
+
+<p>Here I am starting by porting a single <code>cypress/integration/feature-a</code> folder with a few specs. I installed Cypress v12.7.0 and opened it for the very first time. The upgrade wizard moved my plugins file and renamed the <code>cypress/integration</code> folder to <code>cypress/e2e</code>. We kept the original <code>*.js</code> spec pattern.</p>
+<p>We have went through the list of plugins and checked if there was a newly released version compatible with Cypress v12. <strong>Tip:</strong> you can use <a target="_blank" rel="noopener" href="https://github.com/bahmutov/available-versions">available-versions</a> to quickly find out all versions of an NPM package.</p>
+<h2><span id="code-changes">Code changes</span></h2><p>First, read the Cypres <a target="_blank" rel="noopener" href="https://on.cypress.io/migration-guide">migration guides</a>. They cover each major Cypress version. Here are some common code changes we had to do to move from Cypress v9 to v12.</p>
+<h3><span id="ci-changes">CI changes</span></h3><p>We changed our CircleCI and GitHub Actions workflows to new versions that support Cypress v12 and let the CI tell us all failing specs.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># CircleCI config file</span></span><br><span class="line"><span class="comment"># https://github.com/cypress-io/circleci-orb</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 🔻 Cypress v9</span></span><br><span class="line"><span class="attr">cypress:</span> <span class="string">cypress-io/cypress@1</span></span><br><span class="line"></span><br><span class="line"><span class="string">✅</span> <span class="string">Cypress</span> <span class="string">v12</span></span><br><span class="line"><span class="attr">cypress:</span> <span class="string">cypress-io/cypress@2</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># GitHub Actions</span></span><br><span class="line"><span class="comment"># https://github.com/cypress-io/github-action</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 🔻 Cypress v9</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v3</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ✅ Cypress v12</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v5</span></span><br></pre></td></tr></table></figure>
+
+<h3><span id="replace-cythencylog">Replace cy.then(cy.log)</span></h3><p>Previously code <code>cy.then(cy.log)</code> yielded whatever the original subject of <code>cy.then</code> was. In Cypress v10, <code>cy.log</code> started yielding <code>null</code>, &quot;breaking&quot; the subject. The solution was to wrap the original subject passed to <code>cy.then</code> like this:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line">cy</span><br><span class="line">  .<span class="title function_">wait</span>(alias)</span><br><span class="line">  .<span class="title function_">its</span>(<span class="string">&#x27;response.statusCode&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>(cy.<span class="property">log</span>)</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">statusCode</span>) =&gt;</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line">cy</span><br><span class="line">  .<span class="title function_">wait</span>(alias)</span><br><span class="line">  .<span class="title function_">its</span>(<span class="string">&#x27;response.statusCode&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function"><span class="params">code</span> =&gt;</span> &#123;</span><br><span class="line">    cy.<span class="title function_">log</span>(code)</span><br><span class="line">    cy.<span class="title function_">wrap</span>(code, &#123;<span class="attr">log</span>: <span class="literal">false</span>&#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">statusCode</span>) =&gt;</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>If we just want to print the subject value to the Command Log, we could replace <code>.then(cy.log)</code> with an assertion. The assertion both checks the value and prints it to the Command Log.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ✅ all Cypress versions</span></span><br><span class="line">cy</span><br><span class="line">  .<span class="title function_">wait</span>(alias)</span><br><span class="line">  .<span class="title function_">its</span>(<span class="string">&#x27;response.statusCode&#x27;</span>)</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;be.a&#x27;</span>, <span class="string">&#x27;number&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">statusCode</span>) =&gt;</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line"><span class="comment">// load the data from the fixture file &quot;apple.json&quot;</span></span><br><span class="line">cy.<span class="title function_">fixture</span>(<span class="string">&#x27;apple.json&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>(cy.<span class="property">log</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ all Cypress versions</span></span><br><span class="line"><span class="comment">// load the data from the fixture file &quot;apple.json&quot;</span></span><br><span class="line">cy.<span class="title function_">fixture</span>(<span class="string">&#x27;apple.json&#x27;</span>)</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;be.an&#x27;</span>, <span class="string">&#x27;object&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>Even better was to use <a href="/blog/better-cypress-log/" title="A Better Cypress Log Command">A Better Cypress Log Command</a>, for example from <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-map">cypress-map</a>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-map&#x27;</span></span><br><span class="line">cy</span><br><span class="line">  .<span class="title function_">wait</span>(alias)</span><br><span class="line">  .<span class="title function_">its</span>(<span class="string">&#x27;response.statusCode&#x27;</span>)</span><br><span class="line">  .<span class="title function_">print</span>(<span class="string">&#x27;response status %d&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">statusCode</span>) =&gt;</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Another example of changes due to <code>cy.log</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line"><span class="comment">// print the first prices to Command Log</span></span><br><span class="line"><span class="comment">// to make they visible in the video</span></span><br><span class="line"><span class="comment">// because cy.log returns nothing, the original &quot;prices&quot; subject</span></span><br><span class="line"><span class="comment">// is going to be yielded down the command chain</span></span><br><span class="line">.<span class="title function_">then</span>(<span class="function">(<span class="params">prices</span>) =&gt;</span> cy.<span class="title function_">log</span>(<span class="string">&#x27;prices &#x27;</span> + <span class="title class_">Cypress</span>.<span class="property">_</span>.<span class="title function_">take</span>(prices, <span class="number">10</span>).<span class="title function_">join</span>(<span class="string">&#x27;, &#x27;</span>)))</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line"><span class="comment">// print the first prices to Command Log</span></span><br><span class="line"><span class="comment">// to make they visible in the video</span></span><br><span class="line">.<span class="title function_">then</span>(<span class="function">(<span class="params">prices</span>) =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">log</span>(<span class="string">&#x27;prices &#x27;</span> + <span class="title class_">Cypress</span>.<span class="property">_</span>.<span class="title function_">take</span>(prices, <span class="number">10</span>).<span class="title function_">join</span>(<span class="string">&#x27;, &#x27;</span>))</span><br><span class="line">  cy.<span class="title function_">wrap</span>(prices, &#123; <span class="attr">log</span>: <span class="literal">false</span> &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>There were even hidden ways for <code>cy.log</code> to trick you. If <code>cy.then</code> callback function returns undefined, the yielded value is the the result of the last internal command. Which caused problems if you had <code>cy.log</code> at the end of <code>cy.then(callback)</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line"><span class="comment">// get the addresses somehow</span></span><br><span class="line">cy.<span class="title function_">then</span>(<span class="function">(<span class="params">addresses</span>) =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">log</span>(<span class="string">`User has <span class="subst">$&#123;addresses.length&#125;</span> address(es)`</span>)</span><br><span class="line">&#125;)</span><br><span class="line">.<span class="title function_">should</span>(<span class="string">&#x27;have.length.greaterThan&#x27;</span>, <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>The above code quietly changes the subject from the <code>addresses</code> array to <code>null</code> in Cypress v12 and had to be rewritten.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line"><span class="comment">// get the addresses somehow</span></span><br><span class="line">cy.<span class="title function_">then</span>(<span class="function">(<span class="params">addresses</span>) =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">log</span>(<span class="string">`User has <span class="subst">$&#123;addresses.length&#125;</span> address(es)`</span>)</span><br><span class="line">  cy.<span class="title function_">wrap</span>(addresses, &#123; <span class="attr">log</span>: <span class="literal">false</span> &#125;)</span><br><span class="line">&#125;)</span><br><span class="line">.<span class="title function_">should</span>(<span class="string">&#x27;have.length.greaterThan&#x27;</span>, <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+
+<h3><span id="disable-cyinvoke-retries">Disable cy.invoke retries</span></h3><p>I said many times that <a href="/blog/cypress-v12/" title="Cypress V12 Is A Big Deal">Cypress V12 Is A Big Deal</a>, but <code>cy.invoke</code> switching by default to retries is ... weird. For example, this code only runs once in Cypress v9, but multiple times in v10+ causing problems.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line">cy.<span class="title function_">wrap</span>(<span class="title function_">fetch</span>(<span class="string">&#x27;/fruit&#x27;</span>))</span><br><span class="line">  .<span class="title function_">invoke</span>(<span class="string">&#x27;json&#x27;</span>)</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;have.property&#x27;</span>, <span class="string">&#x27;fruit&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>The trick to disable retries is to put them after or inside <code>cy.then</code> command</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line">cy.<span class="title function_">wrap</span>(<span class="title function_">fetch</span>(<span class="string">&#x27;/fruit&#x27;</span>))</span><br><span class="line">  <span class="comment">// cannot use cy.invoke as it retries in Cypress v12</span></span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">res</span>) =&gt;</span> res.<span class="title function_">json</span>())</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;have.property&#x27;</span>, <span class="string">&#x27;fruit&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>I wish Cypress team added an option to <code>cy.invoke</code> command to skip retries, like <code>.invoke(&#123; retries: false &#125;, &#39;json&#39;)</code> Of course, I got you, buddy. You can use <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-map#invokeonce">cypress-map cy.invokeOnce</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-map&#x27;</span></span><br><span class="line"></span><br><span class="line">cy.<span class="title function_">wrap</span>(<span class="title function_">fetch</span>(<span class="string">&#x27;/fruit&#x27;</span>))</span><br><span class="line">  .<span class="title function_">invokeOnce</span>(<span class="string">&#x27;json&#x27;</span>)</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;have.property&#x27;</span>, <span class="string">&#x27;fruit&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>Another example where I am using the application window&#39;s <code>fetch</code> method (which I can intercept using <code>cy.intercept</code> command, unlike <code>cy.request</code> network calls)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line">cy.<span class="title function_">window</span>()</span><br><span class="line">  .<span class="title function_">invoke</span>(<span class="string">&#x27;fetch&#x27;</span>, <span class="string">&#x27;/fruit&#x27;</span>)</span><br><span class="line">  .<span class="title function_">invoke</span>(<span class="string">&#x27;json&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line">cy.<span class="title function_">window</span>()</span><br><span class="line">  <span class="comment">// do not use cy.invoke as it retries in Cypress v12</span></span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">w</span>) =&gt;</span> w.<span class="title function_">fetch</span>(<span class="string">&#x27;/fruit&#x27;</span>))</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">(<span class="params">res</span>) =&gt;</span> res.<span class="title function_">json</span>())</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-map&#x27;</span></span><br><span class="line">cy.<span class="title function_">window</span>()</span><br><span class="line">  .<span class="title function_">invokeOnce</span>(<span class="string">&#x27;fetch&#x27;</span>, <span class="string">&#x27;/fruit&#x27;</span>)</span><br><span class="line">  .<span class="title function_">invokeOnce</span>(<span class="string">&#x27;json&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3><span id="disable-cyas-retries">Disable cy.as retries</span></h3><p>Cypress v12 has changed how <a target="_blank" rel="noopener" href="https://on.cypress.io/as">cy.as</a> command works. If the previous commands are queries, accessing the aliased value would re-run the queries, which would suddenly show you a different value</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;.item&#x27;</span>)</span><br><span class="line">  .<span class="title function_">invoke</span>(<span class="string">&#x27;text&#x27;</span>)</span><br><span class="line">  .<span class="title function_">as</span>(<span class="string">&#x27;itemName&#x27;</span>)</span><br><span class="line"><span class="comment">// load new item</span></span><br><span class="line"><span class="comment">// sometime later</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;@itemName&#x27;</span>)</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;equal&#x27;</span>, <span class="string">&#x27;old item name&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>In Cypress v12, if the <code>.item</code> element changed, you would suddenly see &quot;new item name&quot;, even if the value of the alias was &quot;old item name&quot; before. The solution is to save it with the &quot;static&quot; option</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;.item&#x27;</span>)</span><br><span class="line">  .<span class="title function_">invoke</span>(<span class="string">&#x27;text&#x27;</span>)</span><br><span class="line">  .<span class="title function_">as</span>(<span class="string">&#x27;itemName&#x27;</span>, &#123; <span class="attr">type</span>: <span class="string">&#x27;static&#x27;</span> &#125;)</span><br><span class="line"><span class="comment">// load new item</span></span><br><span class="line"><span class="comment">// sometime later</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;@itemName&#x27;</span>)</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;equal&#x27;</span>, <span class="string">&#x27;old item name&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3><span id="remove-cypress-if-commands">Remove cypress-if commands</span></h3><p>Removing <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-if">cypress-if</a> plugin with its <code>cy.if</code> command was very sad. It is a <a href="/blog/cypress-if/" title="powerful plugin">powerful plugin</a>, even if it relies on internals of Cypress command chain implementation.</p>
+<h3><span id="existence-condition">Existence condition</span></h3><p>The element existence assertion is built into Cypress querying commands, like <code>cy.get</code>, <code>cy.find</code>, and <code>cy.contains</code>. If we wanted to conditionally do operations if the element exists or not, we had to disable the built-in assertion using <code>cy.should(Cypress._.noop)</code> assertion and check inside the <code>cy.then(callback)</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-if&#x27;</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;.enabled-sms&#x27;</span>)</span><br><span class="line">  .<span class="title function_">if</span>(<span class="string">&#x27;exists&#x27;</span>)</span><br><span class="line">  .<span class="title function_">log</span>(<span class="string">&#x27;User enabled SMS notifications&#x27;</span>)</span><br><span class="line">  .<span class="title function_">else</span>()</span><br><span class="line">  .<span class="title function_">get</span>(<span class="string">&#x27;.enable-sms&#x27;</span>)</span><br><span class="line">  .<span class="title function_">click</span>()</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;.enabled-sms&#x27;</span>)</span><br><span class="line">  .<span class="title function_">should</span>(<span class="title class_">Cypress</span>.<span class="property">_</span>.<span class="property">noop</span>)</span><br><span class="line">  .<span class="title function_">then</span>($el =&gt; &#123;</span><br><span class="line">    <span class="keyword">if</span> ($el.<span class="property">length</span>) &#123;</span><br><span class="line">      cy.<span class="title function_">log</span>(<span class="string">&#x27;User enabled SMS notifications&#x27;</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      cy.<span class="title function_">get</span>(<span class="string">&#x27;.enable-sms&#x27;</span>).<span class="title function_">click</span>()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<h3><span id="visibility-condition">Visibility condition</span></h3><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-if&#x27;</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;.product&#x27;</span>)</span><br><span class="line">  .<span class="title function_">if</span>(<span class="string">&#x27;visible&#x27;</span>)</span><br><span class="line">    .<span class="title function_">log</span>(<span class="string">&#x27;have a product&#x27;</span>)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">      <span class="comment">// do something with the product</span></span><br><span class="line">    &#125;)</span><br><span class="line">  .<span class="title function_">else</span>()</span><br><span class="line">    .<span class="title function_">log</span>(<span class="string">&#x27;need to pick the product&#x27;</span>)</span><br><span class="line">    .<span class="title function_">get</span>(<span class="string">&#x27;.select-product&#x27;</span>)</span><br><span class="line">    .<span class="title function_">click</span>()</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;.product&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>($product =&gt; &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="title class_">Cypress</span>.<span class="property">dom</span>.<span class="title function_">isVisible</span>($product)) &#123;</span><br><span class="line">      cy.<span class="title function_">log</span>(<span class="string">&#x27;have a product&#x27;</span>)</span><br><span class="line">        .<span class="title function_">then</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">          <span class="comment">// do something with the product</span></span><br><span class="line">        &#125;)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      cy.<span class="title function_">log</span>(<span class="string">&#x27;need to pick the product&#x27;</span>)</span><br><span class="line">        .<span class="title function_">get</span>(<span class="string">&#x27;.select-product&#x27;</span>)</span><br><span class="line">        .<span class="title function_">click</span>()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<h3><span id="checked-box-condition">Checked box condition</span></h3><p>If a checkbox might be checked or not, and we wanted to have it checked:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-if&#x27;</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;#enrolled&#x27;</span>)</span><br><span class="line">  .<span class="title function_">if</span>(<span class="string">&#x27;checked&#x27;</span>)</span><br><span class="line">  .<span class="title function_">log</span>(<span class="string">&#x27;**already enrolled**&#x27;</span>)</span><br><span class="line">  <span class="comment">// the checkbox should be passed into .else()</span></span><br><span class="line">  .<span class="title function_">else</span>()</span><br><span class="line">  .<span class="title function_">check</span>()</span><br><span class="line">  .<span class="title function_">finally</span>()</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;be.checked&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line">cy.<span class="title function_">get</span>(<span class="string">&#x27;#enrolled&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>($el =&gt; &#123;</span><br><span class="line">    <span class="keyword">if</span> ($el.<span class="title function_">is</span>(<span class="string">&#x27;:checked&#x27;</span>)) &#123;</span><br><span class="line">      cy.<span class="title function_">log</span>(<span class="string">&#x27;**already enrolled**&#x27;</span>)</span><br><span class="line">      <span class="comment">// yield the element</span></span><br><span class="line">      cy.<span class="title function_">wrap</span>($el, &#123; <span class="attr">log</span>: <span class="literal">false</span> &#125;)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      cy.<span class="title function_">wrap</span>($el, &#123; <span class="attr">log</span>: <span class="literal">false</span> &#125;).<span class="title function_">check</span>()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">  .<span class="title function_">should</span>(<span class="string">&#x27;be.checked&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3><span id="location-pathname">Location pathname</span></h3><p>Imagine you are buying an item, but sometimes the system does extra security checks, and redirects you to verify you credit card. We used to handle it quite easily by checking the location pathname after the &quot;Purchase&quot; click.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 🔻 Cypress v9</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;cypress-if&#x27;</span></span><br><span class="line">cy.<span class="title function_">contains</span>(<span class="string">&#x27;Purchase&#x27;</span>).<span class="title function_">click</span>()</span><br><span class="line"><span class="comment">// try for 5 seconds to see if the URL pathname</span></span><br><span class="line"><span class="comment">// includes the string &quot;/verify_card/&quot;</span></span><br><span class="line">cy.<span class="title function_">location</span>(<span class="string">&#x27;pathname&#x27;</span>, &#123; <span class="attr">timeout</span>: <span class="number">5000</span> &#125;)</span><br><span class="line">  .<span class="title function_">if</span>(<span class="string">&#x27;includes&#x27;</span>, <span class="string">&#x27;/verify_card/&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// enter credit card verification info</span></span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Without <code>cypress-if</code> the simplest check waits 5 seconds, then checks the URL</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ✅ Cypress v12</span></span><br><span class="line">cy.<span class="title function_">contains</span>(<span class="string">&#x27;Purchase&#x27;</span>).<span class="title function_">click</span>().<span class="title function_">wait</span>(<span class="number">5000</span>)</span><br><span class="line">cy.<span class="title function_">location</span>(<span class="string">&#x27;pathname&#x27;</span>)</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function"><span class="params">pathname</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (pathname.<span class="title function_">includes</span>(<span class="string">&#x27;/verify_card/&#x27;</span>)) &#123;</span><br><span class="line">      <span class="comment">// enter credit card verification info</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>I think this was it. Now smooth sailing with Cypress v12.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/upgrade-cypress-v9-to-v12/" data-id="clxj6w7fw00l0bjn78gyde4xo" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/upgrade-cypress-v9-to-v12/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../retry-or-not/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Retry Or Not
+        
+      </div>
+    </a>
+  
+  
+    <a href="../testing-q-and-a/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Your Testing Questions Answered</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/upgrade-cypress-v9-to-v12/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

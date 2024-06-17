@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Monads | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Big thank you to Vincent Orr and especially to Luis Atencio for reading an early draft of this post and providing generous feedback. There is a new excellent explanation of the Maybe monad written by">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Monads">
+<meta property="og:url" content="https://glebbahmutov.com/blog/monads/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Big thank you to Vincent Orr and especially to Luis Atencio for reading an early draft of this post and providing generous feedback. There is a new excellent explanation of the Maybe monad written by">
+<meta property="og:locale">
+<meta property="article:published_time" content="2016-08-16T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.556Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="functional">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-monads" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-08-16T04:00:00.000Z" itemprop="datePublished">Aug 16 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Monads
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Array, Promise and Maybe monads. Plus Docker is a functor.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Big <strong>thank you</strong> to <a target="_blank" rel="noopener" href="https://twitter.com/_cmdv_">Vincent Orr</a> and especially
+to <a target="_blank" rel="noopener" href="https://twitter.com/luijar">Luis Atencio</a> for reading an early draft of
+this post and providing generous feedback.</p>
+<p>There is a new <a target="_blank" rel="noopener" href="http://jrsinclair.com/articles/2016/marvellously-mysterious-javascript-maybe-monad/">excellent explanation</a> of the Maybe monad written by
+<a target="_blank" rel="noopener" href="https://twitter.com/jrsinclair">James Sinclair</a>. I highly recommend reading
+his long and comprehensive essay. I just want to give a slightly
+different reason for having monads around.</p>
+<h2><span id="simple-function-for-primitives">Simple function for primitives</span></h2><p>Whenever I code, I always prefer to code the simplest functionality
+first. For example an addition function would just return the sum of its
+two arguments</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">add</span>(<span class="params">a, b</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> a + b</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">2</span>, <span class="number">3</span>))</span><br><span class="line"><span class="comment">// 5</span></span><br></pre></td></tr></table></figure>
+
+<p>What if I want to log the input arguments before adding them? I do not add
+the logging into the function <code>add</code> - this adds a second concern to the
+function, making it harder to understand, test and reuse.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// BAD</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">add</span>(<span class="params">a, b</span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(a, b)</span><br><span class="line">  <span class="keyword">return</span> a + b</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">add</span>(<span class="number">2</span>, <span class="number">3</span>))</span><br><span class="line"><span class="comment">// 2 3</span></span><br><span class="line"><span class="comment">// 5</span></span><br></pre></td></tr></table></figure>
+
+<p>Instead, we can compose a <code>log</code> and <code>add</code> functions.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">add</span>(<span class="params">a, b</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> a + b</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">logArguments</span>(<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="property">log</span>.<span class="title function_">apply</span>(<span class="variable language_">console</span>, <span class="variable language_">arguments</span>)</span><br><span class="line">    <span class="keyword">return</span> fn.<span class="title function_">apply</span>(<span class="literal">null</span>, <span class="variable language_">arguments</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">logArguments</span>(add)(<span class="number">2</span>, <span class="number">3</span>))</span><br><span class="line"><span class="comment">// 2 3</span></span><br><span class="line"><span class="comment">// 5</span></span><br></pre></td></tr></table></figure>
+
+<p>We can refactor the <code>logArguments</code> further to separate the log call from
+applying the given function, but the main point is this:</p>
+<blockquote>
+<p>We kept the function <code>add</code> as is;
+<code>add</code> has a very clear purpose and works on its simple arguments.</p>
+</blockquote>
+<p>Let us take a look at another simple function, for example <code>double</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">double</span>(<span class="params">x</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> x + x</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">double</span>(<span class="number">10</span>))</span><br><span class="line"><span class="comment">// 20</span></span><br></pre></td></tr></table></figure>
+
+<p>Again, <code>double</code> only handles the simplest case possible - a single input
+argument. If we wanted to extend <code>double</code> with additional features, like
+logging its arguments, we would create a second function via composition.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">logArguments</span>(double)(<span class="number">10</span>))</span><br><span class="line"><span class="comment">// 10</span></span><br><span class="line"><span class="comment">// 20</span></span><br></pre></td></tr></table></figure>
+
+<h2><span id="working-with-arrays">Working with arrays</span></h2><p>What if we wanted to double many numbers? Given a list of numbers,
+could we double every element in the list by reusing the original
+<code>double</code> that operates on a single item at a time?</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">map</span>(<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">function</span> (<span class="params">list</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> result = []</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> k = <span class="number">0</span>; k &lt; list.<span class="property">length</span>; k += <span class="number">1</span>) &#123;</span><br><span class="line">      result.<span class="title function_">push</span>(<span class="title function_">fn</span>(list[k]))</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> numbers = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">map</span>(double)(numbers))</span><br><span class="line"><span class="comment">// [2, 4, 6]</span></span><br></pre></td></tr></table></figure>
+
+<h3><span id="map">map</span></h3><p>The function <code>double</code> stays the same, but it was <em>adapted</em> to work on a list
+of numbers using another function we wrote. What if we wanted to log
+each number before doubling it? Just compose <code>double</code>, <code>logArguments</code> and
+<code>map</code> functions!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">map</span>(<span class="title function_">logArguments</span>(double))(numbers))</span><br><span class="line"><span class="comment">// 1</span></span><br><span class="line"><span class="comment">// 2</span></span><br><span class="line"><span class="comment">// 3</span></span><br><span class="line"><span class="comment">// [2, 4, 6]</span></span><br></pre></td></tr></table></figure>
+
+<p>What is so interesting about the <code>map</code> function we have just written? Its
+purpose is not really to adapt the <code>double</code> function <em>per se</em>. It does
+not extend its functionality the way <code>logArguments</code> does. No, the <code>map</code>
+function <em>adapts</em> the function <code>double</code> to work with a different <em>type</em>
+of inputs - it &quot;teaches&quot; <code>double</code> how to work with multiple numbers stored
+in an Array.</p>
+<p>In <a target="_blank" rel="noopener" href="https://github.com/hemanth/functional-programming-jargon">functional jargon</a>
+we say that <code>map</code> &quot;lifts&quot; function <code>double</code> to work on a non primitive type.</p>
+<p>We can write &quot;type signature&quot; next to each function for clarity.
+Even if the original function <code>double</code> works with any argument due to
+JavaScript&#39;s dynamic nature, let us pretend that we are
+only passing numbers to it.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">                       <span class="comment">// name   :: argument -&gt; return type</span></span><br><span class="line">double                 <span class="comment">// double :: number   -&gt; number</span></span><br><span class="line"><span class="title function_">logArguments</span>(double)   <span class="comment">//        :: number   -&gt; number</span></span><br><span class="line"><span class="title function_">map</span>(double)            <span class="comment">//        :: [number] -&gt; [number]</span></span><br></pre></td></tr></table></figure>
+
+<p>The function <code>map(double)</code> expects a list of numbers, expressed in our type
+signature as <code>[number]</code> and returns a list of numbers, also written as
+<code>[number]</code>.</p>
+<p>Function <code>map</code> adapts any function that works on a simple single argument to also
+work on an entire list of values. It is so useful and common that it became
+a built-in method in the ES5 JavaScript standard, and it belongs to the
+<code>Array</code> type. Thus our program should really be written simply as</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(numbers.<span class="title function_">map</span>(double))</span><br><span class="line"><span class="comment">// [2, 4, 6]</span></span><br></pre></td></tr></table></figure>
+
+<p>Great, what does this have to do with monads? Well, we are almost there.
+The <code>Array</code> instance is a container. It just stores many values and has a
+method <code>map</code> that &quot;unwraps&quot; the values and gives them one by one to a simple
+function like <code>double</code> that only knows how to deal with just a simple
+single value.</p>
+<p>The Array is so convenient and is used so often, that sometimes we run
+into troubles. For example, what if the function we are mapping does not
+return a primitive value, but (<strong>drum roll please</strong>) an already wrapped value?</p>
+<p>Consider for example a function that returns all distinct characters in
+a given string.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// nice ES6 trick to get distinct values here</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">distinct</span>(<span class="params">str</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> [... <span class="keyword">new</span> <span class="title class_">Set</span>(str)]</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">distinct</span>(<span class="string">&#x27;foo&#x27;</span>))</span><br><span class="line"><span class="comment">// [&#x27;f&#x27;, &#x27;o&#x27;]</span></span><br></pre></td></tr></table></figure>
+
+<p>What happens when we want to find distinct characters across a list of words?
+Well, we are going to map over an Array, right?</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> words = [<span class="string">&#x27;foo&#x27;</span>, <span class="string">&#x27;bar&#x27;</span>, <span class="string">&#x27;baz&#x27;</span>]</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(words.<span class="title function_">map</span>(distinct))</span><br><span class="line"><span class="comment">// [ [ &#x27;f&#x27;, &#x27;o&#x27; ], [ &#x27;b&#x27;, &#x27;a&#x27;, &#x27;r&#x27; ], [ &#x27;b&#x27;, &#x27;a&#x27;, &#x27;z&#x27; ] ]</span></span><br></pre></td></tr></table></figure>
+
+<p>Hmm, this does not work very well, because the function <code>distinct</code> is a little
+more complicated than <code>double</code>. Their signatures show this</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">double    <span class="comment">// double   :: number -&gt; number</span></span><br><span class="line">distinct  <span class="comment">// distinct :: string -&gt; [string]</span></span><br></pre></td></tr></table></figure>
+
+<p>When we map over <code>distinct</code> we put back into the Array more little Arrays
+instead of primitive types (that should be <code>string</code> in this case). The
+assumption that <code>map</code> makes is that the function it <em>adapts</em> takes
+the primitive value and returns a <em>primitive</em> unwrapped value.</p>
+<p>We can try using something else in this case. For example, we could call
+<code>join</code> on the array, get a single string and than map it, but that does
+not work since <code>Array.prototype.join</code> does not put the result back into
+the wrapped value that has <code>map</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(words.<span class="title function_">join</span>(<span class="string">&#x27;&#x27;</span>).<span class="title function_">map</span>(distinct))</span><br><span class="line"><span class="comment">// TypeError: words.join(...).map is not a function</span></span><br></pre></td></tr></table></figure>
+
+<p>We could of course &quot;wrap&quot; the value returned by the <code>join</code> ourselves,
+then we could call <code>map</code> if we wanted.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>([words.<span class="title function_">join</span>(<span class="string">&#x27;&#x27;</span>)].<span class="title function_">map</span>(distinct))</span><br><span class="line"><span class="comment">// [ [ &#x27;f&#x27;, &#x27;o&#x27;, &#x27;b&#x27;, &#x27;a&#x27;, &#x27;r&#x27;, &#x27;z&#x27; ] ]</span></span><br></pre></td></tr></table></figure>
+
+<h3><span id="flatmap">flatMap</span></h3><p>Almost correct, we <em>really</em> want to handle the case when the mapped function
+returns an already wrapped value! Let us write a function that is <em>just like</em>
+<code>map</code> function, but knows how to NOT doubly wrap the result. Because in this
+case its purpose is to avoid nested arrays, we need to <em>flatten</em> the result,
+and thus we will call it <code>flatMap</code> - it maps the value and then flattens the
+returned wrapped result to avoid wrapping it twice.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Array</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">flatMap</span> = <span class="keyword">function</span> <span class="title function_">flatMap</span>(<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="keyword">var</span> result = []</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">var</span> k = <span class="number">0</span>; k &lt; <span class="variable language_">this</span>.<span class="property">length</span>; k += <span class="number">1</span>) &#123;</span><br><span class="line">    result = result.<span class="title function_">concat</span>(<span class="title function_">fn</span>(<span class="variable language_">this</span>[k]))</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// set this instance to the result array</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">var</span> k = <span class="number">0</span>; k &lt; result.<span class="property">length</span>; k += <span class="number">1</span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>[k] = result[k]</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">length</span> = result.<span class="property">length</span></span><br><span class="line">  <span class="keyword">return</span> <span class="variable language_">this</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The above function calls the simple <code>fn</code> that MUST return an Array.
+The Array is the wrapped value in this case, and we prevent putting an Array
+into an Array by replacing the internal list with the new result.</p>
+<p>Here is how we use it</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>([words.<span class="title function_">join</span>(<span class="string">&#x27;&#x27;</span>)].<span class="title function_">flatMap</span>(distinct))</span><br><span class="line"><span class="comment">// [ &#x27;f&#x27;, &#x27;o&#x27;, &#x27;b&#x27;, &#x27;a&#x27;, &#x27;r&#x27;, &#x27;z&#x27; ]</span></span><br></pre></td></tr></table></figure>
+
+<p>We got ourselves an Array monad! It is nothing but a container data type that can
+use simple functions with signatures <code>x -&gt; x</code> by mapping over them.
+The result of a simple function is placed back into the Array - the container
+lives on! And most importantly, if we add <code>flatMap</code> to the Array, we get
+ourselves a monad - a container that knows how to handle simple functions
+that return a container instead of a primitive value. A monad does not nest values
+when using <code>flatMap</code> - it knows that it should discard the second wrapper
+and just keep one, otherwise it will soon get into a Russian nested doll
+situation where the underlying primitive value gets lost inside all the
+returned wrapping.</p>
+<p>It is almost like re-gifting a present. You do not just place the wrapped
+unwanted present into a new gift bag and give it to someone else. You first
+unwrap and discard the wrapping paper with the personal greeting card,
+wrap the present in your paper and add a new greeting card.</p>
+<p>Note: the method <code>flatMap</code> is also called <code>chain</code> sometimes. I prefer
+<code>flatMap</code> of course because it parallels the Array operation.</p>
+<h3><span id="combining-map-with-flatmap">Combining map with flatMap</span></h3><p>We can chain both <code>map</code> and <code>flatMap</code> method calls, depending on the
+return type of the lifted (adapted) function. For example we can flat map
+strings in an Array to letters and then map each letter to upper case.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">toUpper</span>(<span class="params">s</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> s.<span class="title function_">toUpperCase</span>()</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(</span><br><span class="line">  words.<span class="title function_">flatMap</span>(distinct).<span class="title function_">map</span>(toUpper)</span><br><span class="line">)</span><br><span class="line"><span class="comment">// const words = [&#x27;foo&#x27;, &#x27;bar&#x27;, &#x27;baz&#x27;]</span></span><br><span class="line"><span class="comment">// [ &#x27;F&#x27;, &#x27;O&#x27;, &#x27;B&#x27;, &#x27;A&#x27;, &#x27;R&#x27;, &#x27;B&#x27;, &#x27;A&#x27;, &#x27;Z&#x27; ]</span></span><br></pre></td></tr></table></figure>
+
+<p>The <code>map</code> vs <code>flatMap</code> choice should naturally depend on the function used.
+For example we could use <code>flatMap</code> to double numbers, but it would be a lot
+more efficient and intuitive to use simple <code>map</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// BAD</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>].<span class="title function_">flatMap</span>(<span class="function"><span class="params">x</span> =&gt;</span> [x * x]) <span class="comment">// [1, 4, 9]</span></span><br><span class="line"><span class="comment">// GOOD</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>].<span class="title function_">map</span>(<span class="function"><span class="params">x</span> =&gt;</span> x * x) <span class="comment">// [1, 4, 9]</span></span><br></pre></td></tr></table></figure>
+
+<h2><span id="working-with-async-code">Working with async code</span></h2><p>The above examples are all synchronous. The result is available right away,
+that is why we could print the returned value. The Arrays are very suitable
+for working with synchronous lifted functions; but they break down when
+the items are generated asynchronously, like reading values from a database
+or network resource.</p>
+<p>Promises are abstractions that allow us to work efficiently with values
+that will be generated asynchronously. They are part of the ES6 standard
+and are widely available in browsers.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> promise = http.<span class="title function_">get</span>(<span class="string">&#x27;/some/value&#x27;</span>)</span><br><span class="line"><span class="comment">// http.get call returns a &quot;promise&quot; that will later contain the actual value</span></span><br><span class="line">promise.<span class="title function_">then</span>(<span class="keyword">function</span> (<span class="params">value</span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;we got&#x27;</span>, value)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Promises are monads! They wrap a value that will be there in the future, and
+allow modifying the value using a &quot;map&quot; operation, called <code>then</code>.
+In fact Promises are even more user friendly than the above
+Array monad because both <code>map</code> and <code>flatMap</code> is just a single method <code>then</code>.
+The <code>Promise.prototype.then</code> is &quot;smart&quot; to determine how it should treat
+the value returned from the callback function.</p>
+<p>If the callback function returns a non-Promise instance, it will be treated
+like <code>map</code>, placing the value back into the Promise &quot;wrapper&quot;.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Promise</span>.<span class="title function_">resolve</span>(<span class="number">42</span>).<span class="title function_">then</span>(double).<span class="title function_">then</span>(<span class="variable language_">console</span>.<span class="property">log</span>)</span><br><span class="line"><span class="comment">// 84</span></span><br></pre></td></tr></table></figure>
+
+<p>If the passed function returns a Promise object, it knows NOT to double
+wrap it and <code>then</code> method acts like <code>flatMap</code> instead</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Promise</span>.<span class="title function_">resolve</span>(<span class="number">42</span>).<span class="title function_">then</span>(<span class="function">() =&gt;</span> <span class="title class_">Promise</span>.<span class="title function_">resolve</span>(<span class="number">100</span>)).<span class="title function_">then</span>(<span class="variable language_">console</span>.<span class="property">log</span>)</span><br><span class="line"><span class="comment">// 100</span></span><br></pre></td></tr></table></figure>
+
+<p>The anonymous function in the middle has returned a Promise object
+(with value <code>100</code> inside), but what got printed next was just the primitive
+value <code>100</code>, not <code>[Promise&#123;100&#125;]</code> because <code>then</code> acted like <code>flatMap</code> in this
+case.</p>
+<h2><span id="monads-of-different-type">Monads of different type</span></h2><p>The method <code>flatMap</code> (and <code>then</code> for Promises) is nice, but it <em>only</em> flattens
+the returned value of the same type. For example, if we resolve a Promise with
+an Array, it will keep the Array, since Promise only understands how to flatten
+other Promises, not other monad container types.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Promise</span>.<span class="title function_">resolve</span>(<span class="number">42</span>).<span class="title function_">then</span>(<span class="function">() =&gt;</span> <span class="title class_">Promise</span>.<span class="title function_">resolve</span>(numbers)).<span class="title function_">then</span>(<span class="variable language_">console</span>.<span class="property">log</span>)</span><br><span class="line"><span class="comment">// [1, 2, 3]</span></span><br></pre></td></tr></table></figure>
+
+<p>Similarly, we can <code>map</code> or <code>flatMap</code> an Array of Promises, but we still will
+get the Promise objects inside.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(numbers.<span class="title function_">flatMap</span>(<span class="function"><span class="params">x</span> =&gt;</span> <span class="title class_">Promise</span>.<span class="title function_">resolve</span>(x)))</span><br><span class="line"><span class="comment">// [ Promise &#123; 1 &#125;, Promise &#123; 2 &#125;, Promise &#123; 3 &#125; ]</span></span><br></pre></td></tr></table></figure>
+
+<p>If we want to really get the primitive value from a monad container
+inside another monad container we have to <code>map</code> with custom code. For example,
+Promise API has a method to convert an Array of Promises into an Array of
+resolved primitive values.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Promise</span>.<span class="title function_">all</span>(numbers.<span class="title function_">flatMap</span>(<span class="function"><span class="params">x</span> =&gt;</span> <span class="title class_">Promise</span>.<span class="title function_">resolve</span>(x)))</span><br><span class="line">  .<span class="title function_">then</span>(<span class="function"><span class="params">values</span> =&gt;</span> <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;resolved values&#x27;</span>, values))</span><br><span class="line"><span class="comment">// resolved values [ 1, 2, 3 ]</span></span><br></pre></td></tr></table></figure>
+
+<p>The call <code>Promise.all</code> in the first line takes as an argument an Array monad
+with each individual item being a Promise monad. It returns a single
+Promise monad that contains an Array monad. This switcheroo gives us the
+actual values.</p>
+<h2><span id="maybe-monad">Maybe monad</span></h2><p>Note: this Maybe monad is slightly different from the typical implementation.
+It is only supposed to be an example how to safely perform numerical division.</p>
+<p>We saw a monad that helped deal with multiple values (an Array monad), and
+a monad that helped deal with asynchronous values (a Promise monad). There is
+an infinite number of useful Monad types. They just need to wrap a value
+and provide a <code>map</code> and a <code>flatMap</code> methods. The <code>map</code> is especially useful
+because it allows us to quickly reuse the simplest function that does not
+care about any of the Monad mambo-jumbo, and only deals with a primitive value.</p>
+<p>The Maybe monad is useful for dealing with non-existent values without
+a pyramid of <code>if - else</code> blocks. Take a look at the typical <code>divide</code> function.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">divide</span>(<span class="params">a, b</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> a / b</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">divide</span>(<span class="number">10</span>, <span class="number">2</span>)) <span class="comment">// 5</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">divide</span>(<span class="number">10</span>, <span class="number">0</span>)) <span class="comment">// Infinity</span></span><br></pre></td></tr></table></figure>
+
+<p>Without guarding for the zero value of the second argument, we can get quite
+a large number! We could add the guard logic into the function itself,
+but this goes against our principle - add new features to the existing function
+by composing functions, not by putting more code inside of them.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">divide</span>(<span class="params">a, b</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (b === <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&#x27;nope&#x27;</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> a / b</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">divide</span>(<span class="number">10</span>, <span class="number">2</span>)) <span class="comment">// 5</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">divide</span>(<span class="number">10</span>, <span class="number">0</span>)) <span class="comment">// nope</span></span><br></pre></td></tr></table></figure>
+
+<p>Notice we had to hard code the action to take if the second argument was zero,
+in this case returning &#39;nope&#39; string (or maybe throwing an exception).</p>
+<p>We can handle the above situation differently. Let us wrap the data
+in a new data type for storing just two numbers</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Maybe</span>(<span class="params">a, b</span>) &#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">a</span> = a</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">b</span> = b</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> maybe = <span class="keyword">new</span> <span class="title class_">Maybe</span>(<span class="number">10</span>, <span class="number">2</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(maybe)</span><br><span class="line"><span class="comment">// Maybe &#123; a: 10, b: 2 &#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Using keyword <code>new</code> is a <a href="../work-around-the-keyword-new-in-javascript/">pain</a>
+so we can just add a utility method <code>of</code> to make creating a Maybe object
+of two numbers easier</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">Maybe</span>(<span class="params">a, b</span>) &#123;</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">a</span> = a</span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">b</span> = b</span><br><span class="line">&#125;</span><br><span class="line"><span class="title class_">Maybe</span>.<span class="property">of</span> = <span class="keyword">function</span> <span class="title function_">of</span>(<span class="params">a, b</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Maybe</span>(a, b)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> maybe = <span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="number">10</span>, <span class="number">2</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(maybe)</span><br><span class="line"><span class="comment">// Maybe &#123; a: 10, b: 2 &#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>We have an existing function <code>divide(a, b)</code> that we want to reuse safely.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">divide</span>(<span class="params">a, b</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> a / b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The function <code>divide</code> operates on the primitive values and returns a primitive,
+thus it is a good candidate for <code>map</code> method. We will add <code>map</code> method to the
+<code>Maybe</code> object. We will place the guard logic there!</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Maybe</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">map</span> = <span class="keyword">function</span> (<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="variable language_">this</span>.<span class="property">b</span>) &#123;</span><br><span class="line">    <span class="comment">// do not divide, but return invalid object</span></span><br><span class="line">    <span class="keyword">return</span> <span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="literal">null</span>, <span class="literal">null</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// put the result into first position</span></span><br><span class="line">  <span class="keyword">return</span> <span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="title function_">fn</span>(<span class="variable language_">this</span>.<span class="property">a</span>, <span class="variable language_">this</span>.<span class="property">b</span>))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>We can then safely use the division - the result, if there is one will be
+in the <code>a</code> property. If <code>a</code> is &quot;null&quot; then the division was invalid because
+the second number was zero.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="number">10</span>, <span class="number">2</span>).<span class="title function_">map</span>(divide))</span><br><span class="line"><span class="comment">// Maybe &#123; a: 5, b: undefined &#125;</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="number">10</span>, <span class="number">0</span>).<span class="title function_">map</span>(divide))</span><br><span class="line"><span class="comment">// Maybe &#123; a: null, b: null &#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>What about <code>flatMap</code>? We need to handle a case when the function returns
+an instance of <code>Maybe</code>.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Maybe</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">flatMap</span> = <span class="keyword">function</span> (<span class="params">fn</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="variable language_">this</span>.<span class="property">b</span>) &#123;</span><br><span class="line">    <span class="comment">// do NOT call a function, since this division is invalid</span></span><br><span class="line">    <span class="keyword">return</span> <span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="literal">null</span>, <span class="literal">null</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="title function_">fn</span>(<span class="variable language_">this</span>.<span class="property">a</span>, <span class="variable language_">this</span>.<span class="property">b</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>We can use it on a somewhat artificial example</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// safe division</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">maybeDivide</span>(<span class="params">x, y</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (y) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="title class_">Maybe</span>.<span class="title function_">of</span>(x, y).<span class="title function_">map</span>(divide)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="literal">null</span>, <span class="literal">null</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="number">10</span>, <span class="number">2</span>).<span class="title function_">flatMap</span>(maybeDivide))</span><br><span class="line"><span class="comment">// Maybe &#123; a: 5, b: undefined &#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Notice that <code>flatMap</code> cannot be interchanged with <code>map</code> - if the given
+function returns already wrapped value we need to use <code>flatMap</code> to get
+the value to avoid double wrapping. If we forget this rule
+and use <code>map</code> the result will be a nested Maybe inside another one.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="number">10</span>, <span class="number">2</span>).<span class="title function_">map</span>(maybeDivide))</span><br><span class="line"><span class="title class_">Maybe</span> &#123; <span class="attr">a</span>: <span class="title class_">Maybe</span> &#123; <span class="attr">a</span>: <span class="number">5</span>, <span class="attr">b</span>: <span class="literal">undefined</span> &#125;, <span class="attr">b</span>: <span class="literal">undefined</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>Getting the result out of the above Maybe monad is kind of awkward.
+Thus most Maybe implementations provide convenience methods. These methods
+also help avoid hard coding the logic in the original simple function.
+Let us add a method that gets the computed value or returns the default
+value if the division was invalid</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Maybe</span>.<span class="property"><span class="keyword">prototype</span></span>.<span class="property">orElse</span> = <span class="keyword">function</span> (<span class="params">defaultValue</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="variable language_">this</span>.<span class="property">a</span> === <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> defaultValue</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">a</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="number">10</span>, <span class="number">2</span>).<span class="title function_">map</span>(divide).<span class="title function_">orElse</span>(<span class="string">&#x27;noop&#x27;</span>))</span><br><span class="line"><span class="comment">// 5</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Maybe</span>.<span class="title function_">of</span>(<span class="number">10</span>, <span class="number">0</span>).<span class="title function_">map</span>(divide).<span class="title function_">orElse</span>(<span class="string">&#x27;noop&#x27;</span>))</span><br><span class="line"><span class="comment">// &#x27;noop&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>Libraries like <a target="_blank" rel="noopener" href="https://github.com/ramda/ramda-fantasy">Ramda Fantasy</a>
+and <a target="_blank" rel="noopener" href="https://github.com/origamitower/folktale">Folktale</a> provide good
+implementations of Maybe and other monads with lots of convenience methods.</p>
+<h2><span id="docker-is-a-functor">Docker is a functor</span></h2><p>If monads wrap a value and have both <code>map</code> and <code>flatMap</code> methods, then
+how do we call types that only have the <code>map</code> method? They are called
+<a target="_blank" rel="noopener" href="http://functionaljavascript.blogspot.in/2013/07/functors.html">functors</a>;
+a standard ES5 Array is an example. The &quot;functors&quot; only &quot;safely&quot;
+use the given callback function, giving it a wrapped value and placing the
+<em>primitive</em> result back into the container without any thinking.</p>
+<p>Sometimes a very unusual structure turns out to be a functor.
+<a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/docker-explained-using-dockerfiles-to-automate-building-of-images">Docker images</a>
+are built from simple text files. Each Dockerfile specifies a <em>base</em> image
+and then each command (like install a software module) creates a new
+derived image. Here is a Dockerfile that installs gulp in a Node 6 base image</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">FROM mhart/alpine-node:6</span><br><span class="line">RUN npm install -g gulp</span><br></pre></td></tr></table></figure>
+
+<p>We can take this file and run <code>docker build</code> command.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">docker build .</span><br><span class="line">Step 1 : FROM mhart/alpine-node:6</span><br><span class="line">6: Pulling from mhart/alpine-node</span><br><span class="line">Status: Downloaded newer image <span class="keyword">for</span> mhart/alpine-node:6</span><br><span class="line"> ---&gt; ecd37ad77c2b</span><br><span class="line">Step 2 : RUN npm install -g gulp</span><br><span class="line"> ---&gt; Running <span class="keyword">in</span> c2568b777d7d</span><br><span class="line">/usr/bin/gulp -&gt; /usr/lib/node_modules/gulp/bin/gulp.js</span><br><span class="line"> ---&gt; f3158cbb038c</span><br><span class="line">Removing intermediate container c2568b777d7d</span><br><span class="line">Successfully built f3158cbb038c</span><br></pre></td></tr></table></figure>
+
+<p>The above build step downloaded an image &quot;mhart&#x2F;alpine-node:6&quot;,
+which contains the NodeJS binary, ran the command <code>npm install -g gulp</code> inside
+that &quot;environment&quot; and created new image with id &quot;f3158cbb038c&quot;.</p>
+<p>Conceptually, this looks a lot like our monads!
+The Docker image wraps a value (in the example a NodeJS binary,
+then a NodeJS binary and &quot;gulp&quot; installed).
+Each statement <code>RUN &lt;command&gt;</code> is like a JavaScript function.
+The command <code>docker build</code> plays the <code>map</code> method role - it allows a
+simple &quot;dumb&quot; command <code>npm install -g gulp</code> to actually run on the value
+<em>inside the image</em> and then places the value <em>back into the Docker image</em>.</p>
+<p>(I am avoiding using the word &quot;container&quot; because Docker actually has
+a specific meaning for this term - a Docker container is an image being
+executed).</p>
+<p>So the above program is almost like the following JavaScript</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> image = <span class="title class_">DockerImage</span>(<span class="string">&#x27;mhart/alpine-node:6&#x27;</span>)</span><br><span class="line">  .<span class="title function_">map</span>(<span class="string">&#x27;npm install -g gulp&#x27;</span>)</span><br><span class="line">  .<span class="title function_">save</span>(<span class="string">&#x27;f3158cbb038c&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>We can repeat the process multiple times. Another Dockerfile can use
+the produced image and run (&quot;map&quot;) a simple command that will operate
+inside the image.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">FROM f3158cbb038c</span><br><span class="line">RUN gulp -v</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ docker build -f Dockerfile2 .</span><br><span class="line">Sending build context to Docker daemon 7.168 kB</span><br><span class="line">Step 1 : FROM f3158cbb038c</span><br><span class="line"> ---&gt; f3158cbb038c</span><br><span class="line">Step 2 : RUN gulp -v</span><br><span class="line"> ---&gt; Running <span class="keyword">in</span> c46144b84495</span><br><span class="line">[02:24:44] CLI version 3.9.1</span><br><span class="line"> ---&gt; 35e23a678ef0</span><br><span class="line">Removing intermediate container c46144b84495</span><br><span class="line">Successfully built 35e23a678ef0</span><br></pre></td></tr></table></figure>
+
+<p>which is equivalent (combined with the previous step) to:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> image = <span class="title class_">DockerImage</span>(<span class="string">&#x27;mhart/alpine-node:6&#x27;</span>)</span><br><span class="line">  .<span class="title function_">map</span>(<span class="string">&#x27;npm install -g gulp&#x27;</span>)</span><br><span class="line">  .<span class="title function_">map</span>(<span class="string">&#x27;gulp -v&#x27;</span>) <span class="comment">// CLI version 3.9.1</span></span><br><span class="line">  .<span class="title function_">save</span>(<span class="string">&#x27;35e23a678ef0&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3><span id="why-docker-is-not-a-monad">Why Docker is not a monad</span></h3><p>In order for Docker to be a &quot;monad&quot; it would have to support <code>flatMap</code>.
+A callback function for <code>flatMap</code> could return a <em>new Docker image</em> and the
+original container would have to <em>know how to switch to it</em>. That is, the
+returned value would be a Docker image that would become the new base image.</p>
+<p>Since there is no Docker functionality like this (there is
+<a target="_blank" rel="noopener" href="https://hub.docker.com/_/docker/">Docker in Docker</a>,
+but it does not support replacing the original image with the image
+returned by the build command), we can only express what it would be like
+in fake JavaScript notation</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> image = <span class="title class_">DockerImage</span>(<span class="string">&#x27;mhart/alpine-node:6&#x27;</span>)</span><br><span class="line">  .<span class="title function_">map</span>(<span class="string">&#x27;npm install -g gulp&#x27;</span>)</span><br><span class="line">  .<span class="title function_">map</span>(<span class="string">&#x27;gulp -v&#x27;</span>) <span class="comment">// CLI version 3.9.1</span></span><br><span class="line">  .<span class="title function_">flatMap</span>(<span class="string">&#x27;FROM mhart/alpine-node:6&#x27;</span>) <span class="comment">// wipes out gulp install again</span></span><br><span class="line">  .<span class="title function_">map</span>(<span class="string">&#x27;gulp -v&#x27;</span>) <span class="comment">// gulp: command not found</span></span><br></pre></td></tr></table></figure>
+
+<p>Thus the Docker system is not a full monad, but only functor - it only
+knows how to <code>map</code> shell commands.</p>
+<p>To read more about functors, I have a couple of other blog posts:</p>
+<ul>
+<li><a href="../combine-promises-with-maybe-functors/">Combine promises with Maybe functors</a></li>
+<li><a href="../use-javascript-functor-today/">Use JavaScript functor today</a></li>
+<li><a href="../appliers/">Functor + Applicative &#x3D; Applier</a></li>
+</ul>
+<p>I also have a Docker basics covered in a single
+<a target="_blank" rel="noopener" href="https://gist.github.com/bahmutov/1003fa86980dda147ff6">gist</a>.</p>
+<h2><span id="conclusion">Conclusion</span></h2><p>Monads are a way to reuse simple functions. Monads wrap a primitive value
+that the simple function expects. The wrapping logic could be used to iterate
+over items in a list, handle asynchronous values or guard against values
+that would break the simple functions.</p>
+<p>A monad has <code>map</code> method that calls the simple function with the value,
+and wraps the result. A monad also has <code>flatMap</code> method that calls a function
+that returns a wrapped value. The <code>flatMap</code> prevents double wrapping.</p>
+<p>Docker is a functor - it only supports &quot;map&quot; method, but not the &quot;flatMap&quot;
+method.</p>
+<h2><span id="further-info">Further info</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://www.manning.com/books/functional-programming-in-javascript">Functional Programming in JavaScript</a> by Luis Atencio has a great chapter
+on the proper Maybe monad.</li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/monads/" data-id="clxj6w7du00bfbjn75k3j6dst" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/monads/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/functional/" rel="tag">functional</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../semantic-release-on-gitlab/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Semantic release on GitLab
+        
+      </div>
+    </a>
+  
+  
+    <a href="../preloading-node-module/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Preloading Node module</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/monads/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

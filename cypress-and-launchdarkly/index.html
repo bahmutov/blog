@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Control LaunchDarkly From Cypress Tests | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Let&#39;s say you are using LaunchDarkly to develop and test new web application features behind a flag. You have end-to-end tests too. How do you test the features behind the flag? In this blog post,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Control LaunchDarkly From Cypress Tests">
+<meta property="og:url" content="https://glebbahmutov.com/blog/cypress-and-launchdarkly/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Let&#39;s say you are using LaunchDarkly to develop and test new web application features behind a flag. You have end-to-end tests too. How do you test the features behind the flag? In this blog post,">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/project.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/flag.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/targeting.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/hello.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/target-user.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/formal.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/token.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/project-key.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/ld.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/test-formal.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/test-aloha.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/remains.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/cleaned.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/print-flag.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/secrets.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/terminal.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/ld-control/single-test.gif">
+<meta property="article:published_time" content="2022-03-04T05:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.503Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="cypress">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/ld-control/project.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-cypress-and-launchdarkly" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2022-03-04T05:00:00.000Z" itemprop="datePublished">Mar 4 2022</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Control LaunchDarkly From Cypress Tests
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to set the feature flag values using targeting to test each variation.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Let&#39;s say you are using <a target="_blank" rel="noopener" href="https://launchdarkly.com/">LaunchDarkly</a> to develop and test new web application features behind a flag. You have end-to-end tests too. How do you test the features behind the flag? In this blog post, I will show how to target features using individual user IDs. We will use the plugin <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-ld-control">cypress-ld-control</a> to set the user ID as an explicit target for the experiment and then confirm the web application behaves correctly using Cypress test.</p>
+<!-- toc -->
+
+<ul>
+<li><a href="#launchdarkly-project">LaunchDarkly project</a></li>
+<li><a href="#demo-react-application">Demo React application</a></li>
+<li><a href="#cypress-setup">Cypress setup</a><ul>
+<li><a href="#sensitive-variables">Sensitive variables</a></li>
+<li><a href="#starting-the-app-and-the-tests">Starting the app and the tests</a></li>
+<li><a href="#make-launchdarkly-optional">Make LaunchDarkly optional</a></li>
+<li><a href="#the-plugin-api">The plugin API</a></li>
+</ul>
+</li>
+<li><a href="#the-tests">The tests</a></li>
+<li><a href="#cleaning-up">Cleaning up</a></li>
+<li><a href="#inspecting-a-feature-flag">Inspecting a feature flag</a></li>
+<li><a href="#running-tests-on-ci">Running tests on CI</a></li>
+<li><a href="#single-test">Single test</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#bonus-1-control-the-feature-lifetime">Bonus 1: control the feature lifetime</a></li>
+<li><a href="#bonus-2-custom-commands">Bonus 2: custom commands</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="launchdarkly-project">LaunchDarkly project</span></h2><p>I have created a new LaunchDarkly project with project &quot;Demo Project&quot; and two environments. We will concentrate on the &quot;Test&quot; environment.</p>
+<p><img src="../images/ld-control/project.png" alt="LaunchDarkly demo project"></p>
+<p>In the project, I have created a new String feature flag <code>testing-launch-darkly-control-from-cypress</code> with three variations.</p>
+<p><img src="../images/ld-control/flag.png" alt="Test feature flag variations"></p>
+<p>Because we want to turn different flag variations for specific users, we will turn on the &quot;Targeting&quot; option. Currently there are no targets yet.</p>
+<p><img src="../images/ld-control/targeting.png" alt="Turn the feature flag targeting on"></p>
+<h2><span id="demo-react-application">Demo React application</span></h2><p>To demonstrate controlling the feature flags from Cypress tests, I grabbed a copy of the LD&#39;s React application. I got a copy using the <a target="_blank" rel="noopener" href="https://github.com/Rich-Harris/degit#readme">degit</a> command.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ npx degit launchdarkly/react-client-sdk/examples/hoc ld-example</span><br><span class="line">&gt; cloned launchdarkly/react-client-sdk#HEAD to ld-example</span><br><span class="line">$ cd ld-example</span><br></pre></td></tr></table></figure>
+
+<blockquote class="pullquote"><p>🎁 You can find my version of the application used in this blog post in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-ld-control-example">bahmutov&#x2F;cypress-ld-control-example</a>.</p>
+</blockquote>
+
+<p>I have changed the code to use my project&#39;s Client SDK ID and show the current greeting using the feature flag value. For the demo, I have passed a made-up user ID (in the real application, the user ID would be set after authentication step)</p>
+<figure class="highlight js"><figcaption><span>universal/app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; withLDProvider &#125; <span class="keyword">from</span> <span class="string">&#x27;launchdarkly-react-client-sdk&#x27;</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="title function_">App</span> = (<span class="params"></span>) =&gt; (</span><br><span class="line">  ...</span><br><span class="line">);</span><br><span class="line"><span class="comment">// Set clientSideID to your own Client-side ID. You can find this in</span></span><br><span class="line"><span class="comment">// your LaunchDarkly portal under Account settings / Projects</span></span><br><span class="line"><span class="comment">// https://docs.launchdarkly.com/sdk/client-side/javascript#initializing-the-client</span></span><br><span class="line"><span class="keyword">const</span> user = &#123;</span><br><span class="line">  <span class="attr">key</span>: <span class="string">&#x27;USER_1234&#x27;</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="title function_">withLDProvider</span>(&#123; <span class="attr">clientSideID</span>: <span class="string">&#x27;YOUR_CLIENT_SIDE_ID&#x27;</span>, <span class="attr">user</span>: <span class="string">&#x27;USER_1234&#x27;</span> &#125;)(<span class="title class_">App</span>);</span><br></pre></td></tr></table></figure>
+
+<p>My Home page uses the flag&#39;s value to show the greeting.</p>
+<figure class="highlight js"><figcaption><span>universal/home.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; withLDConsumer &#125; <span class="keyword">from</span> <span class="string">&#x27;launchdarkly-react-client-sdk&#x27;</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="title function_">Home</span> = (<span class="params">&#123; flags &#125;</span>) =&gt; (</span><br><span class="line">  <span class="language-xml"><span class="tag">&lt;<span class="name">Root</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;<span class="name">Heading</span>&gt;</span>&#123;flags.testingLaunchDarklyControlFromCypress&#125;, World<span class="tag">&lt;/<span class="name">Heading</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">      This is a LaunchDarkly React example project. The message above changes the greeting,</span></span><br><span class="line"><span class="language-xml">      based on the current feature flag variation.</span></span><br><span class="line"><span class="language-xml">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="language-xml">  <span class="tag">&lt;/<span class="name">Root</span>&gt;</span></span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="title function_">withLDConsumer</span>()(<span class="title class_">Home</span>);</span><br></pre></td></tr></table></figure>
+
+<p>When I start the application, it shows the default causal greeting</p>
+<p><img src="../images/ld-control/hello.png" alt="The application uses the casual greeting variation of the flag"></p>
+<p>Great. Let&#39;s target the user <code>USER_1234</code> with a more formal greeting. At LaunchDarkly app, I will create a new targeting list. Don&#39;t forget to save the changes for them to be applied!</p>
+<p><img src="../images/ld-control/target-user.png" alt="Target the user by ID"></p>
+<p>LaunchDarkly SDK includes real-time updates using server-side events, thus the Home page immediately changes to the formal greeting.</p>
+<p><img src="../images/ld-control/formal.png" alt="The current user receives its own feature flag value"></p>
+<p>Nice, let&#39;s do the same from a Cypress test.</p>
+<h2><span id="cypress-setup">Cypress setup</span></h2><p>Let&#39;s install Cypress test runner</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">yarn add -D cypress</span></span><br><span class="line">success Saved 1 new dependency.</span><br><span class="line">info Direct dependencies</span><br><span class="line">└─ cypress@9.5.1</span><br></pre></td></tr></table></figure>
+
+<p>We will need to control LaunchDarkly flags via HTTP calls. While you can make HTTP calls from Node and from Cypress easily, there is higher-level logic LaunchDarkly uses that makes implementing feature flag changes a chore. I have abstracted everything necessary to add individual user targets into a plugin <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-ld-control">cypress-ld-control</a> that Cypress tests can use to avoid the complexity. Let&#39;s install this plugin and start using it.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">yarn add -D cypress-ld-control</span></span><br><span class="line">info Direct dependencies</span><br><span class="line">└─ cypress-ld-control@1.1.2</span><br></pre></td></tr></table></figure>
+
+<p>To change the flag values and add individual user targets, the plugin needs to access the LaunchDarkly REST API. We need to make an access token.</p>
+<p><img src="../images/ld-control/token.png" alt="LaunchDarkly token"></p>
+<p>Let&#39;s load the plugin and create tasks for the Cypress tests to call using the <a target="_blank" rel="noopener" href="https://on.cypress.io/task">cy.task</a> - after all, <a href="/blog/powerful-cy-task/" title="cy.task is very powerful">cy.task is very powerful</a> command.</p>
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; initLaunchDarklyApiTasks &#125; = <span class="built_in">require</span>(<span class="string">&#x27;cypress-ld-control&#x27;</span>)</span><br><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = <span class="function">(<span class="params">on, config</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> tasks = &#123;</span><br><span class="line">    <span class="comment">// add your other Cypress tasks if any</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// https://github.com/bahmutov/cypress-ld-control</span></span><br><span class="line">  <span class="keyword">if</span> (</span><br><span class="line">    process.<span class="property">env</span>.<span class="property">LAUNCH_DARKLY_PROJECT_KEY</span> &amp;&amp;</span><br><span class="line">    process.<span class="property">env</span>.<span class="property">LAUNCH_DARKLY_AUTH_TOKEN</span></span><br><span class="line">  ) &#123;</span><br><span class="line">    <span class="keyword">const</span> ldApiTasks = <span class="title function_">initLaunchDarklyApiTasks</span>(&#123;</span><br><span class="line">      <span class="attr">projectKey</span>: process.<span class="property">env</span>.<span class="property">LAUNCH_DARKLY_PROJECT_KEY</span>,</span><br><span class="line">      <span class="attr">authToken</span>: process.<span class="property">env</span>.<span class="property">LAUNCH_DARKLY_AUTH_TOKEN</span>,</span><br><span class="line">      <span class="attr">environment</span>: <span class="string">&#x27;test&#x27;</span>, <span class="comment">// the key of the environment to use</span></span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="comment">// copy all LaunchDarkly methods as individual tasks</span></span><br><span class="line">    <span class="title class_">Object</span>.<span class="title function_">assign</span>(tasks, ldApiTasks)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Skipping cypress-ld-control plugin&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// register all tasks with Cypress</span></span><br><span class="line">  <span class="title function_">on</span>(<span class="string">&#x27;task&#x27;</span>, tasks)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// IMPORTANT: return the updated config object</span></span><br><span class="line">  <span class="keyword">return</span> config</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Whenever we open Cypress locally or run on a continuous integration system, we need to provide two environment variables <code>LAUNCH_DARKLY_PROJECT_KEY</code> and <code>LAUNCH_DARKLY_AUTH_TOKEN</code>. The token is your private secret key we have just created. The project key is the unique string identifying each project shown in the URL and on the <code>https://app.launchdarkly.com/settings/projects</code> page.</p>
+<p><img src="../images/ld-control/project-key.png" alt="LaunchDarkly project key"></p>
+<h3><span id="sensitive-variables">Sensitive variables</span></h3><p>You can store sensitive values and inject them as needed using my <a target="_blank" rel="noopener" href="https://github.com/bahmutov/as-a">as-a</a> CLI tool. In my case, I have <code>.as-a.ini</code> file that is never checked into source control</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">; https://github.com/bahmutov/as-a</span></span><br><span class="line"><span class="section">[cypress-ld-control-demo]</span></span><br><span class="line"><span class="attr">LAUNCH_DARKLY_PROJECT_KEY</span>=...</span><br><span class="line"><span class="attr">LAUNCH_DARKLY_AUTH_TOKEN</span>=...</span><br></pre></td></tr></table></figure>
+
+<p>I open Cypress using the command <code>as-a cypress-ld-control-demo yarn cypress open</code>.</p>
+<h3><span id="starting-the-app-and-the-tests">Starting the app and the tests</span></h3><p>I typically use <a target="_blank" rel="noopener" href="https://github.com/bahmutov/start-server-and-test">start-server-and-test</a> to start the application and open &#x2F; run Cypress tests. In my <code>package.json</code> file I have set up the command <code>dev</code>:</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;start&quot;</span><span class="punctuation">:</span> <span class="string">&quot;node src/server/index.js&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;dev&quot;</span><span class="punctuation">:</span> <span class="string">&quot;start-test 3000 &#x27;cypress open&#x27;&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>I run the application and inject the sensitive variables into Cypress tests using the terminal command</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ as-a cypress-ld-control-demo yarn run dev</span><br></pre></td></tr></table></figure>
+
+<p>For more, see video <a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=6iDjbAXvLa0">Start server and test</a>.</p>
+<h3><span id="make-launchdarkly-optional">Make LaunchDarkly optional</span></h3><p>It is up to you to require these environment variables or gracefully handle it and only require them in some tests. For example, you could set an environment variable if the LaunchDarkly has been initialized:</p>
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; initLaunchDarklyApiTasks &#125; = <span class="built_in">require</span>(<span class="string">&#x27;cypress-ld-control&#x27;</span>)</span><br><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = <span class="function">(<span class="params">on, config</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// https://github.com/bahmutov/cypress-ld-control</span></span><br><span class="line">  <span class="keyword">if</span> (</span><br><span class="line">    process.<span class="property">env</span>.<span class="property">LAUNCH_DARKLY_PROJECT_KEY</span> &amp;&amp;</span><br><span class="line">    process.<span class="property">env</span>.<span class="property">LAUNCH_DARKLY_AUTH_TOKEN</span></span><br><span class="line">  ) &#123;</span><br><span class="line">    <span class="keyword">const</span> ldApiTasks = <span class="title function_">initLaunchDarklyApiTasks</span>(&#123;</span><br><span class="line">      <span class="attr">projectKey</span>: process.<span class="property">env</span>.<span class="property">LAUNCH_DARKLY_PROJECT_KEY</span>,</span><br><span class="line">      <span class="attr">authToken</span>: process.<span class="property">env</span>.<span class="property">LAUNCH_DARKLY_AUTH_TOKEN</span>,</span><br><span class="line">      <span class="attr">environment</span>: <span class="string">&#x27;test&#x27;</span>, <span class="comment">// the key of the environment to use</span></span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="comment">// copy all LaunchDarkly methods as individual tasks</span></span><br><span class="line">    <span class="title class_">Object</span>.<span class="title function_">assign</span>(tasks, ldApiTasks)</span><br><span class="line">    <span class="comment">// set an environment variable for specs to use</span></span><br><span class="line">    <span class="comment">// to check if the LaunchDarkly can be controlled</span></span><br><span class="line">    config.<span class="property">env</span>.<span class="property">launchDarklyApiAvailable</span> = <span class="literal">true</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Skipping cypress-ld-control plugin&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// register all tasks with Cypress</span></span><br><span class="line">  <span class="title function_">on</span>(<span class="string">&#x27;task&#x27;</span>, tasks)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// IMPORTANT: return the updated config object</span></span><br><span class="line">  <span class="keyword">return</span> config</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>In the test files that really need to call LaunchDarkly API we can check the variable once:</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">before</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">expect</span>(<span class="title class_">Cypress</span>.<span class="title function_">env</span>(<span class="string">&#x27;launchDarklyApiAvailable&#x27;</span>), <span class="string">&#x27;LaunchDarkly&#x27;</span>).<span class="property">to</span>.<span class="property">be</span>.<span class="property">true</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h3><span id="the-plugin-api">The plugin API</span></h3><p>The &quot;cypress-ld-control&quot; plugin can be used by itself without Cypress to target users. When you initialize the <code>ldApi</code> object, it has the following methods: <code>getFeatureFlag</code>, <code>setFeatureFlagForUser</code>, and others, see <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-ld-control#api">README#API</a> section. When using the plugin from Cypress specs, you need to call these methods via the <a target="_blank" rel="noopener" href="https://on.cypress.io/task">cy.task</a> command. To avoid clashing with other tasks, and conform to the <code>cy.task</code> semantics, the plugin follows the following rules:</p>
+<ul>
+<li>every task it returns is prefixed with <code>cypress-ld-control:</code> string. Thus you to get the feature flag you would call <code>cy.task(&#39;cypress-ld-control:getFeatureFlag&#39;)</code> command.</li>
+<li>every command takes zero or a single options object as an argument, for example: <code>cy.task(&#39;cypress-ld-control:setFeatureFlagForUser&#39;, (&#123;featureFlagKey, userId, variationIndex&#125;))</code></li>
+<li>every command returns either an object or a null, never <code>undefined</code></li>
+</ul>
+<h2><span id="the-tests">The tests</span></h2><p>For each experiment variation, I wrote a test placeholder to verify the application&#39;s behavior. In every test we can set the feature flag target that specific user, load the application, and check its behavior.</p>
+<figure class="highlight js"><figcaption><span>cypress/integration/spec.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">before</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">expect</span>(<span class="title class_">Cypress</span>.<span class="title function_">env</span>(<span class="string">&#x27;launchDarklyApiAvailable&#x27;</span>), <span class="string">&#x27;LaunchDarkly&#x27;</span>).<span class="property">to</span>.<span class="property">be</span>.<span class="property">true</span></span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;shows the casual greeting&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;shows formal greeting&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;shows vacation greeting&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s start with the first test. Set the flag, load the app, confirm the user sees a casual greeting heading.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">before</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">expect</span>(<span class="title class_">Cypress</span>.<span class="title function_">env</span>(<span class="string">&#x27;launchDarklyApiAvailable&#x27;</span>), <span class="string">&#x27;LaunchDarkly&#x27;</span>).<span class="property">to</span>.<span class="property">be</span>.<span class="property">true</span></span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> featureFlagKey = <span class="string">&#x27;testing-launch-darkly-control-from-cypress&#x27;</span></span><br><span class="line"><span class="keyword">const</span> userId = <span class="string">&#x27;USER_1234&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;shows the casual greeting&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// target the given user to receive the first variation of the feature flag</span></span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;cypress-ld-control:setFeatureFlagForUser&#x27;</span>, &#123;</span><br><span class="line">    featureFlagKey,</span><br><span class="line">    userId,</span><br><span class="line">    <span class="attr">variationIndex</span>: <span class="number">0</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;Hello, World&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/ld-control/ld.gif" alt="The test sets the feature flag and confirm the user sees the first variation"></p>
+<p>Similarly, the second test can target the user and confirm the second variant (index 1) is working as expected.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;shows formal greeting&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;cypress-ld-control:setFeatureFlagForUser&#x27;</span>, &#123;</span><br><span class="line">    featureFlagKey,</span><br><span class="line">    userId,</span><br><span class="line">    <span class="attr">variationIndex</span>: <span class="number">1</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;How do you do, World&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/ld-control/test-formal.png" alt="Testing the second variation that shows the formal greeting"></p>
+<p>Finally, when on vacation, the greeting is relaxed</p>
+<p><img src="../images/ld-control/test-aloha.png" alt="Testing the Aloha greeting"></p>
+<p>Note: you can see a flash of empty content while the application is fetching the features from LaunchDarkly. See <a target="_blank" rel="noopener" href="https://docs.launchdarkly.com/sdk/client-side/javascript/default-variations">LaunchDarkly docs</a> on how to avoid it. For my simple application it was fine to have the flash.</p>
+<h2><span id="cleaning-up">Cleaning up</span></h2><p>When the tests are finished, the last target for the user remains. We should clean up these targets to avoid adding more and more individual test users to LaunchDarkly. I am not sure, but it probably makes it slower to fetch the status for a particular user, and makes the web UI noisier. Let&#39;s remove any targeting after all tests are done.</p>
+<p><img src="../images/ld-control/remains.png" alt="The user target remains after the last test"></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">after</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;cypress-ld-control:removeUserTarget&#x27;</span>, &#123; featureFlagKey, userId &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Nice, the user target is automatically removed.</p>
+<p><img src="../images/ld-control/cleaned.png" alt="The test removed the individual user target after finishing"></p>
+<p>Note: the <code>after</code> hook runs even if any of the tests fail. The only reason it can be completely skipped is if the test runner crashes.</p>
+<h2><span id="inspecting-a-feature-flag">Inspecting a feature flag</span></h2><p>If you are just interested in the feature flag and its variations, you can fetch the flag&#39; state using the &quot;cypress-ld-control:getFeatureFlag&quot; task</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">it</span>(<span class="string">&#x27;shows vacation greeting&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;cypress-ld-control:setFeatureFlagForUser&#x27;</span>, &#123;</span><br><span class="line">    featureFlagKey,</span><br><span class="line">    userId,</span><br><span class="line">    <span class="attr">variationIndex</span>: <span class="number">2</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;Aloha, World&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// print the current state of the feature flag and its variations</span></span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;cypress-ld-control:getFeatureFlag&#x27;</span>, featureFlagKey)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="variable language_">console</span>.<span class="property">log</span>)</span><br><span class="line">    <span class="comment">// let&#x27;s print the variations to the Command Log side panel</span></span><br><span class="line">    .<span class="title function_">its</span>(<span class="string">&#x27;variations&#x27;</span>)</span><br><span class="line">    .<span class="title function_">then</span>(<span class="function">(<span class="params">variations</span>) =&gt;</span> &#123;</span><br><span class="line">      variations.<span class="title function_">forEach</span>(<span class="function">(<span class="params">v, k</span>) =&gt;</span> &#123;</span><br><span class="line">        cy.<span class="title function_">log</span>(<span class="string">`<span class="subst">$&#123;k&#125;</span>: <span class="subst">$&#123;v.name&#125;</span> is <span class="subst">$&#123;v.value&#125;</span>`</span>)</span><br><span class="line">      &#125;)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The entire feature flag object is quite large, as we see in the DevTools console. The highlighted variations are visible in the Command Log.</p>
+<p><img src="../images/ld-control/print-flag.png" alt="The feature flag object"></p>
+<h2><span id="running-tests-on-ci">Running tests on CI</span></h2><p>Let&#39;s use <a href="/blog/trying-github-actions/" title="GitHub Actions">GitHub Actions</a> to run the same tests on CI. I will use <a target="_blank" rel="noopener" href="https://github.com/cypress-io/github-action">cypress-io&#x2F;github-action</a> to install the dependencies, cache Cypress, start the application, and run the tests. I will need to set the same environment secrets in the repo.</p>
+<p><img src="../images/ld-control/secrets.png" alt="Setting secrets on GitHub"></p>
+<p>The CI workflow <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-ld-control-example/blob/main/.github/workflows/ci.yml">ci.yml</a> uses the GH action and injects the secrets as environment variables.</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/ci.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">ci</span></span><br><span class="line"><span class="attr">on:</span> <span class="string">push</span></span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">test:</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-20.04</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Checkout</span> <span class="string">🛎</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/checkout@v2</span></span><br><span class="line"></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Run</span> <span class="string">tests</span> <span class="string">🧪</span></span><br><span class="line">        <span class="comment"># https://github.com/cypress-io/github-action</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">cypress-io/github-action@v3</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">start:</span> <span class="string">&#x27;yarn start&#x27;</span></span><br><span class="line">        <span class="attr">env:</span></span><br><span class="line">          <span class="attr">LAUNCH_DARKLY_PROJECT_KEY:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.LAUNCH_DARKLY_PROJECT_KEY</span> <span class="string">&#125;&#125;</span></span><br><span class="line">          <span class="attr">LAUNCH_DARKLY_AUTH_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.LAUNCH_DARKLY_AUTH_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>The terminal output on CI shows the messages from <code>cypress-ld-control</code> plugin as it calls LaunchDarkly API</p>
+<p><img src="../images/ld-control/terminal.png" alt="The plugin logs its LaunchDarkly operations"></p>
+<h2><span id="single-test">Single test</span></h2><p>Because LaunchDarkly client-side SDK includes real-time updates, we can write a single test that goes through every variation of the flag without visiting the page again or even reloading it.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">it.<span class="title function_">only</span>(<span class="string">&#x27;shows all greetings&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>)</span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;cypress-ld-control:setFeatureFlagForUser&#x27;</span>, &#123;</span><br><span class="line">    featureFlagKey,</span><br><span class="line">    userId,</span><br><span class="line">    <span class="attr">variationIndex</span>: <span class="number">0</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;Hello, World&#x27;</span>)</span><br><span class="line">    .<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line">    <span class="comment">// I have added one second waits for clarity</span></span><br><span class="line">    .<span class="title function_">wait</span>(<span class="number">1000</span>)</span><br><span class="line"></span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;cypress-ld-control:setFeatureFlagForUser&#x27;</span>, &#123;</span><br><span class="line">    featureFlagKey,</span><br><span class="line">    userId,</span><br><span class="line">    <span class="attr">variationIndex</span>: <span class="number">1</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;How do you do, World&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>).<span class="title function_">wait</span>(<span class="number">1000</span>)</span><br><span class="line"></span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;cypress-ld-control:setFeatureFlagForUser&#x27;</span>, &#123;</span><br><span class="line">    featureFlagKey,</span><br><span class="line">    userId,</span><br><span class="line">    <span class="attr">variationIndex</span>: <span class="number">2</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  cy.<span class="title function_">contains</span>(<span class="string">&#x27;h1&#x27;</span>, <span class="string">&#x27;Aloha, World&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;be.visible&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/ld-control/single-test.gif" alt="A single test will all feature flag states"></p>
+<p>Note: the plugin &quot;cypress-ld-control&quot; handles LaunchDarkly rate-limiting, retrying API calls if the test runner receives 429 HTTP response code.</p>
+<p>Note 2: in the test above you see a flash of &quot;Hello, World&quot; default flag state between the formal and the vacation greetings. The plugin automatically removes the current user target from a variation before adding it to another one (the same user cannot be target of two variations at the same time). Thus you see that brief moment between the remove and add commands.</p>
+<h2><span id="see-also">See also</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-ld-control">bahmutov&#x2F;cypress-ld-control</a> plugin repo</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-ld-control-example">bahmutov&#x2F;cypress-ld-control-example</a> example app repo</li>
+<li><a href="/blog/test-feature-flags/" title="Test Feature Flags Using Cypress and Flagsmith">Test Feature Flags Using Cypress and Flagsmith</a></li>
+</ul>
+<h2><span id="bonus-1-control-the-feature-lifetime">Bonus 1: control the feature lifetime</span></h2><p>When someone introduces a new experiment behind the feature flag, one has to be careful not to break all existing tests. Here is what I think the feature lifetime should be:</p>
+<ol>
+<li><strong>an experiment</strong> A new feature flag is added to enable the new behavior. At first, the developer is experimenting with the behavior, thus the feature is strictly opt-in. All existing users are seeing the existing default behavior. No updates to the tests are necessary.</li>
+<li><strong>a prototype</strong> The new feature seems to be a success and has been given a go. Now the team is implementing it and is planning to release it. A few end-to-end tests are added that use the LD plugin to turn the feature on and test the new feature flow. All existing tests are still seeing the old behavior because the old behavior is the default one.</li>
+<li><strong>an alternative</strong> In this stage, more and more users are seeing the new feature, and the old behavior will be removed in the future. We need to start thinking about the test changes. We now switch the existing tests to explicitly opt-in to turn the old behavior. So some tests opt-in and test the new feature, and other tests opt-in and test the new feature.</li>
+<li><strong>the switch</strong> The feature is being turned on by default for most or all users. The tests written while developing the feature are now working without opt-in. The old tests are still running with opt-in to the old behavior.</li>
+<li><strong>the removal</strong> The old behavior is removed and all old tests are disabled. The feature flag is now always pointing to the new behavior.</li>
+</ol>
+<h2><span id="bonus-2-custom-commands">Bonus 2: custom commands</span></h2><p>To simplify using the plugin, I have added Cypress custom commands to get, set, and remove feature flags.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="title class_">Cypress</span>.<span class="title function_">isLaunchDarklyControlInitialized</span>()) &#123;</span><br><span class="line">  <span class="comment">// we can control the LaunchDarkly flags</span></span><br><span class="line">&#125;</span><br><span class="line">cy.<span class="title function_">getFeatureFlag</span>(featureFlagKey).<span class="title function_">then</span>(<span class="function"><span class="params">flag</span> =&gt;</span> ...)</span><br><span class="line">cy.<span class="title function_">setFeatureFlagForUser</span>(featureFlagKey, userId, variationIndex)</span><br><span class="line">cy.<span class="title function_">removeUserTarget</span>(featureFlagKey, userId)</span><br></pre></td></tr></table></figure>
+
+<p>See the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/cypress-ld-control#readme">README</a> for the latest command syntax.</p>
+<p>The plugin can also control multiple LaunchDarkly projects at once. When initializing the plugin from the plugins file or from the <code>cypress.config.js</code> file, list the projects you want to control (and their environments):</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// list all the LD projects you want to use</span></span><br><span class="line"><span class="keyword">const</span> projects = [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">name</span>: <span class="string">&#x27;web-flags&#x27;</span>,</span><br><span class="line">    <span class="attr">projectKey</span>: <span class="string">&#x27;default&#x27;</span>,</span><br><span class="line">    <span class="attr">environment</span>: <span class="string">&#x27;test&#x27;</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">projectKey</span>: <span class="string">&#x27;api-project&#x27;</span>,</span><br><span class="line">    <span class="attr">environment</span>: <span class="string">&#x27;test&#x27;</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="title function_">initCypressMultipleProjects</span>(projects, on, config)</span><br></pre></td></tr></table></figure>
+
+<p>From the spec file, use the name or the key of the project you want to use when controlling a feature flag.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cy.<span class="title function_">getFeatureFlag</span>(<span class="string">&#x27;my-flag&#x27;</span>, <span class="string">&#x27;default&#x27;</span>)</span><br><span class="line">cy.<span class="title function_">getFeatureFlag</span>(<span class="string">&#x27;my-flag&#x27;</span>, <span class="string">&#x27;web-flags&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/cypress-and-launchdarkly/" data-id="clxj6w7d3003ybjn7d50i8vp0" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/cypress-and-launchdarkly/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../code-coverage-for-nextjs-app/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Code Coverage For Nextjs Application
+        
+      </div>
+    </a>
+  
+  
+    <a href="../visualize-cypress-command-queue/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Visualize Cypress Command Queue</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/cypress-and-launchdarkly/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

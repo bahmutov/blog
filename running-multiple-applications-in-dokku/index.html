@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Running multiple applications in Dokku | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Recently, I have looked how to develop multiple small applications and how to deploy them to the cloud. See the following blog posts  Microservices with fuge Local microservice containers  I still cou">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Running multiple applications in Dokku">
+<meta property="og:url" content="https://glebbahmutov.com/blog/running-multiple-applications-in-dokku/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Recently, I have looked how to develop multiple small applications and how to deploy them to the cloud. See the following blog posts  Microservices with fuge Local microservice containers  I still cou">
+<meta property="og:locale">
+<meta property="article:published_time" content="2016-04-03T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.582Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-running-multiple-applications-in-dokku" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-04-03T04:00:00.000Z" itemprop="datePublished">Apr 3 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Running multiple applications in Dokku
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Setting up multiple applications in a single DigitalOcean instance via Dokku.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Recently, I have looked how to develop multiple small applications and how to deploy them
+to the cloud. See the following blog posts</p>
+<ul>
+<li><a href="../microservices-with-fuge/">Microservices with fuge</a></li>
+<li><a href="../local-microservice-containers/">Local microservice containers</a></li>
+</ul>
+<p>I still could not find a way to actually deploy these <em>small</em> applications onto a single
+cloud instance. Different deployment services tried to create a separate instance to run
+each application; that is a huge overhead and costs a lot.</p>
+<p>Finally, I found a solution that works for me, and is suitable for small to medium sized
+applications. If you have used Heroku, the concept would be very familiar to you, and
+in practice the steps are similar.</p>
+<p>I am using <a target="_blank" rel="noopener" href="http://dokku.viewdocs.io/dokku/">Dokku</a> - which is Docker-powered Heroku-like
+application. You can create a single DigitalOcean &quot;droplet&quot; with Dokku 0.4 with
+<a target="_blank" rel="noopener" href="https://www.digitalocean.com/features/one-click-apps/dokku/">1-click</a> setup and have your
+own &quot;Heroku&quot; platform. The Dokku can then create and control multiple applications, each
+application running inside its own Docker container. If you need additional features,
+there are plugins for load balancing, common databases, etc.</p>
+<p>Here are my steps to start and configure separate apps inside a single Dokku instance
+hosted on DigitalOcean. Hope these steps are useful, especially if you try to configure
+virtual hosting for application to avoid addressing apps by their transient port numbers.</p>
+<h1><span id="step-zero">Step zero</span></h1><ul>
+<li>Read the official <a target="_blank" rel="noopener" href="http://dokku.viewdocs.io/dokku/installation/">Dokku installation guide</a> -
+the steps might have changed since I have described them.</li>
+<li><strong>Important</strong> make sure you have your public SSH key uploaded to DigitalOcean before
+creating any new droplets for simple and secure login.</li>
+</ul>
+<h1><span id="create-droplet">Create droplet</span></h1><p>Read the <a target="_blank" rel="noopener" href="http://dokku.viewdocs.io/dokku/getting-started/install/digitalocean/">Running Dokku on DigitalOcean</a> instructions</p>
+<ul>
+<li>Pick one-click apps</li>
+<li>Select &quot;Dokku 0.4.14 on Ubuntu&quot;</li>
+<li>Pick at least 1GB size</li>
+<li>Add your SSH key for simplicity and security, instead of using the root password</li>
+<li>Choose internal host name, for example &quot;dokku&quot; instead of the default</li>
+<li>Click &quot;Create&quot; button and wait a few seconds</li>
+</ul>
+<h2><span id="check-dokku-running-in-the-droplet">Check Dokku running in the droplet</span></h2><ul>
+<li>Copy droplet&#39;s IP4 address and run <code>ssh root@&lt;ip4&gt;</code> to login</li>
+<li>Check dokku&#39;s installation</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@dokku:~<span class="comment"># dokku version</span></span><br><span class="line">0.4.14</span><br></pre></td></tr></table></figure>
+
+<p>If the version is old(er), you can upgrade dokku, see
+<a target="_blank" rel="noopener" href="http://dokku.viewdocs.io/dokku/getting-started/upgrading/#upgrade-instructions">instructions</a></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update</span><br><span class="line">sudo apt-get install -qq -y dokku herokuish</span><br></pre></td></tr></table></figure>
+
+<h1><span id="configure-custom-domain-name-optional">Configure custom domain name (optional)</span></h1><p>If you setup a custom domain, you will be able to use <code>&lt;application name.domain.com&gt;</code> for
+reach your application. Otherwise you will have to use <code>&lt;ip4&gt;:&lt;port&gt;</code> to reach the individual
+applications. Even worse, every time you redeploy
+an application X, you will get a new port number: <code>&lt;ip4:port1&gt;</code>, <code>&lt;ip4:port2&gt;</code>, <code>&lt;ip4:port3&gt;</code>
+which makes connecting to an application difficult.</p>
+<p>With a custom domain name and virtual host names, the application stays at the same
+name <code>&lt;name-of-the-app.domain.com&gt;</code> and the port is remapped internally.</p>
+<p><strong>WARNING</strong> maybe it is possible, but I failed to switch existing an Dokku droplet from using
+port numbers to the custom domain name; had to rebuild the droplet and create the applications
+again after configuring the domain. Thus it is recommended that you perform domain &#x2F; virtual host
+name configuration first, before creating any apps.</p>
+<h2><span id="buy-a-domain-and-point-dns-record-at-the-droplet">Buy a domain and point DNS record at the droplet</span></h2><ol>
+<li>First, you need a custom domain name for the droplet.
+Purchase a domain name <code>&lt;domain.com&gt;</code>, for example from domains.google.com</li>
+<li>Go into the settings (where you bought the domain) and point DNS servers at the
+  DigitalOcean&#39;s name servers:
+  <code>ns1.digitalocean.com</code>, <code>ns2.digitalocean.com</code> and <code>ns3.digitalocean.com</code></li>
+<li>Verify that the new domain servers are listed in
+  <code>$ whois &lt;domain.com&gt;  | grep &quot;Name Server&quot;</code> response</li>
+<li>From the DO droplet&#39;s actions pick &quot;Add Domain&quot; and enter the new domain <code>&lt;domain.com&gt;</code></li>
+<li>There should be nothing to do, there is already a default <code>@ &lt;ip4&gt;</code> A record created</li>
+<li>Add wild card mapping for everything else to the same domain - A record <code>* &lt;ip4&gt;</code>
+  <strong>Note</strong> just enter a wildcard &quot;*&quot; in the first column, and <code>&lt;ip4&gt;</code>
+  address in the second.</li>
+<li>You should see the following text in the record on the config page</li>
+</ol>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">domain.com. 1800 IN A &lt;ip4&gt;</span><br><span class="line">*.domain.com. 1800 IN A &lt;ip4&gt;</span><br></pre></td></tr></table></figure>
+
+<ol start="8">
+<li>Test the mapping by browsing to <code>&lt;domain.com&gt;</code> - you should see the same screen as browsing
+to <code>&lt;ip4&gt;</code> directly</li>
+<li>Create CNAME record if you need aliases, I don&#39;t think you need them with Dokku</li>
+<li>Test the domain resolution from the command line by using <code>ping &lt;domain.com&gt;</code></li>
+<li>Test the SSH works using domain name in addition to IP4</li>
+</ol>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh root@&lt;domain.com&gt;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="set-virtualhost">Set virtualhost</span></h2><ol>
+<li>Open the Dokku application in the browser using the new name <code>&lt;domain.com&gt;</code>
+  and enter the new domain name in the input box instead of the <code>&lt;ip4&gt;</code> address.</li>
+<li>Click &quot;Finish setup&quot;</li>
+</ol>
+<p><strong>Maybe</strong></p>
+<p>In order to properly route each application <code>foo</code> to <code>foo.domain.com</code>
+you might have to set the hostname on the droplet. SSH into the droplet and
+check the current domain name, and set it to <code>domain.com</code></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo hostname -f</span><br><span class="line">sudo hostname domain.com</span><br></pre></td></tr></table></figure>
+
+<h2><span id="related-info">Related info</span></h2><ul>
+<li><a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/how-to-set-up-a-host-name-with-digitalocean">How To Set Up a Host Name with DigitalOcean</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/how-to-use-the-digitalocean-dokku-application">How to Use the DigitalOcean Dokku Application</a></li>
+</ul>
+<h2><span id="install-letsencrypt">Install LetsEncrypt</span></h2><p>In order to get free automatic SSL certificates for our applications and the
+new domain, need to install
+<a target="_blank" rel="noopener" href="https://github.com/dokku/dokku-letsencrypt">Dokku LetsEncrypt plugin</a>.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git</span><br></pre></td></tr></table></figure>
+
+<h1><span id="create-an-application">Create an application</span></h1><ul>
+<li>ssh into the box</li>
+<li>Create new <code>hello</code> application using <code>dokku apps:create hello</code></li>
+<li>Exit SSH from the droplet and switch back to the local computer</li>
+<li>Since Dokku operates under its own user &quot;dokku&quot; we want to associate it with the user <code>root</code> to
+use our SSH key when push to the remote repo. From the local computer execute the following
+remote command</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> ~/.ssh/id_rsa.pub | ssh root@&lt;ip4&gt; <span class="string">&quot;sudo sshcommand acl-add dokku root&quot;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>From the local Git repo (for example I am using
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/hello-world">bahmutov&#x2F;hello-world</a>)
+add Dokku as another remote git server</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git remote add dokku dokku@&lt;ip4&gt;:hello</span><br><span class="line">or</span><br><span class="line">git remote add dokku dokku@&lt;domain.com&gt;:hello</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>push the code to the remote (you should see lots of build messages)</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git push dokku master</span><br></pre></td></tr></table></figure>
+
+<p>You should see build process log messages, similar to the build log generated
+when pushing an app to Heroku.</p>
+<p><strong>Hint:</strong> you can push a different local branch to Dokku server. Just map
+it to Dokku&#39;s &quot;master&quot; like this <code>git push dokku local-branch:master</code>.</p>
+<p>If the build step during the push fails, it might be due to the droplet&#39;s
+small size. Try resizing the drop let to have larger memory limit and
+push again. For example, I could run small HTTP server on a droplet with 512MB,
+but ExpressJS required at least 1 GB droplet.</p>
+<h2><span id="checking-the-application39s-state">Checking the application&#39;s state</span></h2><ul>
+<li>ssh into the box</li>
+<li>see the list of running applications</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">root@dokku:~<span class="comment"># dokku apps</span></span><br><span class="line">=====&gt; My Apps</span><br><span class="line">hello</span><br></pre></td></tr></table></figure>
+<ul>
+<li>check the app&#39;s logs</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">root@dokku:~<span class="comment"># dokku logs hello</span></span><br><span class="line">2016-03-20T23:07:18.916218565Z app[web.1]:</span><br><span class="line">2016-03-20T23:07:18.916313189Z app[web.1]: &gt; hello-world@1.0.0 start /app</span><br><span class="line">2016-03-20T23:07:18.916324098Z app[web.1]: &gt; node index.js</span><br><span class="line">2016-03-20T23:07:18.916331059Z app[web.1]:</span><br><span class="line">2016-03-20T23:07:19.032003761Z app[web.1]: Server running at port 5000</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Make direct request to the application running inside the Docker container.
+To find the internal IP and port, see the <code>nginx.conf</code> file created with the
+application.</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dokku:~<span class="comment"># cat /home/dokku/hello-world/nginx.conf</span></span><br><span class="line">...</span><br><span class="line">upstream hello-world-5000 &#123;</span><br><span class="line">  server 172.17.0.4:5000;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Use the above &quot;server&quot; IP to check the web application</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dokku:~<span class="comment"># curl 172.17.0.4:5000</span></span><br><span class="line">Hello World</span><br></pre></td></tr></table></figure>
+
+<p>If you have configured custom domain and virtual host name resolution,
+skip the IP4 port step below.</p>
+<ul>
+<li>Find the <strong>actual port</strong> on the droplet mapped to the application (running inside Docker).</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">root@dokku:~<span class="comment"># dokku urls hello</span></span><br><span class="line">http://dokku:32769 (container)</span><br><span class="line">http://dokku:80 (nginx)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Check the application&#39;s response by running <code>curl</code> or whatever is your preferred HTTP client</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ http &lt;ip4&gt;:32769 // or http://&lt;hello.domain.com&gt;</span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Content-Type: text/plain</span><br><span class="line">Date: Sun, 20 Mar 2016 23:24:22 GMT</span><br><span class="line">Transfer-Encoding: chunked</span><br><span class="line">Hello World</span><br></pre></td></tr></table></figure>
+
+<p>Our <a target="_blank" rel="noopener" href="https://github.com/bahmutov/hello-world">Hello World</a> is running at that full address
+<code>&lt;ip4&gt;:32769</code> (or at <code>hello.domain.com</code>).</p>
+<h1><span id="setting-up-a-database-container-service">Setting up a database container (service)</span></h1><p>If you need a database, for example MongoDB, you can easily create it to run in a separate
+container on Dokku.</p>
+<ul>
+<li>SSH into Dokku box and install <a target="_blank" rel="noopener" href="https://github.com/dokku/dokku-mongo">Mongo plugin</a>
+<code>dokku plugin:install https://github.com/dokku/dokku-mongo.git mongo</code></li>
+<li>Then create a new mongo service, for example name it &quot;my-db&quot; <code>dokku mongo:create my-db</code><ul>
+<li>the command will show full Mongo URI</li>
+<li>You can always list created mongo service with <code>dokku mongo:list</code> and get details about
+a particular one with <code>dokku mongo:info my-db</code></li>
+</ul>
+</li>
+</ul>
+<p>Let us say we want to use this MongoDB from a <a target="_blank" rel="noopener" href="https://parse.com/docs">Parse</a> server</p>
+<h2><span id="setting-up-parse-server">Setting up Parse server</span></h2><p>From your local machine:</p>
+<ul>
+<li>Clone the <a target="_blank" rel="noopener" href="https://github.com/ParsePlatform/parse-server-example">parse example</a> to local folder</li>
+<li>Install dependencies <code>npm i -r http://registry.npmjs.org/</code> just to test the server locally</li>
+<li>SSH into Dokku box</li>
+<li>Create <code>parse</code> application on Dokku host <code>dokku apps:create parse</code></li>
+<li>Link the mongo service to the new app <code>dokku mongo:link my-db parse</code></li>
+<li>Note: you can see other environment variables in the <a target="_blank" rel="noopener" href="https://github.com/ParsePlatform/parse-server-example/blob/master/index.js">index.js</a> file</li>
+<li>Add remote Dokku as another git server <code>git remote add dokku dokku@&lt;custom domain&gt;:parse</code> and push the code <code>git push dokku master</code></li>
+<li>SSH into the box and set app id and master key environment variables</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dokku config:<span class="built_in">set</span> parse APP_ID=&lt;app <span class="built_in">id</span>&gt;</span><br><span class="line">dokku config:<span class="built_in">set</span> parse MASTER_KEY=&lt;key&gt;</span><br></pre></td></tr></table></figure>
+
+<p>Hint: you can set multiple variables at once using</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">dokku config:<span class="built_in">set</span> &lt;app&gt; key1=value1 key2=value2</span><br><span class="line">````</span><br><span class="line"></span><br><span class="line">If everything goes well, you should have a fresh Parse server.</span><br><span class="line"></span><br><span class="line">- Test the server (using</span><br><span class="line">  [the guide](http://julienrenaux.fr/2016/01/29/complete-parse-server-migration-guide/))</span><br><span class="line"></span><br><span class="line">```sh</span><br><span class="line">http http://&lt;parse.domain.com&gt;</span><br><span class="line">&#123;<span class="string">&quot;error&quot;</span>:<span class="string">&quot;unauthorized&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Try making a GET request</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -X GET -H <span class="string">&quot;X-Parse-Application-Id: &lt;app&gt;&quot;</span> -H <span class="string">&quot;X-Parse-Master-Key: &lt;key&gt;&quot;</span> -G \</span><br><span class="line">    http://&lt;parse.domain.com&gt;/parse/classes/Foo/1</span><br></pre></td></tr></table></figure>
+
+<h2><span id="setting-up-ssl-for-an-application">Setting up SSL for an application</span></h2><p>We have already installed LetsEncrypt plugin. Now we can use it to enable
+SSL for our <code>hello.domain.com</code> application.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">dokku config:<span class="built_in">set</span> --no-restart hello DOKKU_LETSENCRYPT_EMAIL=&lt;me@gmail.com&gt;</span><br><span class="line">dokku letsencrypt hello</span><br><span class="line">-----&gt; Configuring hello.domain.com...(using built-in template)</span><br><span class="line">-----&gt; Creating https nginx.conf</span><br><span class="line">-----&gt; Running nginx-pre-reload</span><br><span class="line">       Reloading nginx</span><br><span class="line">-----&gt; Configuring hello.domain.com...(using built-in template)</span><br><span class="line">-----&gt; Creating https nginx.conf</span><br><span class="line">-----&gt; Running nginx-pre-reload</span><br><span class="line">       Reloading nginx</span><br><span class="line">-----&gt; Disabling ACME proxy <span class="keyword">for</span> hello...</span><br><span class="line">       <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+<p>While we are at the Dokku box, print the two urls for &quot;hello&quot; app</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dokku urls hello</span><br><span class="line">http://hello.domain.com</span><br><span class="line">https://hello.domain.com</span><br></pre></td></tr></table></figure>
+
+<p>Let us try regular request, and should get a redirect to the secure end point.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ http http://hello.domain.com</span><br><span class="line">HTTP/1.1 301 Moved Permanently</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Content-Length: 178</span><br><span class="line">Content-Type: text/html</span><br><span class="line">Date: Wed, 06 Jul 2016 04:07:29 GMT</span><br><span class="line">Location: https://hello.domain.com:443/</span><br></pre></td></tr></table></figure>
+
+<p>The secure endpoint works</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ http https://hello.domain.com</span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Hello World</span><br></pre></td></tr></table></figure>
+
+<p>Any modern browser is also very happy loading this secure page.</p>
+<p><strong>Note</strong> the free certificates expire after N months. Use the plugin&#39;s
+<a target="_blank" rel="noopener" href="https://github.com/dokku/dokku-letsencrypt#commands">commands</a> to setup a
+cron job to auto-renew them.</p>
+<p><strong>Note</strong> if you try to get a second certificate for a different application,
+it might fail. Check if the domain name is displayed correctly, sometimes
+it thinks the domain is <em>still the first one</em>*</p>
+<p>For example, this will work</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dokku letsencrypt hello</span><br><span class="line">...</span><br><span class="line">-----&gt; Enabling ACME proxy for api...</span><br><span class="line">-----&gt; Getting letsencrypt certificate for hello...</span><br><span class="line">        - Domain &#x27;hello.domain.com&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>But when you try to get a certificate for second application &quot;bye&quot;</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">```</span><br><span class="line">dokku letsencrypt bye</span><br><span class="line">...</span><br><span class="line">-----&gt; Enabling ACME proxy for api...</span><br><span class="line">-----&gt; Getting letsencrypt certificate for bye...</span><br><span class="line">        - Domain &#x27;hello.domain.com&#x27;</span><br><span class="line">ERROR: could not get ...</span><br></pre></td></tr></table></figure>
+
+<p>In this case try to cleanup &quot;letsencrypt&quot; for every application.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">; <span class="keyword">do</span> <span class="keyword">for</span> each application</span><br><span class="line">dokku letsencrypt:revoke &lt;app&gt;</span><br><span class="line">dokku letsencrypt:cleanup &lt;app&gt;</span><br><span class="line">; <span class="keyword">then</span> get new certificate <span class="keyword">for</span> each application</span><br><span class="line">dokku letsencrypt &lt;app&gt;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="making-ssl-bulletproof">Making SSL bulletproof</span></h2><p>You can test your new SSL setup using <a target="_blank" rel="noopener" href="https://www.ssllabs.com/">SSL Labs</a>
+Just open the browser at <code>https://www.ssllabs.com/ssltest/analyze.html?d=&lt;app name.domain.com&gt;</code>
+and wait a minute. Most likely your default setup will get a &quot;C&quot; due to
+SSLv3 enabled, which has <a target="_blank" rel="noopener" href="https://blog.qualys.com/ssllabs/2014/10/15/ssl-3-is-dead-killed-by-the-poodle-attack">Poodle vulnerability</a></p>
+<p><strong>Note</strong> the commands below could be executed using a single script I placed
+into <a target="_blank" rel="noopener" href="https://github.com/bahmutov/secure-dokku">bahmutov&#x2F;secure-dokku</a>.</p>
+<h3><span id="disable-sslv3">Disable SSLv3</span></h3><p>Let us disable the SSLv3 in the nginx configuration for all applications.
+SSH into the Dokku box, the nginx configuration should be in the file
+<code>/etc/nginx/conf.d/dokku.conf</code>. Add the following line:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;ssl_protocols TLSv1 TLSv1.1 TLSv1.2;&quot;</span> &gt;&gt; /etc/nginx/conf.d/dokku.conf</span><br><span class="line">service nginx reload</span><br></pre></td></tr></table></figure>
+
+<p>You can confirm that the SSLv3 was disabled from the command line - the
+following command should return an error</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl s_client -connect &lt;app.domain.com&gt;:443 -ssl3</span><br></pre></td></tr></table></figure>
+
+<p>Boom! SSL Labs should bump the grade from &quot;C&quot; to &quot;A-&quot;. If you want to go
+all the way to &quot;A&quot; you should configure <a target="_blank" rel="noopener" href="https://blog.qualys.com/ssllabs/2013/06/25/ssl-labs-deploying-forward-secrecy">forward secrecy</a>.</p>
+<h3><span id="enable-forward-secrecy">Enable Forward Secrecy</span></h3><p>To enable this feature and disable weak keys,
+I tweaked the configuration file following the advice in excellent
+<a target="_blank" rel="noopener" href="https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html">Strong SSL Security on nginx</a>; here is the result</p>
+<figure class="highlight sh"><figcaption><span>/etc/nginx/conf.d/dokku.conf</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">include /home/dokku/*/nginx.conf;</span><br><span class="line"></span><br><span class="line">server_tokens off;</span><br><span class="line"></span><br><span class="line">ssl_session_cache shared:SSL:20m;</span><br><span class="line">ssl_session_timeout 10m;</span><br><span class="line"></span><br><span class="line">ssl_prefer_server_ciphers on;</span><br><span class="line"></span><br><span class="line"><span class="comment"># default ciphers</span></span><br><span class="line"><span class="comment"># ssl_ciphers EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># strong ciphers only</span></span><br><span class="line"><span class="comment"># see https://weakdh.org/sysadmin.html</span></span><br><span class="line">ssl_ciphers <span class="string">&#x27;ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:!CAMELLIA:!DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA&#x27;</span>;</span><br><span class="line"></span><br><span class="line">ssl_dhparam /etc/nginx/conf.d/dhparams.pem;</span><br><span class="line"></span><br><span class="line"><span class="comment"># no SSLv3</span></span><br><span class="line">ssl_protocols TLSv1 TLSv1.1 TLSv1.2;</span><br></pre></td></tr></table></figure>
+
+<p>The file <code>/etc/nginx/conf.d/dhparams.pem</code> was generated by me</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl dhparam -out /etc/nginx/conf.d/dhparams.pem 2048</span><br></pre></td></tr></table></figure>
+
+<p>After editing the <code>/etc/nginx/conf.d/dokku.conf</code> file, restart the service
+again</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service nginx reload</span><br></pre></td></tr></table></figure>
+
+<p>If there is a problem, inspect the log file, usually in
+<code>/var/log/nginx/error.log</code>. Most likely there is a spelling error.</p>
+<p>After everything said and done, your website should get solid &quot;A&quot;!</p>
+<h2><span id="simple-persistent-storage">Simple persistent storage</span></h2><p>If you deploy a new version of the application, all its data inside the
+Docker container is lost. In order to save the data, and have it available
+after new deploy, you need to mount an external folder.</p>
+<p>See <a target="_blank" rel="noopener" href="http://dokku.viewdocs.io/dokku/advanced-usage/persistent-storage/">docs</a>
+for more information.</p>
+<p>Let us mount external folder <code>/var/lib/dokku/data/storage/hello</code> as <code>/tmp/data</code>
+inside the application &quot;hello&quot;</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /var/lib/dokku/data/storage/hello</span><br><span class="line">dokku storage:mount hello /var/lib/dokku/data/storage/hello:/tmp/data</span><br><span class="line">dokku ps:restart hello</span><br></pre></td></tr></table></figure>
+
+
+<p>And ... the application &quot;hello&quot; cannot actually write into that folder,
+see <a target="_blank" rel="noopener" href="https://github.com/dokku/dokku/issues/2215">issue 2215</a>.
+Seems every Dokku container runs a random non-privileged user, thus
+that user cannot actually write into the folder.</p>
+<p>As a temporary workaround until Dokku v7, you can give everyone write access
+to the folder.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> a+w /var/lib/dokku/data/storage/hello</span><br></pre></td></tr></table></figure>
+
+<p>Since every deploy changes the user, if the new user creates new files
+or recreates the existing ones, we need to run this command again.
+I scheduled a quick cron job to do this very often; run <code>crontab -e</code>
+then enter the following to run the command every two minutes</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># m h  dom mon dow   command</span><br><span class="line">*/2 * * * * chmod a+w /var/lib/dokku/data/storage/hello/*</span><br></pre></td></tr></table></figure>
+
+<p>Hopefully, this would be fixed in a better way soon.</p>
+<h2><span id="setting-up-continuous-deployment">Setting up continuous deployment</span></h2><p>We do not want to perform manual deploys, instead I prefer to deploy
+my applications automatically. For publishing NPM modules I prefer
+<a target="_blank" rel="noopener" href="https://github.com/semantic-release/semantic-release">semantic release</a>,
+similarly for deploys we can use a CI server to push the new code
+as soon as unit tests pass.</p>
+<h3><span id="simple-case-shippable">Simple case - Shippable</span></h3><p>Let us follow the instructions from
+<a target="_blank" rel="noopener" href="http://blog.shippable.com/continuous-nodejs-deployment-to-digitalocean">Shippable</a>
+and setup the deployment pipeline for <code>hello-world</code> application.</p>
+<p>First, we need to give Shippable access to Dokku so it can deploy
+applications. Browse to Shippable &quot;CI &#x2F; Settings&quot; tab and copy
+the public &quot;Deployment Key&quot;. Then from the local terminal add this key
+to Dokku (consult <a target="_blank" rel="noopener" href="http://dokku.viewdocs.io/dokku/deployment/user-management/#adding-deploy-users">User Management &#x2F; Adding Deploy Users</a>).
+If the SSH key is in the clipboard, we can simply run</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ pbpaste | ssh root@domain.com <span class="string">&quot;sudo sshcommand acl-add dokku shippable&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>The last word &quot;shippable&quot; is the name of the new user we have just created
+for Shippable connections.</p>
+<p>Second, enable the build for the project, in this case <code>hello-world</code>.
+A simple <code>shippable.yml</code> file pushes to the Dokku remote server after a
+successful build</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">language:</span> <span class="string">node_js</span></span><br><span class="line"><span class="attr">node_js:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="number">6</span></span><br><span class="line"><span class="attr">after_success:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">if</span> [ <span class="string">&quot;$BRANCH&quot;</span> <span class="string">==</span> <span class="string">&quot;master&quot;</span> ]<span class="string">;</span> <span class="string">then</span> <span class="string">git</span> <span class="string">remote</span> <span class="string">add</span> <span class="string">dokku</span> <span class="string">dokku@domain.com:hello;</span> <span class="string">fi</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">if</span> [ <span class="string">&quot;$BRANCH&quot;</span> <span class="string">==</span> <span class="string">&quot;master&quot;</span> ]<span class="string">;</span> <span class="string">then</span> <span class="string">git</span> <span class="string">push</span> <span class="string">dokku</span> <span class="string">master;</span> <span class="string">fi</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Note</strong> the full git repo for the application &quot;hello&quot; is still
+<code>dokku@domain.com:hello</code> - even if we have created user &quot;shippable&quot;, it
+is only to login via a specific SSH key.</p>
+<p>Via Shippable user interface you can restrict the builds to run only for
+tagged commits, to make sure you only deploy a finished features for example.
+You can find the full configuration docs
+<a target="_blank" rel="noopener" href="http://docs.shippable.com/ci_configure/">here</a>.</p>
+<h3><span id="slightly-more-complex-circleci">Slightly more complex - CircleCI</span></h3><p>Similarly, you can configure other CI services like CircleCI, Codeship
+to push code to Dokku after a successful build. First, we need to generate
+a new SSH key pair, upload the private key to CircleCI and public to Dokku.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -q -t rsa -b 2048 -f <span class="string">&quot;/tmp/ci_rsa&quot;</span> -N <span class="string">&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>This has generated two files in <code>/tmp</code> folder. Grab the private key and
+place it in the clipboard</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /tmp/ci_rsa | pbcopy</span><br></pre></td></tr></table></figure>
+
+<p>Hint: even better is to store the generated key pair in your folder for future
+use</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">folder=$(<span class="built_in">pwd</span>)</span><br><span class="line">ssh-keygen -q -t rsa -b 2048 -f <span class="string">&quot;<span class="variable">$folder</span>/.ssh/dokku-circle-ci_rsa&quot;</span> -N <span class="string">&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Browse to the CircleCI page <code>https://circleci.com/gh/&lt;username&gt;/&lt;project&gt;/edit#ssh</code>
+and paste the text into the text box (leave the <code>hostname</code> blank to allow
+reusing this key for any dokku domain name).</p>
+<p>Now grab the public key file and pipe it directly to the Dokku ssh command</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /tmp/ci_rsa.pub | ssh root@domain.com <span class="string">&quot;sudo sshcommand acl-add dokku codeship&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>That is it, we should be able to push new code directly from the build
+using the command <code>git remote add dokku dokku@domain.com:hello</code> first.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">deployment:</span></span><br><span class="line">  <span class="attr">production:</span></span><br><span class="line">    <span class="attr">branch:</span> <span class="string">master</span></span><br><span class="line">    <span class="attr">commands:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">echo</span> <span class="string">Deploying</span> <span class="string">master</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">git</span> <span class="string">remote</span> <span class="string">add</span> <span class="string">dokku</span> <span class="string">dokku@domain.com:hello</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">git</span> <span class="string">push</span> <span class="string">dokku</span> <span class="string">master</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><a target="_blank" rel="noopener" href="https://circleci.com/docs/configuration/#deployment">How to setup deployment from CircleCI</a></li>
+</ul>
+<h2><span id="beefing-up-server-security">Beefing up server security</span></h2><p>This is a list of advanced steps to make the Dokku box even more secure.</p>
+<h3><span id="disable-ssh-login-using-passwords">Disable SSH login using passwords</span></h3><p>We should only login using SSH key, not passwords.
+Edit file <code>/etc/ssh/sshd_config</code> and insert line</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PasswordAuthentication no</span><br></pre></td></tr></table></figure>
+
+<p>If you are only logging in from specific IP(s) you can restrict the Dokku
+host to only allow logins from these addresses, see
+<a target="_blank" rel="noopener" href="http://www.unixlore.net/articles/five-minutes-to-even-more-secure-ssh.html">this guide</a>
+<strong>Note</strong> this will probably break continuous deployment!</p>
+<p>Restart the SSH daemon</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service ssh restart</span><br></pre></td></tr></table></figure>
+
+<h3><span id="login-with-non-root-user">Login with non-root user</span></h3><p>It is a good idea to make a new non-root user just to be able to SSH into
+the box, and disable SSH login for the root user.
+See <a target="_blank" rel="noopener" href="https://mediatemple.net/community/products/dv/204643810/how-do-i-disable-ssh-login-for-the-root-user">how</a>.</p>
+<h3><span id="enable-2fa-for-ssh-login">Enable 2FA for SSH login</span></h3><p>This is an advanced step to make sure only you can login.
+Read the <a target="_blank" rel="noopener" href="https://linuxrocks.asia/2015/07/configuring-ssh-with-2fa-and-key-based-authentication/">Configuring SSH with 2FA and Key based authentication</a></p>
+<h2><span id="conclusion">Conclusion</span></h2><p>I love Dokku - it seems mature, feature complete, simple and allows me to
+spend very little money to run a plenty of small applications. While not
+as simple as <a target="_blank" rel="noopener" href="https://zeit.co/now">Zeit now</a>, Dokku has a huge advantage -
+every tool that runs in a Docker container can be deployed in seconds.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/running-multiple-applications-in-dokku/" data-id="clxj6w7e500fqbjn7ektqhlh8" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/running-multiple-applications-in-dokku/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/docker/" rel="tag">docker</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../test-if-a-function-is-pure-revisited/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Test if a function is pure revisited
+        
+      </div>
+    </a>
+  
+  
+    <a href="../angular-nuggets/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Angular nuggets</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/running-multiple-applications-in-dokku/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Code Coverage for End-to-end Tests | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Instrumenting the code as a pre-processor step During the tests The coverage report Code coverage from multiple spec files Code coverage on CI 100% code coverage See also    In my previous blog pos">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Code Coverage for End-to-end Tests">
+<meta property="og:url" content="https://glebbahmutov.com/blog/code-coverage-for-e2e-tests/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Instrumenting the code as a pre-processor step During the tests The coverage report Code coverage from multiple spec files Code coverage on CI 100% code coverage See also    In my previous blog pos">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/battery/crash.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/battery-coverage/one-test.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/battery-coverage/coverage-report.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/battery-coverage/missed-line.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/battery-coverage/artifacts.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/battery-coverage/report.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/battery-coverage/index-js-report.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/battery-coverage/fixed.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/battery-coverage/100-covered.png">
+<meta property="article:published_time" content="2019-05-06T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.497Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="testing">
+<meta property="article:tag" content="cypress">
+<meta property="article:tag" content="code coverage">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/battery/crash.png">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-code-coverage-for-e2e-tests" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2019-05-06T04:00:00.000Z" itemprop="datePublished">May 6 2019</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Code Coverage for End-to-end Tests
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to instrument application code and collect code coverage during Cypress E2E tests.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- toc -->
+
+<ul>
+<li><a href="#instrumenting-the-code-as-a-pre-processor-step">Instrumenting the code as a pre-processor step</a></li>
+<li><a href="#during-the-tests">During the tests</a></li>
+<li><a href="#the-coverage-report">The coverage report</a></li>
+<li><a href="#code-coverage-from-multiple-spec-files">Code coverage from multiple spec files</a></li>
+<li><a href="#code-coverage-on-ci">Code coverage on CI</a></li>
+<li><a href="#100-code-coverage">100% code coverage</a></li>
+<li><a href="#see-also">See also</a></li>
+</ul>
+<!-- tocstop -->
+
+<p>In my previous blog post <a href="../stub-navigator-api/">&quot;Stub navigator API in end-to-end tests&quot;</a> I have shown a small web application that shows the current battery charge information. Then I have shown several Cypress end-to-end tests and found an edge case that caused the application to crash.</p>
+<p><img src="/blog/images/battery/crash.png" alt="Application crashes trying to attach the event listener"></p>
+<p>The crash was caused by the failure of the program <a target="_blank" rel="noopener" href="https://github.com/bahmutov/demo-battery-api/blob/master/src/index.js">src&#x2F;index.js</a> to account for the final <code>- else</code> code path when dealing with the browser capabilities.</p>
+<figure class="highlight js"><figcaption><span>src/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> battery</span><br><span class="line"><span class="keyword">if</span> (navigator.<span class="property">battery</span>) &#123;</span><br><span class="line">  <span class="title function_">readBattery</span>(navigator.<span class="property">battery</span>)</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (navigator.<span class="property">getBattery</span>) &#123;</span><br><span class="line">  navigator.<span class="title function_">getBattery</span>().<span class="title function_">then</span>(readBattery)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="comment">// hmm, the &quot;battery&quot; variable remains undefined</span></span><br><span class="line">  <span class="variable language_">document</span>.<span class="title function_">querySelector</span>(<span class="string">&#x27;.not-support&#x27;</span>).<span class="title function_">removeAttribute</span>(<span class="string">&#x27;hidden&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable language_">window</span>.<span class="property">onload</span> = <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">  <span class="comment">// hmm what happens when &quot;battery&quot; variable stays undefined?</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// show updated status when the battery changes</span></span><br><span class="line">  battery.<span class="title function_">addEventListener</span>(<span class="string">&#x27;chargingchange&#x27;</span>, <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="title function_">readBattery</span>()</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  battery.<span class="title function_">addEventListener</span>(<span class="string">&#x27;levelchange&#x27;</span>, <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="title function_">readBattery</span>()</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Our end-to-end test in spec file <a target="_blank" rel="noopener" href="https://github.com/bahmutov/demo-battery-api/blob/master/cypress/integration/no-battery.js">no-battery.js</a> removes both <code>navigator.battery</code> and <code>navigator.getBattery</code> properties and reaches the final <code>- else</code> path, causing the <code>window.onload</code> to crash - the variable <code>battery</code> remains undefined. If only we could see right away before writing <code>no-battery.js</code> that this code path is a problem!</p>
+<h2><span id="instrumenting-the-code-as-a-pre-processor-step">Instrumenting the code as a pre-processor step</span></h2><p>Cypress users who think collecting application code coverage during end-to-end tests <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress/issues/346">proposed several solutions</a>. All solutions instrument the web application code during the build step, then save the collected code coverage data after the tests. Finally, yet another step generates coverage report from the saved data. Let&#39;s see how it can be done for our battery API demo application.</p>
+<p>You can find this code in branch <a target="_blank" rel="noopener" href="https://github.com/bahmutov/demo-battery-api/tree/coverage-step">coverage-step</a> in the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/demo-battery-api">demo-battery-api</a> repository.</p>
+<p>First, we will instrument our application code as a pre-processing step using <a target="_blank" rel="noopener" href="https://github.com/istanbuljs/istanbuljs">IstanbulJS</a> library and its command line wrapper <a target="_blank" rel="noopener" href="https://github.com/istanbuljs/nyc">nyc</a>. I will install the following two libraries</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">npm install --save-dev nyc@14 istanbul-lib-coverage@2</span><br><span class="line">+ istanbul-lib-coverage@2.0.5</span><br><span class="line">+ nyc@14.1.0</span><br></pre></td></tr></table></figure>
+
+<p>I have added the command to instrument application code in <code>src</code> folder and place the instrumented code into <code>build/src</code>. The <code>cp</code> command copies the rest of the application files: HTML and styles.</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;build&quot;</span><span class="punctuation">:</span> <span class="string">&quot;npm run instrument &amp;&amp; npm run cp&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;preinstrument&quot;</span><span class="punctuation">:</span> <span class="string">&quot;npm run clean&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;instrument&quot;</span><span class="punctuation">:</span> <span class="string">&quot;nyc instrument --compact false src build/src&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;cp&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cp src/*.css build/src &amp;&amp; cp src/*.png build/src &amp;&amp; cp index.html build&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;clean&quot;</span><span class="punctuation">:</span> <span class="string">&quot;rm -rf build .nyc_output || true&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;report:coverage&quot;</span><span class="punctuation">:</span> <span class="string">&quot;nyc report --reporter=html&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>If we execute <code>npm run build</code> we will get the instrumented application in the <code>build</code> folder. For demo purposes I pass <code>--compact false</code> during instrument step to avoid minification. The output code looks like this (this is only a small part of the instrumented code):</p>
+<figure class="highlight js"><figcaption><span>build/src/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (navigator.<span class="property">battery</span>) &#123;</span><br><span class="line">  cov_w7e0b4vcv.<span class="property">b</span>[<span class="number">11</span>][<span class="number">0</span>]++;</span><br><span class="line">  cov_w7e0b4vcv.<span class="property">s</span>[<span class="number">31</span>]++;</span><br><span class="line">  <span class="title function_">readBattery</span>(navigator.<span class="property">battery</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  cov_w7e0b4vcv.<span class="property">b</span>[<span class="number">11</span>][<span class="number">1</span>]++;</span><br><span class="line">  cov_w7e0b4vcv.<span class="property">s</span>[<span class="number">32</span>]++;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (navigator.<span class="property">getBattery</span>) &#123;</span><br><span class="line">    cov_w7e0b4vcv.<span class="property">b</span>[<span class="number">12</span>][<span class="number">0</span>]++;</span><br><span class="line">    cov_w7e0b4vcv.<span class="property">s</span>[<span class="number">33</span>]++;</span><br><span class="line">    navigator.<span class="title function_">getBattery</span>().<span class="title function_">then</span>(readBattery);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    cov_w7e0b4vcv.<span class="property">b</span>[<span class="number">12</span>][<span class="number">1</span>]++;</span><br><span class="line">    cov_w7e0b4vcv.<span class="property">s</span>[<span class="number">34</span>]++;</span><br><span class="line">    <span class="variable language_">document</span>.<span class="title function_">querySelector</span>(<span class="string">&#x27;.not-support&#x27;</span>).<span class="title function_">removeAttribute</span>(<span class="string">&#x27;hidden&#x27;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The instrumentation just inserts counters into the code, incrementing them for each statement (the <code>cov_w7e0b4vcv.s[31]++</code> line) and <code>if - else</code> branch (the <code>cov_w7e0b4vcv.b[11][0]++</code> line). After the code finishes running, we can map the numbers from the object <code>window.cov_w7e0b4vcv</code> back to the original source code to see which lines were covered.</p>
+<h2><span id="during-the-tests">During the tests</span></h2><p>The application code has been instrumented, and we serve the <code>build</code> folder during end-to-end tests, rather than the original <code>src</code> folder. Here is what we need to do in the browser during each test:</p>
+<ul>
+<li>reset the collected coverage before tests begin</li>
+<li>merge the code coverage collected during each test with previously collected data</li>
+<li>generate a coverage report in desired format after all tests have finished</li>
+</ul>
+<p>The above 3 things are controlled by the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/demo-battery-api/blob/coverage-step/cypress/support/index.js">cypress&#x2F;support&#x2F;index.js</a> file that gets bundled with each spec file automatically.</p>
+<figure class="highlight js"><figcaption><span>cypress/support/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// &lt;reference types=&quot;cypress&quot; /&gt;</span></span><br><span class="line"><span class="title function_">before</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;resetCoverage&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="title function_">afterEach</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// save coverage after each test</span></span><br><span class="line">  <span class="comment">// because the entire &quot;window&quot; object is about</span></span><br><span class="line">  <span class="comment">// to be recycled by Cypress before next test</span></span><br><span class="line">  cy.<span class="title function_">window</span>().<span class="title function_">then</span>(<span class="function"><span class="params">win</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (win.<span class="property">__coverage__</span>) &#123;</span><br><span class="line">      cy.<span class="title function_">task</span>(<span class="string">&#x27;combineCoverage&#x27;</span>, win.<span class="property">__coverage__</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="title function_">after</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;coverageReport&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Each <a target="_blank" rel="noopener" href="https://on.cypress.io/task">cy.task</a> jumps from the browser context to the backend context in Cypress where we have the full access to the file system. Thus we can save the code coverage JSON file and execute <code>nyc</code> to produce the report. Here is the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/demo-battery-api/blob/coverage-step/cypress/plugins/index.js">cypress&#x2F;plugins&#x2F;index.js</a> that keeps the code coverage object and generates the report:</p>
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> istanbul = <span class="built_in">require</span>(<span class="string">&#x27;istanbul-lib-coverage&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> &#123; join &#125; = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> &#123; existsSync, mkdirSync, writeFileSync &#125; = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> execa = <span class="built_in">require</span>(<span class="string">&#x27;execa&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = <span class="function">(<span class="params">on, config</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">let</span> coverageMap = istanbul.<span class="title function_">createCoverageMap</span>(&#123;&#125;)</span><br><span class="line">  <span class="keyword">const</span> outputFolder = <span class="string">&#x27;.nyc_output&#x27;</span></span><br><span class="line">  <span class="keyword">const</span> nycFilename = <span class="title function_">join</span>(outputFolder, <span class="string">&#x27;out.json&#x27;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!<span class="title function_">existsSync</span>(outputFolder)) &#123;</span><br><span class="line">    <span class="title function_">mkdirSync</span>(outputFolder)</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;created folder %s for output coverage&#x27;</span>, outputFolder)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="title function_">on</span>(<span class="string">&#x27;task&#x27;</span>, &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Clears accumulated code coverage information</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    resetCoverage () &#123;</span><br><span class="line">      coverageMap = istanbul.<span class="title function_">createCoverageMap</span>(&#123;&#125;)</span><br><span class="line">      <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;reset code coverage&#x27;</span>)</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Combines coverage information from single test</span></span><br><span class="line"><span class="comment">     * with previously collected coverage.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    combineCoverage (coverage) &#123;</span><br><span class="line">      coverageMap.<span class="title function_">merge</span>(coverage)</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Saves coverage information as a JSON file and calls</span></span><br><span class="line"><span class="comment">     * NPM script to generate HTML report</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    coverageReport () &#123;</span><br><span class="line">      <span class="title function_">writeFileSync</span>(nycFilename, <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(coverageMap, <span class="literal">null</span>, <span class="number">2</span>))</span><br><span class="line">      <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;wrote coverage file %s&#x27;</span>, nycFilename)</span><br><span class="line">      <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;saving coverage report&#x27;</span>)</span><br><span class="line">      <span class="keyword">return</span> <span class="title function_">execa</span>(<span class="string">&#x27;npm&#x27;</span>, [<span class="string">&#x27;run&#x27;</span>, <span class="string">&#x27;report:coverage&#x27;</span>], &#123; <span class="attr">stdio</span>: <span class="string">&#x27;inherit&#x27;</span> &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s run the instrumented tests. I will run just a single test that removes <code>navigator.battery</code> property.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">context</span>(<span class="string">&#x27;navigator.getBattery&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  it.<span class="title function_">only</span>(<span class="string">&#x27;shows battery status of 75%&#x27;</span>, <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    cy.<span class="title function_">visit</span>(<span class="string">&#x27;/&#x27;</span>, &#123;</span><br><span class="line">      onBeforeLoad (win) &#123;</span><br><span class="line">        <span class="keyword">delete</span> win.<span class="property">navigator</span>.<span class="property">battery</span></span><br><span class="line">        win.<span class="property">navigator</span>.<span class="property">getBattery</span> = cy</span><br><span class="line">          .<span class="title function_">stub</span>()</span><br><span class="line">          .<span class="title function_">resolves</span>(&#123;</span><br><span class="line">            <span class="attr">level</span>: <span class="number">0.75</span>,</span><br><span class="line">            <span class="attr">charging</span>: <span class="literal">false</span>,</span><br><span class="line">            <span class="attr">addEventListener</span>: <span class="function">() =&gt;</span> &#123;&#125;</span><br><span class="line">          &#125;)</span><br><span class="line">          .<span class="title function_">as</span>(<span class="string">&#x27;getBattery&#x27;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">    cy.<span class="title function_">contains</span>(<span class="string">&#x27;.battery-percentage&#x27;</span>, <span class="string">&#x27;75%&#x27;</span>)</span><br><span class="line">    cy.<span class="title function_">get</span>(<span class="string">&#x27;@getBattery&#x27;</span>).<span class="title function_">should</span>(<span class="string">&#x27;have.been.calledOnce&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The Cypress Test Runner shows the code coverage related commands.</p>
+<p><img src="/blog/images/battery-coverage/one-test.png" alt="Single test with code coverage"></p>
+<p>Great, let us see the covered lines.</p>
+<h2><span id="the-coverage-report">The coverage report</span></h2><p>The saved code coverage object is just a large JSON file <code>.nyc_output/out.json</code> like this</p>
+<figure class="highlight js"><figcaption><span>JSON coverage object example</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;/demo-battery-api/src/index.js&quot;</span>: &#123;</span><br><span class="line">    <span class="string">&quot;path&quot;</span>: <span class="string">&quot;/demo-battery-api/src/index.js&quot;</span>,</span><br><span class="line">    <span class="string">&quot;statementMap&quot;</span>: &#123;</span><br><span class="line">      <span class="string">&quot;0&quot;</span>: &#123;</span><br><span class="line">        <span class="string">&quot;start&quot;</span>: &#123;</span><br><span class="line">          <span class="string">&quot;line&quot;</span>: <span class="number">1</span>,</span><br><span class="line">          <span class="string">&quot;column&quot;</span>: <span class="number">1</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="string">&quot;end&quot;</span>: &#123;</span><br><span class="line">          <span class="string">&quot;line&quot;</span>: <span class="number">76</span>,</span><br><span class="line">          <span class="string">&quot;column&quot;</span>: <span class="number">4</span></span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&quot;s&quot;</span>: &#123;</span><br><span class="line">      <span class="string">&quot;0&quot;</span>: <span class="number">10</span>,</span><br><span class="line">      <span class="string">&quot;1&quot;</span>: <span class="number">14</span>,</span><br><span class="line">      <span class="string">&quot;2&quot;</span>: <span class="number">14</span>,</span><br><span class="line">      <span class="string">&quot;3&quot;</span>: <span class="number">14</span>,</span><br><span class="line">      <span class="string">&quot;4&quot;</span>: <span class="number">14</span>,</span><br><span class="line">      <span class="string">&quot;5&quot;</span>: <span class="number">14</span>,</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+
+<p>The object contains location of all statements, functions and branches in the original code, and the counters for how many times each item has been executed (for example the <code>s</code> counters are for statements). The human coverage report is generated from the <code>.nyc_output/out.json</code> file using npm script <code>&quot;report:coverage&quot;: &quot;nyc report --reporter=html&quot;</code> is placed in <code>coverage</code> folder. It is a folder with a static site.</p>
+<figure class="highlight text"><figcaption><span>coverage folder</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">coverage/</span><br><span class="line">  base.css</span><br><span class="line">  block-navigation.js</span><br><span class="line">  index.html</span><br><span class="line">  index.js.html</span><br><span class="line">  prettify.css</span><br><span class="line">  prettify.js</span><br><span class="line">  sort-arrow-sprite.png</span><br><span class="line">  sorter.js</span><br></pre></td></tr></table></figure>
+
+<p>We can open the <code>coverage/index.html</code> file and see that our test really has hit just a single <code>if - else</code> line. Lines in red show the code NOT covered by the tests.</p>
+<p><img src="/blog/images/battery-coverage/coverage-report.png" alt="The getBattery path hit by the test"></p>
+<p>We can enable all tests and see more lines covered - and the only uncovered line is the third code path <code>- else</code> when there is neither <code>navigator.battery</code> nor <code>navigator.getBattery</code> methods.</p>
+<p><img src="/blog/images/battery-coverage/missed-line.png" alt="Missed line"></p>
+<p><strong>Tip:</strong> I prefer having a separate npm script to generate the code coverage report, because we may want to generate reports in different formats. For example we can generate a summary report and show it in the terminal: <code>&quot;report:coverage&quot;: &quot;nyc report --compact&quot;</code></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ npm run report:coverage</span><br><span class="line">----------|----------|----------|----------|----------|-------------------|</span><br><span class="line">File      |  % Stmts | % Branch |  % Funcs |  % Lines | Uncovered Line #s |</span><br><span class="line">----------|----------|----------|----------|----------|-------------------|</span><br><span class="line">All files |       95 |    92.31 |      100 |       95 |                   |</span><br><span class="line"> index.js |       95 |    92.31 |      100 |       95 |             31,64 |</span><br><span class="line">----------|----------|----------|----------|----------|-------------------|</span><br></pre></td></tr></table></figure>
+
+<p>We can even fail the build if the code coverage (lines, statements, branches or per file) is below given threshold:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ npx nyc report --check-coverage --statements 100</span><br><span class="line">----------|----------|----------|----------|----------|-------------------|</span><br><span class="line">File      |  % Stmts | % Branch |  % Funcs |  % Lines | Uncovered Line #s |</span><br><span class="line">----------|----------|----------|----------|----------|-------------------|</span><br><span class="line">All files |     97.5 |    96.15 |      100 |     97.5 |                   |</span><br><span class="line"> index.js |     97.5 |    96.15 |      100 |     97.5 |                64 |</span><br><span class="line">----------|----------|----------|----------|----------|-------------------|</span><br><span class="line">ERROR: Coverage for statements (97.5%) does not meet global threshold (100%)</span><br><span class="line">$ echo $?</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
+
+<p>Better write more tests.</p>
+<h2><span id="code-coverage-from-multiple-spec-files">Code coverage from multiple spec files</span></h2><p>If we have more than a single test (spec) file, we need to be careful when we reset the coverage information. There are two different cases, depending on how the test runner is running:</p>
+<ul>
+<li>if the test runner is in the interactive mode using <code>cypress open</code> then we can reset the coverage before the tests. This works for a single spec file, or when running all specs using &quot;Run all specs&quot; button.</li>
+<li>if the test runner is in the headless mode using <code>cypress run</code>, then each spec is processed separately. It is almost like executing a series of separate commands: <code>cypress run --spec test1.js</code>, <code>cypress run --spec test2.js</code>, etc. We cannot reset the coverage in that case - we risk destroying the information collected from the previous spec file. We need to reset the coverage <em>before running Cypress</em>. Luckily this is simple to do, here I am using npm <code>precy:run</code> script that automatically runs before <code>cy:run</code> script.</li>
+</ul>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;cy:open&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cypress open&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;cy:run&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cypress run&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;precy:run&quot;</span><span class="punctuation">:</span> <span class="string">&quot;rm -rf .nyc_output || true&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>From the tests, we can pass <code>isInteractive</code> flag to the task, and only reset the coverage file when <code>isInteractive</code> is <code>true</code>.</p>
+<figure class="highlight js"><figcaption><span>cypress/support/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">before</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// we need to reset the coverage when running</span></span><br><span class="line">  <span class="comment">// in the interactive mode, otherwise the counters will</span></span><br><span class="line">  <span class="comment">// keep increasing every time we rerun the tests</span></span><br><span class="line">  cy.<span class="title function_">task</span>(<span class="string">&#x27;resetCoverage&#x27;</span>, &#123; <span class="attr">isInteractive</span>: <span class="title class_">Cypress</span>.<span class="title function_">config</span>(<span class="string">&#x27;isInteractive&#x27;</span>) &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><figcaption><span>cypress/plugins/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = <span class="function">(<span class="params">on, config</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="title function_">on</span>(<span class="string">&#x27;task&#x27;</span>, &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Clears accumulated code coverage information.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * Interactive mode with &quot;cypress open&quot;</span></span><br><span class="line"><span class="comment">     *    - running a single spec or &quot;Run all specs&quot; needs to reset coverage</span></span><br><span class="line"><span class="comment">     * Headless mode with &quot;cypress run&quot;</span></span><br><span class="line"><span class="comment">     *    - runs EACH spec separately, so we cannot reset the coverage</span></span><br><span class="line"><span class="comment">     *      or we will lose the coverage from previous specs.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    resetCoverage (&#123; isInteractive &#125;) &#123;</span><br><span class="line">      <span class="keyword">if</span> (isInteractive) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;reset code coverage in interactive mode&#x27;</span>)</span><br><span class="line">        <span class="keyword">const</span> coverageMap = istanbul.<span class="title function_">createCoverageMap</span>(&#123;&#125;)</span><br><span class="line">        <span class="title function_">writeFileSync</span>(nycFilename, <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(coverageMap, <span class="literal">null</span>, <span class="number">2</span>))</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">/*</span></span><br><span class="line"><span class="comment">        Else:</span></span><br><span class="line"><span class="comment">          in headless mode, assume the coverage file was deleted</span></span><br><span class="line"><span class="comment">          before the `cypress run` command was called</span></span><br><span class="line"><span class="comment">          example: rm -rf .nyc_output || true</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">      <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Perfect.</p>
+<h2><span id="code-coverage-on-ci">Code coverage on CI</span></h2><p>The generated HTML code coverage report can be stored on continuous integration server as a static artifact. I am running these builds on CircleCI at <a target="_blank" rel="noopener" href="https://circleci.com/gh/bahmutov/demo-battery-api/tree/coverage-step">https://circleci.com/gh/bahmutov/demo-battery-api/tree/coverage-step</a> using <a target="_blank" rel="noopener" href="https://github.com/cypress-io/circleci-orb">Cypress Circle Orb</a>. After the test run, I store the <code>coverage</code> folder as a test artifact. Here is the entire CI config file <a target="_blank" rel="noopener" href="https://github.com/bahmutov/demo-battery-api/blob/coverage-step/circle.yml">circle.yml</a></p>
+<figure class="highlight yaml"><figcaption><span>circle.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># see https://github.com/cypress-io/circleci-orb</span></span><br><span class="line"><span class="attr">version:</span> <span class="number">2.1</span></span><br><span class="line"><span class="attr">orbs:</span></span><br><span class="line">  <span class="attr">cypress:</span> <span class="string">cypress-io/cypress@1</span></span><br><span class="line"><span class="attr">workflows:</span></span><br><span class="line">  <span class="attr">build:</span></span><br><span class="line">    <span class="attr">jobs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">cypress/run:</span></span><br><span class="line">          <span class="comment"># we need to start the web application</span></span><br><span class="line">          <span class="attr">start:</span> <span class="string">npm</span> <span class="string">start</span></span><br><span class="line">          <span class="comment"># there are no jobs to follow this one</span></span><br><span class="line">          <span class="comment"># so no need to save the workspace files (saves time)</span></span><br><span class="line">          <span class="attr">no-workspace:</span> <span class="literal">true</span></span><br><span class="line">          <span class="comment"># store the created coverage report folder</span></span><br><span class="line">          <span class="comment"># you can click on it in the CircleCI UI</span></span><br><span class="line">          <span class="comment"># to see live static HTML site</span></span><br><span class="line">          <span class="attr">post-steps:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">store_artifacts:</span></span><br><span class="line">                <span class="attr">path:</span> <span class="string">coverage</span></span><br></pre></td></tr></table></figure>
+
+<p>Note that on CI we do not need to remove the code coverage folder <code>.nyc_output</code> before starting <code>cypress run</code> - because CI server automatically gets a fresh workspace folder.</p>
+<p>You can see the artifact with each build. For example you can browse to the artifacts in the build <a target="_blank" rel="noopener" href="https://circleci.com/gh/bahmutov/demo-battery-api/28#artifacts/containers/0">#28</a></p>
+<p><img src="/blog/images/battery-coverage/artifacts.png" alt="Code coverage folder as a build artifact"></p>
+<p>Click on <code>index.html</code> to see the JavaScript coverage report</p>
+<p><img src="/blog/images/battery-coverage/report.png" alt="Code coverage report"></p>
+<p>We have only a single JavaScript application file, open the report for <code>index.js</code> by clicking on it.</p>
+<p><img src="/blog/images/battery-coverage/index-js-report.png" alt="Code coverage for index.js file"></p>
+<h2><span id="100-code-coverage">100% code coverage</span></h2><p>Hitting a 100% code coverage is a <a target="_blank" rel="noopener" href="https://slides.com/bahmutov/test-coverage-update">hard and thankless task</a>. Code coverage is not the goal in itself, rather the gap in the code coverage helps me identify a missing test and an overlooked edge condition. In our case, the uncovered logical branch shows that we did not test what happens when the browser <code>navigator</code> object does not have the battery API. Let&#39;s fix the issue and enable the previously crashing test.</p>
+<figure class="highlight js"><figcaption><span>src/index.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">window</span>.<span class="property">onload</span> = <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">  <span class="comment">// add a guard condition to prevent crashing</span></span><br><span class="line">  <span class="keyword">if</span> (battery) &#123;</span><br><span class="line">    battery.<span class="title function_">addEventListener</span>(<span class="string">&#x27;chargingchange&#x27;</span>, <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">      <span class="title function_">readBattery</span>()</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    battery.<span class="title function_">addEventListener</span>(<span class="string">&#x27;levelchange&#x27;</span>, <span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">      <span class="title function_">readBattery</span>()</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>You need to rerun the instrumentation step again (<code>npm run build</code> in my case). Enable the previously crashing test - and it is passing now!</p>
+<p><img src="/blog/images/battery-coverage/fixed.png" alt="No battery API support - no problem"></p>
+<p>Run all tests again - interactively using &quot;Run all tests&quot; button, or using <code>npm run cy:run</code> and get the 100% code covered.</p>
+<p><img src="/blog/images/battery-coverage/100-covered.png" alt="100% code covered"></p>
+<h2><span id="see-also">See also</span></h2><ul>
+<li>The example source code is in the branch <a target="_blank" rel="noopener" href="https://github.com/bahmutov/demo-battery-api/tree/coverage-step">coverage-step</a> in the <a target="_blank" rel="noopener" href="https://github.com/bahmutov/demo-battery-api">demo-battery-api</a> repository</li>
+<li><a href="../stub-navigator-api/">&quot;Stub navigator API in end-to-end tests&quot;</a> is the previous blog post explaining the end-to-end tests for this web application</li>
+<li>Code coverage Cypress repo <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress/issues/346">issue #346</a></li>
+<li><a target="_blank" rel="noopener" href="https://on.cypress.io/code-coverage">Cypress.io code coverage guide</a></li>
+</ul>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/code-coverage-for-e2e-tests/" data-id="clxj6w7d00030bjn7hi59ajuj" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/code-coverage-for-e2e-tests/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/cypress/" rel="tag">cypress</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/testing/" rel="tag">testing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../using-ts-aliases-in-cypress-tests/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Using TypeScript aliases in Cypress tests
+        
+      </div>
+    </a>
+  
+  
+    <a href="../stub-navigator-api/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Stub navigator API in end-to-end tests</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/code-coverage-for-e2e-tests/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

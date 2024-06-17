@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Trying Lighthouse | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="This blog post shows how to measure the performance of your web application using Lighthouse tool, and how to run such measurements on each pull request to make sure the performance does not drop.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Trying Lighthouse">
+<meta property="og:url" content="https://glebbahmutov.com/blog/trying-lighthouse/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="This blog post shows how to measure the performance of your web application using Lighthouse tool, and how to run such measurements on each pull request to make sure the performance does not drop.">
+<meta property="og:locale">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/loaded.gif">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/network1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/network2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/l1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/r1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/r2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/c1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/c2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/reports.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/o1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/o2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/over-budget.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/ci1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/ci2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/ci3.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/report-comp.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/lhci-fails.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/app1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/app2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/secret1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/secret2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/status1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/status2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/pr-error1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/pr-error2.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/files.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/named.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/zip-report.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/ter1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/rep1.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/status.png">
+<meta property="og:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/82.png">
+<meta property="article:published_time" content="2023-06-15T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.612Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="tutorial">
+<meta property="article:tag" content="performance">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://glebbahmutov.com/blog/images/trying-lighthouse/loaded.gif">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-trying-lighthouse" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2023-06-15T04:00:00.000Z" itemprop="datePublished">Jun 15 2023</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Trying Lighthouse
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      Installing and using Lighthouse to measure your application&#39;s performance.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>This blog post shows how to measure the performance of your web application using <a target="_blank" rel="noopener" href="https://github.com/GoogleChrome/lighthouse">Lighthouse</a> tool, and how to run such measurements on each pull request to make sure the performance does not drop.</p>
+<!-- toc -->
+
+<ul>
+<li><a href="#example-application">Example application</a></li>
+<li><a href="#lighthouse-in-chrome-browser">Lighthouse in Chrome browser</a></li>
+<li><a href="#reports">Reports</a></li>
+<li><a href="#lighthouse-cli">Lighthouse CLI</a></li>
+<li><a href="#set-performance-budget">Set performance budget</a></li>
+<li><a href="#lighthouse-on-ci">Lighthouse on CI</a></li>
+<li><a href="#fail-on-low-performance">Fail on low performance</a></li>
+<li><a href="#lighthouse-github-status-checks">Lighthouse GitHub status checks</a></li>
+<li><a href="#performance-checks-for-pull-requests">Performance checks for pull requests</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#bonus-1-run-chrome-in-docker">Bonus 1: Run Chrome in Docker</a></li>
+<li><a href="#bonus-2-basic-authentication">Bonus 2: Basic authentication</a></li>
+<li><a href="#bonus-3-local-lighthouse-report">Bonus 3: Local Lighthouse report</a></li>
+<li><a href="#bonus-4-post-github-summary">Bonus 4: Post GitHub summary</a></li>
+<li><a href="#bonus-5-split-autorun-command">Bonus 5: Split autorun command</a></li>
+<li><a href="#bonus-6-reusable-github-actions-module">Bonus 6: Reusable GitHub Actions module</a></li>
+</ul>
+<!-- tocstop -->
+
+<h2><span id="example-application">Example application</span></h2><p>I have prepared a small web page that loads and shows &quot;Loaded&quot; after one second. You can find the source code in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/web-performance-example">bahmutov&#x2F;web-performance-example</a>.</p>
+<figure class="highlight html"><figcaption><span>public/index.html</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>Web performance<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;viewport&quot;</span> <span class="attr">content</span>=<span class="string">&quot;width=device-width&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;stylesheet&quot;</span> <span class="attr">href</span>=<span class="string">&quot;./reset.css&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;stylesheet&quot;</span> <span class="attr">href</span>=<span class="string">&quot;./style.css&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">main</span>&gt;</span><span class="tag">&lt;/<span class="name">main</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript">      <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span></span><br><span class="line"><span class="language-javascript">        <span class="variable language_">document</span>.<span class="title function_">querySelector</span>(<span class="string">&#x27;main&#x27;</span>).<span class="property">innerHTML</span> = <span class="string">`</span></span></span><br><span class="line"><span class="string"><span class="language-javascript">          &lt;h1&gt;Loaded&lt;/h1&gt;</span></span></span><br><span class="line"><span class="string"><span class="language-javascript">        `</span></span></span><br><span class="line"><span class="language-javascript">      &#125;, <span class="number">2000</span>)</span></span><br><span class="line"><span class="language-javascript">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/trying-lighthouse/loaded.gif" alt="Loaded web site at localhost:3000"></p>
+<p>The server slows down the <code>style.css</code> and <code>index.html</code> on purpose</p>
+<figure class="highlight js"><figcaption><span>server.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">fastify.<span class="title function_">get</span>(<span class="string">&#x27;/&#x27;</span>, <span class="function">(<span class="params">request, reply</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    reply.<span class="title function_">type</span>(<span class="string">&#x27;text/html&#x27;</span>).<span class="title function_">send</span>(indexDoc)</span><br><span class="line">  &#125;, <span class="number">1000</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">fastify.<span class="title function_">get</span>(<span class="string">&#x27;/style.css&#x27;</span>, <span class="function">(<span class="params">request, reply</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    reply.<span class="title function_">type</span>(<span class="string">&#x27;text/css&#x27;</span>).<span class="title function_">send</span>(styles)</span><br><span class="line">  &#125;, <span class="number">500</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">fastify.<span class="title function_">register</span>(<span class="built_in">require</span>(<span class="string">&#x27;@fastify/static&#x27;</span>), &#123;</span><br><span class="line">  <span class="attr">root</span>: publicFolder,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>The slowdown is clearly visible in the Network panel waterfall of resources.</p>
+<p><img src="../images/trying-lighthouse/network1.png" alt="The network panel"></p>
+<p><img src="../images/trying-lighthouse/network2.png" alt="The loaded resources and the load DOM event"></p>
+<p>How fast does this page load? Can we confirm it automatically?</p>
+<h2><span id="lighthouse-in-chrome-browser">Lighthouse in Chrome browser</span></h2><p>The simplest way to measure how fast the site loads is by using the built-in Lighthouse panel in the Chrome browser&#39;s DevTools.</p>
+<p><img src="../images/trying-lighthouse/l1.png" alt="The Lighthouse panel in Chrome DevTools"></p>
+<p>Once you click the &quot;Analyze page load&quot; button, the Lighthouse cranks for a few seconds, reloads the page, while measuring everything, and then shows its results and recommendations.</p>
+<p><img src="../images/trying-lighthouse/r1.png" alt="The Lighthouse page score"></p>
+<p><img src="../images/trying-lighthouse/r2.png" alt="The Lighthouse recommendations"></p>
+<p>Notice how Lighthouse correctly found the bottlenecks in our page: the slow server taking too long to return the page and blocking CSS.</p>
+<h2><span id="reports">Reports</span></h2><p>If you click on the &quot;See calculator&quot; link, you will see how the score 84 was calculated. Different Web Vitals are weighted to produce the final page performance score.</p>
+<p><img src="../images/trying-lighthouse/c1.png" alt="Find the explanation for the score under the calculator link"></p>
+<p><img src="../images/trying-lighthouse/c2.png" alt="The page score is a weighted sum of the individual performance measurements"></p>
+<p>You can generate a PDF or HTML of this report using the menu in the top right corner.</p>
+<p><img src="../images/trying-lighthouse/reports.png" alt="Export Lighthouse results in different formats"></p>
+<h2><span id="lighthouse-cli">Lighthouse CLI</span></h2><p>Let&#39;s generate the same Lighthouse report from the command line. I will install both <a target="_blank" rel="noopener" href="https://github.com/GoogleChrome/lighthouse#using-the-node-cli">Lighthouse NPM module</a> and my utility <a target="_blank" rel="noopener" href="https://github.com/bahmutov/start-server-and-test">start-server-and-test</a> to make starting the app and taking its performance a single command.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D lighthouse start-server-and-test</span><br><span class="line">+ lighthouse@10.3.0</span><br><span class="line">+ start-server-and-test@2.0.0</span><br></pre></td></tr></table></figure>
+
+<p>I will add a few NPM aliases to start the application and run Lighthouse without asking any prompts</p>
+<figure class="highlight json"><figcaption><span>package.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;perf&quot;</span><span class="punctuation">:</span> <span class="string">&quot;lighthouse http://localhost:3003 --preset=desktop --only-categories=performance --no-enable-error-reporting&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;measure&quot;</span><span class="punctuation">:</span> <span class="string">&quot;start-test 3003 perf&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;start&quot;</span><span class="punctuation">:</span> <span class="string">&quot;node ./server&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s run the <code>measure</code> script.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">$ npm run measure</span><br><span class="line"></span><br><span class="line">&gt; web-performance-example@1.0.0 measure</span><br><span class="line">&gt; start-test 3003 perf</span><br><span class="line"></span><br><span class="line">1: starting server using command &quot;npm run start&quot;</span><br><span class="line">and when url &quot;[ &#x27;http://127.0.0.1:3003&#x27; ]&quot; is responding with HTTP status code 200</span><br><span class="line">running tests using command &quot;npm run perf&quot;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&gt; web-performance-example@1.0.0 start</span><br><span class="line">&gt; node ./server</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line">&gt; web-performance-example@1.0.0 perf</span><br><span class="line">&gt; lighthouse http://localhost:3003 --preset=desktop --only-categories=performance --no-enable-error-reporting</span><br><span class="line"></span><br><span class="line">  LH:ChromeLauncher Waiting for browser. +0ms</span><br><span class="line">  LH:ChromeLauncher Waiting for browser... +1ms</span><br><span class="line">  LH:ChromeLauncher Waiting for browser..... +505ms</span><br><span class="line">  LH:ChromeLauncher Waiting for browser.....✓ +3ms</span><br><span class="line">  LH:status Connecting to browser +924ms</span><br><span class="line">  LH:status Navigating to about:blank +14ms</span><br><span class="line">  LH:status Benchmarking machine +14ms</span><br><span class="line">  LH:status Preparing target for navigation mode +1s</span><br><span class="line">  LH:status Navigating to about:blank +14ms</span><br><span class="line">  LH:status Preparing target for navigation +8ms</span><br><span class="line">  LH:status Cleaning origin data +84ms</span><br><span class="line">  LH:status Cleaning browser cache +10ms</span><br><span class="line">  LH:status Preparing network conditions +56ms</span><br><span class="line">  LH:status Navigating to http://localhost:3003/ +93ms</span><br><span class="line">...</span><br><span class="line">  LH:status Generating results... +0ms</span><br><span class="line">  LH:Printer html output written to /web-performance-example/localhost_2023-06-14_21-22-50.report.html +33ms</span><br><span class="line">  LH:CLI Protip: Run lighthouse with `--view` to immediately open the HTML report in your browser +0ms</span><br><span class="line">  LH:ChromeLauncher Killing Chrome instance 76349 +0ms</span><br><span class="line">closing the server with the signal SIGINT</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s open the generated static HTML file <code>localhost_2023-06-14_21-22-50.report.html</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ open localhost_2023-06-14_21-22-50.report.html</span><br></pre></td></tr></table></figure>
+
+<p>The report shows slightly different score from running Lighthouse panel:</p>
+<p><img src="../images/trying-lighthouse/o1.png" alt="The Lighthouse CLI scores our local site higher"></p>
+<p>The difference seems to be in the initial loading of the page for some reason: the CLI reports 600ms vs 1000ms for the index page.</p>
+<p><img src="../images/trying-lighthouse/o2.png" alt="Differences in blocking resources timings"></p>
+<p>I am still learning why such differences exist.</p>
+<p><strong>Tip:</strong> here are some of the Lighthouse CLI flags I use right now:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">lighthouse http://localhost:3003  // URL to audit</span><br><span class="line">  --preset=desktop                // desktop settings mode</span><br><span class="line">  --only-categories=performance   // only interested in performance</span><br><span class="line">  --max-wait-for-load=6000        // let the slow page load everything</span><br><span class="line">  --skip-audits                   // do not run any other audits</span><br><span class="line">  --no-enable-error-reporting     // do not ask if the user wants to send diagnostics</span><br></pre></td></tr></table></figure>
+
+<p>You can also generate reports in several formats: HTML, CSV, JSON. For example, to generate both HTML and CSV reports and overwrite the existing files, use <code>--output html,csv --output-path=./lighthouse-results.html</code> which creates <code>lighthouse-results.html</code> and <code>lighthouse-results.csv</code> files.</p>
+<h2><span id="set-performance-budget">Set performance budget</span></h2><p>Let&#39;s say we are happy with the performance score 92 and want to keep the site this fast. We can set the <a target="_blank" rel="noopener" href="https://github.com/GoogleChrome/lighthouse/blob/main/docs/performance-budgets.md">performance budget</a> and make Lighthouse fail if the performance score drops below 92.</p>
+<figure class="highlight json"><figcaption><span>budget.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span></span><br><span class="line">  <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;path&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;timings&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;metric&quot;</span><span class="punctuation">:</span> <span class="string">&quot;first-contentful-paint&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;budget&quot;</span><span class="punctuation">:</span> <span class="number">100</span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;metric&quot;</span><span class="punctuation">:</span> <span class="string">&quot;speed-index&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;budget&quot;</span><span class="punctuation">:</span> <span class="number">200</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+
+<p>We set the very low metric limits on purpose. The analysis should run with CLI flag</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ lighthouse http://localhost:3003 --budget-path=budget.json ...</span><br></pre></td></tr></table></figure>
+
+<p>The process exists with code 0, but the generated report shows the metrics that are over the budget</p>
+<p><img src="../images/trying-lighthouse/over-budget.png" alt="The Lighthouse reports timings that were over the set budgets"></p>
+<h2><span id="lighthouse-on-ci">Lighthouse on CI</span></h2><p>We cannot stop the build if our site is over the performance budget using Lighthouse CLI. Instead we can use <a target="_blank" rel="noopener" href="https://github.com/GoogleChrome/lighthouse-ci">Lighthouse-CI</a> which grabs the measurements and lets us fail the build if there is a slowdown.</p>
+<p>Let&#39;s create the initial Lighthouse CI configuration file. It uses JavaScript, and at first I will just put our starting command and URL there</p>
+<figure class="highlight js"><figcaption><span>lighthouserc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = &#123;</span><br><span class="line">  <span class="attr">ci</span>: &#123;</span><br><span class="line">    <span class="attr">collect</span>: &#123;</span><br><span class="line">      <span class="attr">url</span>: [<span class="string">&#x27;http://localhost:3003/&#x27;</span>],</span><br><span class="line">      <span class="attr">startServerCommand</span>: <span class="string">&#x27;npm start&#x27;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">upload</span>: &#123;</span><br><span class="line">      <span class="attr">target</span>: <span class="string">&#x27;temporary-public-storage&#x27;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The GitHub Actions workflow installs dependencies and runs the Lighthouse CI (LHCI) using the above configuration</p>
+<p><strong>Tip:</strong> you can read my blog post <a href="/blog/trying-github-actions/" title="Trying GitHub Actions">Trying GitHub Actions</a> to get familiar with GHA.</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/performance.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">performance</span></span><br><span class="line"><span class="attr">on:</span> [<span class="string">push</span>]</span><br><span class="line"><span class="attr">jobs:</span></span><br><span class="line">  <span class="attr">lhci:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">Lighthouse</span></span><br><span class="line">    <span class="attr">runs-on:</span> <span class="string">ubuntu-latest</span></span><br><span class="line">    <span class="attr">steps:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uses:</span> <span class="string">actions/checkout@v3</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Use</span> <span class="string">Node.js</span></span><br><span class="line">        <span class="attr">uses:</span> <span class="string">actions/setup-node@v3</span></span><br><span class="line">        <span class="attr">with:</span></span><br><span class="line">          <span class="attr">node-version:</span> <span class="number">18.</span><span class="string">x</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Install</span> <span class="string">📦</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">npm</span> <span class="string">install</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">run</span> <span class="string">Lighthouse</span> <span class="string">CI</span></span><br><span class="line">        <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">          npm install -g @lhci/cli@0.11.x</span></span><br><span class="line"><span class="string">          lhci autorun</span></span><br></pre></td></tr></table></figure>
+
+<p>By default LHCI runs Lighthouse 3 times and measure everything using a mobile device emulation</p>
+<p><img src="../images/trying-lighthouse/ci1.png" alt="The performance workflow output"></p>
+<p>Because we configured LHCI to upload the report to public storage, we can open the displayed URL to see the HTML report</p>
+<p><img src="../images/trying-lighthouse/ci2.png" alt="The performance HTML report"></p>
+<p>Again, keep in mind that this is a performance report for mobile emulation, as shown at the bottom of the report.</p>
+<p><img src="../images/trying-lighthouse/ci3.png" alt="The performance measurements were taken using a mobile device emulation"></p>
+<p>Let&#39;s run LHCI with the same settings as Lighthouse CLI. We can put all CLI arguments under the <code>settings</code> object in the resource file</p>
+<figure class="highlight js"><figcaption><span>lighthouserc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = &#123;</span><br><span class="line">  <span class="attr">ci</span>: &#123;</span><br><span class="line">    <span class="attr">collect</span>: &#123;</span><br><span class="line">      <span class="attr">url</span>: [<span class="string">&#x27;http://localhost:3003/&#x27;</span>],</span><br><span class="line">      <span class="attr">startServerCommand</span>: <span class="string">&#x27;npm start&#x27;</span>,</span><br><span class="line">      <span class="attr">settings</span>: &#123;</span><br><span class="line">        <span class="attr">budgetPath</span>: <span class="string">&#x27;budget.json&#x27;</span>,</span><br><span class="line">        <span class="attr">preset</span>: <span class="string">&#x27;desktop&#x27;</span>,</span><br><span class="line">        <span class="attr">onlyCategories</span>: <span class="string">&#x27;performance&#x27;</span>,</span><br><span class="line">        <span class="attr">maxWaitForLoad</span>: <span class="number">6000</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">upload</span>: &#123;</span><br><span class="line">      <span class="attr">target</span>: <span class="string">&#x27;temporary-public-storage&#x27;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The LHCI runs on GitHub and generates a report closely matching what I see locally using Lighthouse Chrome DevTools panel.</p>
+<p><img src="../images/trying-lighthouse/report-comp.png" alt="Performance reports local vs LHCI"></p>
+<h2><span id="fail-on-low-performance">Fail on low performance</span></h2><p>Now lets add assertions to our LHCI configuration to fail this step if the performance is too low. To show the failure I will set the performance score to 90 instead of 80.</p>
+<figure class="highlight js"><figcaption><span>lighthouserc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = &#123;</span><br><span class="line">  <span class="attr">ci</span>: &#123;</span><br><span class="line">    <span class="attr">collect</span>: &#123;</span><br><span class="line">      <span class="attr">url</span>: [<span class="string">&#x27;http://localhost:3003/&#x27;</span>],</span><br><span class="line">      <span class="attr">startServerCommand</span>: <span class="string">&#x27;npm start&#x27;</span>,</span><br><span class="line">      <span class="attr">settings</span>: &#123;</span><br><span class="line">        <span class="attr">budgetPath</span>: <span class="string">&#x27;budget.json&#x27;</span>,</span><br><span class="line">        <span class="attr">preset</span>: <span class="string">&#x27;desktop&#x27;</span>,</span><br><span class="line">        <span class="attr">onlyCategories</span>: <span class="string">&#x27;performance&#x27;</span>,</span><br><span class="line">        <span class="attr">maxWaitForLoad</span>: <span class="number">6000</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">upload</span>: &#123;</span><br><span class="line">      <span class="attr">target</span>: <span class="string">&#x27;temporary-public-storage&#x27;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">assert</span>: &#123;</span><br><span class="line">      <span class="attr">assertions</span>: &#123;</span><br><span class="line">        <span class="string">&#x27;categories:performance&#x27;</span>: [<span class="string">&#x27;error&#x27;</span>, &#123; <span class="attr">minScore</span>: <span class="number">0.9</span> &#125;],</span><br><span class="line">      &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s push the code to GitHub and watch it fail</p>
+<p><img src="../images/trying-lighthouse/lhci-fails.png" alt="LHCI breaks the build because of the low performance score"></p>
+<p>Ok, now we know the CI will catch a performance regression, and I will set the performance <code>minScore</code> to 0.83</p>
+<p><strong>Tip:</strong> you can overwrite the url to test from the command line <code>lhci autorun --url &lt;url to test&gt;</code></p>
+<h2><span id="lighthouse-github-status-checks">Lighthouse GitHub status checks</span></h2><p>You could add commit status checks using either your personal GitHub token or by installing the <a target="_blank" rel="noopener" href="https://github.com/apps/lighthouse-ci">Lighthouse GitHub App</a>.</p>
+<p><img src="../images/trying-lighthouse/app1.png" alt="Lighthouse GitHub App"></p>
+<p>I will install the app and will give it access to the status checks in the example repo.</p>
+<p><img src="../images/trying-lighthouse/app2.png" alt="Give Lighthouse app access to the specific repos"></p>
+<p>The installed application will show the LH token - save it and keep it secret.</p>
+<p><img src="../images/trying-lighthouse/secret1.png" alt="Lighthouse app creates a secret token for you"></p>
+<p>You should set this token as GitHub Actions secret, then pass it in the &quot;Lighthouse CI&quot; step as an environment variable.</p>
+<p><img src="../images/trying-lighthouse/secret2.png" alt="Set the Lighthouse token as Actions secret"></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">run</span> <span class="string">Lighthouse</span> <span class="string">CI</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    npm install -g @lhci/cli@0.11.x</span></span><br><span class="line"><span class="string">    lhci autorun</span></span><br><span class="line"><span class="string"></span>  <span class="attr">env:</span></span><br><span class="line">    <span class="attr">LHCI_GITHUB_APP_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.LHCI_GITHUB_APP_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>The workflow runs and finds the token and posts the commit status check.</p>
+<p><img src="../images/trying-lighthouse/status1.png" alt="LHCI finds the token and posts the GH commit status"></p>
+<p>Here is how the commit status looks</p>
+<p><img src="../images/trying-lighthouse/status2.png" alt="LHCI commit status"></p>
+<p>The &quot;details&quot; link goes directly to the public report URL.</p>
+<h2><span id="performance-checks-for-pull-requests">Performance checks for pull requests</span></h2><p>I will adjust the performance workflow to execute on pull requests to the main branch and on any commit pushed to the main branch</p>
+<figure class="highlight yml"><figcaption><span>.github/workflows/performance.yml</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">performance</span></span><br><span class="line"><span class="comment"># run performance testing on main branch</span></span><br><span class="line"><span class="comment"># and on any pull request to the main branch</span></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line">  <span class="attr">pull_request:</span></span><br><span class="line">    <span class="attr">branches:</span> [<span class="string">main</span>]</span><br><span class="line">  <span class="attr">push:</span></span><br><span class="line">    <span class="attr">branches:</span> [<span class="string">main</span>]</span><br></pre></td></tr></table></figure>
+
+<p>Let&#39;s open a pull request that delays serving the <code>index.html</code> by one second. This should decrease the performance. We see the Lighthouse step failing, but no LHCI status check.</p>
+<p><img src="../images/trying-lighthouse/pr-error1.png" alt="Missing the LHCI commit status"></p>
+<p>When running on <code>pull_request</code>, GitHub Actions set <code>GITHUB_REF</code> to the merge commit SHA, while the status checks are attached to the pull request <em>head</em> commit SHA. Luckily, LHCI allows you to overwrite the SHA value to set the status on any commit.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">run</span> <span class="string">Lighthouse</span> <span class="string">CI</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    npm install -g @lhci/cli@0.11.x</span></span><br><span class="line"><span class="string">    lhci autorun</span></span><br><span class="line"><span class="string"></span>  <span class="attr">env:</span></span><br><span class="line">    <span class="attr">LHCI_GITHUB_APP_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.LHCI_GITHUB_APP_TOKEN</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">LHCI_BUILD_CONTEXT__CURRENT_HASH:</span> <span class="string">$&#123;&#123;</span> <span class="string">github.event.pull_request.head.sha</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>The status checks are set correctly</p>
+<p><img src="../images/trying-lighthouse/pr-error2.png" alt="LHCI commit status set for pull request commits"></p>
+<h2><span id="see-also">See also</span></h2><blockquote class="pullquote"><p>🎁 You can find the full source code for this blog post in the repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/web-performance-example">bahmutov&#x2F;web-performance-example</a>.</p>
+</blockquote>
+
+<ul>
+<li>📝 <a href="/blog/cypress-lighthouse/" title="Cypress Lighthouse Example">Cypress Lighthouse Example</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.logrocket.com/lighthouse-meets-github-actions-use-lighthouse-ci/">Lighthouse meets GitHub Actions: How to use Lighthouse in CI</a></li>
+</ul>
+<h2><span id="bonus-1-run-chrome-in-docker">Bonus 1: Run Chrome in Docker</span></h2><p>If you need to use a Docker container to run Lighthouse, then it needs Chrome installed. You can pick a Chrome image from Cypress <a target="_blank" rel="noopener" href="https://github.com/cypress-io/cypress-docker-images">cypress-docker-images</a>:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># we need Chrome browser to run Lighthouse</span></span><br><span class="line"><span class="attr">container:</span> <span class="string">cypress/browsers:node18.12.0-chrome107</span></span><br></pre></td></tr></table></figure>
+
+<p>When running Chrome inside a Docker container, it needs a few flags usually:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// lighthouserc.js</span></span><br><span class="line"><span class="attr">collect</span>: &#123;</span><br><span class="line">  <span class="attr">url</span>: [<span class="string">&#x27;...&#x27;</span>],</span><br><span class="line">  <span class="attr">settings</span>: &#123;</span><br><span class="line">    <span class="attr">chromeFlags</span>: <span class="string">&#x27;--disable-gpu --no-sandbox --disable-dev-shm-usage&#x27;</span>,</span><br><span class="line">    <span class="attr">preset</span>: <span class="string">&#x27;desktop&#x27;</span>,</span><br><span class="line">    <span class="attr">onlyCategories</span>: <span class="string">&#x27;performance&#x27;</span>,</span><br><span class="line">    <span class="attr">maxWaitForLoad</span>: <span class="number">10_000</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="bonus-2-basic-authentication">Bonus 2: Basic authentication</span></h2><p>If your page is protected by the basic authentication, you need to encode the username and password and send it with your Lighthouse requests</p>
+<figure class="highlight js"><figcaption><span>lighthouserc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// encode the username and password like the browser does</span></span><br><span class="line"><span class="keyword">const</span> basicAuth = <span class="title function_">btoa</span>(</span><br><span class="line">  <span class="built_in">encodeURIComponent</span>(process.<span class="property">env</span>.<span class="property">username</span>) +</span><br><span class="line">    <span class="string">&#x27;:&#x27;</span> +</span><br><span class="line">    <span class="built_in">encodeURIComponent</span>(process.<span class="property">env</span>.<span class="property">password</span>),</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="variable language_">module</span>.<span class="property">exports</span> = &#123;</span><br><span class="line">  <span class="attr">ci</span>: &#123;</span><br><span class="line">    <span class="attr">collect</span>: &#123;</span><br><span class="line">      <span class="attr">url</span>: [<span class="string">&#x27;https://web.mercari.guru&#x27;</span>],</span><br><span class="line">      <span class="attr">settings</span>: &#123;</span><br><span class="line">        <span class="comment">// provide basic auth via browser header</span></span><br><span class="line">        <span class="attr">extraHeaders</span>: <span class="string">`&#123;&quot;Authorization&quot;: &quot;Basic <span class="subst">$&#123;basicAuth&#125;</span>&quot;&#125;`</span>,</span><br><span class="line">        <span class="attr">chromeFlags</span>: <span class="string">&#x27;--disable-gpu --no-sandbox --disable-dev-shm-usage&#x27;</span>,</span><br><span class="line">        <span class="attr">preset</span>: <span class="string">&#x27;desktop&#x27;</span>,</span><br><span class="line">        <span class="attr">onlyCategories</span>: <span class="string">&#x27;performance&#x27;</span>,</span><br><span class="line">        <span class="attr">maxWaitForLoad</span>: <span class="number">10_000</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<h2><span id="bonus-3-local-lighthouse-report">Bonus 3: Local Lighthouse report</span></h2><p>If we do not want to save the HTML report to the public static storage, we can set it to store the report to the local file.</p>
+<figure class="highlight js"><figcaption><span>lighthouserc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">upload</span>: &#123;</span><br><span class="line">  <span class="attr">target</span>: <span class="string">&#x27;filesystem&#x27;</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Since LHCI runs 3 performance tests in a row by default, there will be three JSON and HTML files, the names include the timestamps</p>
+<p><img src="../images/trying-lighthouse/files.png" alt="LHCI saves local reports"></p>
+<p>We can simply preserve the last report in both JSON and HTML formats by specifying the output report filename</p>
+<figure class="highlight js"><figcaption><span>lighthouserc.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">upload</span>: &#123;</span><br><span class="line">  <span class="comment">// target: &#x27;temporary-public-storage&#x27;,</span></span><br><span class="line">  <span class="attr">target</span>: <span class="string">&#x27;filesystem&#x27;</span>,</span><br><span class="line">  <span class="attr">reportFilenamePattern</span>: <span class="string">&#x27;lighthouse-results.%%EXTENSION%%&#x27;</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="../images/trying-lighthouse/named.png" alt="LHCI saves the last report under consistent name"></p>
+<p>Let&#39;s save the report files as build artifact.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">run</span> <span class="string">Lighthouse</span> <span class="string">CI</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    npm install -g @lhci/cli@0.11.x</span></span><br><span class="line"><span class="string">    lhci autorun</span></span><br><span class="line"><span class="string"></span>  <span class="attr">env:</span></span><br><span class="line">    <span class="attr">LHCI_GITHUB_APP_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.LHCI_GITHUB_APP_TOKEN</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">LHCI_BUILD_CONTEXT__CURRENT_HASH:</span> <span class="string">$&#123;&#123;</span> <span class="string">github.event.pull_request.head.sha</span> <span class="string">&#125;&#125;</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">List</span> <span class="string">files</span> <span class="string">💾</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">ls</span> <span class="string">-la</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Save</span> <span class="string">LH</span> <span class="string">reports</span> <span class="string">💾</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">actions/upload-artifact@v3</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">lighthouse</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">lighthouse-results.*</span></span><br></pre></td></tr></table></figure>
+
+<p>The report zip with two files appears as a job artifact.</p>
+<p><img src="../images/trying-lighthouse/zip-report.png" alt="LHCI reports saved as a GHA artifact"></p>
+<p><strong>Tip:</strong> you might want to always save the performance test result artifacts, even if the LHCI reports an audit failure.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># after LHCI step</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Save</span> <span class="string">LH</span> <span class="string">reports</span> <span class="string">💾</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">actions/upload-artifact@v3</span></span><br><span class="line">  <span class="attr">if:</span> <span class="string">always()</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">lighthouse</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">lighthouse-results.*</span></span><br></pre></td></tr></table></figure>
+
+<p>This saves the test report even if the LHCI audit does not pass.</p>
+<h2><span id="bonus-4-post-github-summary">Bonus 4: Post GitHub summary</span></h2><p>The LHCI generates JSON and HTML reports. Here is a typical metric in the JSON file:</p>
+<figure class="highlight json"><figcaption><span>lighthouse-results.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="punctuation">:</span><span class="attr">&quot;audits&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;largest-contentful-paint&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;largest-contentful-paint&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;title&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Largest Contentful Paint&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;description&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Largest Contentful Paint marks ...&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;score&quot;</span><span class="punctuation">:</span> <span class="number">0.23</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;scoreDisplayMode&quot;</span><span class="punctuation">:</span> <span class="string">&quot;numeric&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;numericValue&quot;</span><span class="punctuation">:</span> <span class="number">3543.9742082824705</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;numericUnit&quot;</span><span class="punctuation">:</span> <span class="string">&quot;millisecond&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;displayValue&quot;</span><span class="punctuation">:</span> <span class="string">&quot;3.5 s&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>You can read the JSON file and write the main performance metrics to the terminal and to the GitHub job summary. Here is a typical Node.js script:</p>
+<figure class="highlight js"><figcaption><span>post-summary.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ghCore = <span class="built_in">require</span>(<span class="string">&#x27;@actions/core&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> results = <span class="built_in">require</span>(<span class="string">&#x27;./lighthouse-results.json&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> metrics = [</span><br><span class="line">  <span class="string">&#x27;first-contentful-paint&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;interactive&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;speed-index&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;total-blocking-time&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;largest-contentful-paint&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;cumulative-layout-shift&#x27;</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Returns a symbol for the score.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &#123;<span class="type">number</span>&#125; score from 0 to 1</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">evalEmoji</span>(<span class="params">score</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (score &gt;= <span class="number">0.9</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&#x27;🟢&#x27;</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (score &gt;= <span class="number">0.5</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&#x27;🟧&#x27;</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">&#x27;🔺&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> rows = []</span><br><span class="line"></span><br><span class="line">metrics.<span class="title function_">forEach</span>(<span class="function">(<span class="params">key</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> audit = results.<span class="property">audits</span>[key]</span><br><span class="line">  <span class="comment">// be safe and always push strings</span></span><br><span class="line">  rows.<span class="title function_">push</span>([audit.<span class="property">title</span>, <span class="title class_">String</span>(audit.<span class="property">displayValue</span>), evalEmoji(audit.<span class="property">score</span>)])</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">table</span>(rows)</span><br><span class="line"></span><br><span class="line">ghCore.<span class="property">summary</span></span><br><span class="line">  .<span class="title function_">addHeading</span>(<span class="string">&#x27;Lighthouse Performance&#x27;</span>)</span><br><span class="line">  .<span class="title function_">addTable</span>([</span><br><span class="line">    [</span><br><span class="line">      &#123; <span class="attr">data</span>: <span class="string">&#x27;Metric&#x27;</span>, <span class="attr">header</span>: <span class="literal">true</span> &#125;,</span><br><span class="line">      &#123; <span class="attr">data</span>: <span class="string">&#x27;Time&#x27;</span>, <span class="attr">header</span>: <span class="literal">true</span> &#125;,</span><br><span class="line">      &#123; <span class="attr">data</span>: <span class="string">&#x27;Eval&#x27;</span>, <span class="attr">header</span>: <span class="literal">true</span> &#125;,</span><br><span class="line">    ],</span><br><span class="line">    ...rows,</span><br><span class="line">  ])</span><br><span class="line">  .<span class="title function_">addLink</span>(</span><br><span class="line">    <span class="string">&#x27;Trying Lighthouse&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;https://glebbahmutov.com/blog/trying-lighthouse/&#x27;</span>,</span><br><span class="line">  )</span><br><span class="line">  .<span class="title function_">write</span>()</span><br></pre></td></tr></table></figure>
+
+<p>We run this script after LHCI</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">run</span> <span class="string">Lighthouse</span> <span class="string">CI</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    npm install -g @lhci/cli@0.11.x</span></span><br><span class="line"><span class="string">    lhci autorun</span></span><br><span class="line"><span class="string"></span>  <span class="attr">env:</span></span><br><span class="line">    <span class="attr">LHCI_GITHUB_APP_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.LHCI_GITHUB_APP_TOKEN</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">LHCI_BUILD_CONTEXT__CURRENT_HASH:</span> <span class="string">$&#123;&#123;</span> <span class="string">github.event.pull_request.head.sha</span> <span class="string">&#125;&#125;</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">List</span> <span class="string">files</span> <span class="string">💾</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">ls</span> <span class="string">-la</span></span><br><span class="line">  <span class="attr">if:</span> <span class="string">always()</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Post</span> <span class="string">job</span> <span class="string">summary</span> <span class="string">📊</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">node</span> <span class="string">./post-summary</span></span><br><span class="line">  <span class="attr">if:</span> <span class="string">always()</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Save</span> <span class="string">LH</span> <span class="string">reports</span> <span class="string">💾</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">actions/upload-artifact@v3</span></span><br><span class="line">  <span class="attr">if:</span> <span class="string">always()</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">lighthouse</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">lighthouse-results.*</span></span><br></pre></td></tr></table></figure>
+
+<p>Here is the terminal output</p>
+<p><img src="../images/trying-lighthouse/ter1.png" alt="Main performance metrics printed to the terminal"></p>
+<p>Here is the job summary from a typical run:</p>
+<p><img src="../images/trying-lighthouse/rep1.png" alt="Main performance metrics in GHA summary"></p>
+<h2><span id="bonus-5-split-autorun-command">Bonus 5: Split autorun command</span></h2><p>The <code>lhci autorun</code> command executes <code>collect</code>, <code>upload</code>, and <code>assert</code> commands internally. For example, you might want to collect and upload the reports before running any checks. Thus it makes sense to split the steps:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># https://github.com/GoogleChrome/lighthouse-ci</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">run</span> <span class="string">Lighthouse</span> <span class="string">CI</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    npm install -g @lhci/cli@0.11.x</span></span><br><span class="line"><span class="string">    lhci collect</span></span><br><span class="line"><span class="string"></span><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Save</span> <span class="string">reports</span> <span class="string">💾</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">lhci</span> <span class="string">upload</span></span><br><span class="line">  <span class="attr">env:</span></span><br><span class="line">    <span class="attr">LHCI_GITHUB_APP_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.LHCI_GITHUB_APP_TOKEN</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">LHCI_BUILD_CONTEXT__CURRENT_HASH:</span> <span class="string">$&#123;&#123;</span> <span class="string">github.event.pull_request.head.sha</span> <span class="string">&#125;&#125;</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Upload</span> <span class="string">reports</span> <span class="string">⏫</span></span><br><span class="line">  <span class="attr">uses:</span> <span class="string">actions/upload-artifact@v3</span></span><br><span class="line">  <span class="attr">with:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">lighthouse</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">lighthouse-results.*</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Post</span> <span class="string">performance</span> <span class="string">summary</span> <span class="string">📊</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">node</span> <span class="string">./post-summary</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Lighthouse</span> <span class="string">assertions</span> <span class="string">✅</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">lhci</span> <span class="string">assert</span></span><br></pre></td></tr></table></figure>
+
+<h2><span id="bonus-6-reusable-github-actions-module">Bonus 6: Reusable GitHub Actions module</span></h2><p>To simplify posting the performance job summary and commit status, I created an NPM package <code>lhci-gha</code> hosted at <a target="_blank" rel="noopener" href="https://github.com/bahmutov/lhci-gha">https://github.com/bahmutov/lhci-gha</a>. You can install this module as a dev dependency</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ npm i -D lhci-gha</span><br><span class="line">+ lhci-gha@1.0.3</span><br></pre></td></tr></table></figure>
+
+<p>The updated workflow uses <code>npx</code> to run the two scripts provided by the <code>lhci-gha</code> module</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># https://github.com/GoogleChrome/lighthouse-ci</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">run</span> <span class="string">Lighthouse</span> <span class="string">CI</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    npm install -g @lhci/cli@0.11.x</span></span><br><span class="line"><span class="string">    lhci collect</span></span><br><span class="line"><span class="string"></span><span class="comment"># post performance summary and set the commit status</span></span><br><span class="line"><span class="comment"># https://github.com/bahmutov/lhci-gha</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Post</span> <span class="string">performance</span> <span class="string">summary</span> <span class="string">📊</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">npx</span> <span class="string">post-summary</span> <span class="string">--report-filename</span> <span class="string">lighthouse-results.json</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Post</span> <span class="string">performance</span> <span class="string">commit</span> <span class="string">status</span> <span class="string">✅</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    npx post-status \</span></span><br><span class="line"><span class="string">      --report-filename lighthouse-results.json \</span></span><br><span class="line"><span class="string">      --owner bahmutov --repo web-performance-example \</span></span><br><span class="line"><span class="string">      --commit $&#123;&#123; github.event.pull_request.head.sha || github.sha &#125;&#125;</span></span><br><span class="line"><span class="string"></span>  <span class="attr">env:</span></span><br><span class="line">    <span class="attr">PERSONAL_GH_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.PERSONAL_GH_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>The <code>post-status</code> script does not require Lighthouse GH app installation, since it uses my personal GH token. Here is how the commit status looks.</p>
+<p><img src="../images/trying-lighthouse/status.png" alt="Lighthouse performance using custom status"></p>
+<p>You can set the minimum performance score. Let&#39;s make our project fail by requiring at least 90.</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Post</span> <span class="string">performance</span> <span class="string">commit</span> <span class="string">status</span> <span class="string">✅</span></span><br><span class="line">  <span class="attr">run:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    npx post-status --min 90 \</span></span><br><span class="line"><span class="string">      --report-filename lighthouse-results.json \</span></span><br><span class="line"><span class="string">      --owner bahmutov --repo web-performance-example \</span></span><br><span class="line"><span class="string">      --commit $&#123;&#123; github.event.pull_request.head.sha || github.sha &#125;&#125;</span></span><br><span class="line"><span class="string"></span>  <span class="attr">env:</span></span><br><span class="line">    <span class="attr">PERSONAL_GH_TOKEN:</span> <span class="string">$&#123;&#123;</span> <span class="string">secrets.PERSONAL_GH_TOKEN</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>The status check shows the current performance 82 is below 90.</p>
+<p><img src="../images/trying-lighthouse/82.png" alt="Failing performance status check"></p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/trying-lighthouse/" data-id="clxj6w7ej00k6bjn7hcwv7p9s" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/trying-lighthouse/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/performance/" rel="tag">performance</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../test-react-number-format/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Testing React Number Format Component Example
+        
+      </div>
+    </a>
+  
+  
+    <a href="../test-automation-experience-interview/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">The Test Automation Experience Interview</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/trying-lighthouse/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>

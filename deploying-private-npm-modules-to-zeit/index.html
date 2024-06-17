@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Deploying private NPM modules to Zeit | Better world by better software</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Update Zeit has just released the official way to use private NPM modules, see the announcement.    Example application Authentication using NPM_TOKEN Shrink packing Bundling the server code Bundling">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Deploying private NPM modules to Zeit">
+<meta property="og:url" content="https://glebbahmutov.com/blog/deploying-private-npm-modules-to-zeit/index.html">
+<meta property="og:site_name" content="Better world by better software">
+<meta property="og:description" content="Update Zeit has just released the official way to use private NPM modules, see the announcement.    Example application Authentication using NPM_TOKEN Shrink packing Bundling the server code Bundling">
+<meta property="og:locale">
+<meta property="article:published_time" content="2016-06-30T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T22:55:08.518Z">
+<meta property="article:author" content="Gleb Bahmutov">
+<meta property="article:tag" content="advice">
+<meta property="article:tag" content="modular development">
+<meta property="article:tag" content="vercel">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@bahmutov">
+  
+    <link rel="alternative" href="/blog/atom.xml" title="Better world by better software" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="preload" href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" as="style">
+  
+<link rel="stylesheet" href="../css/style.css">
+
+  
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59999353-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-titles">
+      <div id="header-title" class="inner">
+        <h1 id="logo-wrap">
+          <a href="../index.html" id="logo">Better world by better software</a>
+        </h1>
+        <!--
+        
+        -->
+        <!-- <span class="no-mobile">Software advice from</span> -->
+        <h2 id="subtitle-wrap">
+          <span class="subtitle">
+            <a id="subtitle" href="https://glebbahmutov.com">Gleb Bahmutov PhD</a>
+            <a id="nav-house-link" class="nav-icon" href="/" title="Home"></a>
+            
+              <a id="nav-rss-link" class="nav-icon" href="/blog/atom.xml" title="RSS Feed"></a>
+            
+            <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+            <div id="search-form-wrap">
+              <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://glebbahmutov.com/blog"></form>
+            </div>
+          </span>
+        </h2>
+
+      </div>
+    </div>
+    <div id="climate-crisis">
+      <h2>Our planet 🌏 is in danger</h2>
+      <h3>Act today: <a href="/blog/climate-emergency/">what you can do</a></h3>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-deploying-private-npm-modules-to-zeit" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="" class="article-date">
+  <time datetime="2016-06-30T04:00:00.000Z" itemprop="datePublished">Jun 30 2016</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="../categories/products/">products</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Deploying private NPM modules to Zeit
+    </h1>
+
+    <h2 class="article-title" itemprop="name">
+      How to bundle a server including private modules and static files.
+    </h2>
+
+  
+
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>Update</strong> Zeit has just released the official way to use private NPM modules,
+see <a target="_blank" rel="noopener" href="https://zeit.co/blog/private-npm">the announcement</a>.</p>
+<!-- toc -->
+
+<ul>
+<li><a href="#example-application">Example application</a></li>
+<li><a href="#authentication-using-npm_token">Authentication using NPM_TOKEN</a></li>
+<li><a href="#shrink-packing">Shrink packing</a></li>
+<li><a href="#bundling-the-server-code">Bundling the server code</a></li>
+<li><a href="#bundling-the-mock-read-only-file-system">Bundling the mock read-only file system</a></li>
+<li><a href="#writing-the-temp-file-system">Writing the temp file system</a></li>
+<li><a href="#installing-nothing">Installing nothing</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+<!-- tocstop -->
+
+<p>I have been playing with <a target="_blank" rel="noopener" href="https://zeit.co/">Zeit.co</a> - a super quick immutable deployment
+environment targeted at Node projects. If I have a server in a local folder,
+it could be deployed to new server almost instantly. It was a perfect
+solution for deploying a <a href="../publish-release-notes-to-slack/">small web hook</a>,
+or a <a href="../parallel-end-to-end-testing/">chat server</a>.</p>
+<p>Yet there were two limitations:</p>
+<ul>
+<li>lack of environment variables support; this was simple to
+<a href="../publish-release-notes-to-slack/#deployment-with-now">work around</a>
+using a separate private repo and a tool like <a target="_blank" rel="noopener" href="https://github.com/bahmutov/as-a#readme">as-a</a></li>
+<li>the deployment tool does not install any private NPM dependencies due
+to lack of NPM authentication</li>
+</ul>
+<p>This post shows how I worked around the second limitation by bundling
+the entire server code using <a target="_blank" rel="noopener" href="https://github.com/substack/node-browserify#browserify">browserify</a>, preparing a single
+source file to be deployed. At the end there will be just a single
+JavaScript deployed, with zero NPM dependencies.</p>
+<h2><span id="example-application">Example application</span></h2><p>As an example I took a <a target="_blank" rel="noopener" href="https://github.com/bahmutov/feathers-chat-app">chat application server</a> implemented
+on top of <a target="_blank" rel="noopener" href="http://feathersjs.com/">Feathers</a> framework. The original example already had
+some modifications to make it work on Zeit</p>
+<ol>
+<li>No Socket.io on Zeit - I have left the REST api only</li>
+<li>Local data can be written into <code>/tmp</code> folder only.</li>
+<li>(Optional) the server can determine its own host url using environment
+  variable <code>NOW_URL</code></li>
+</ol>
+<p>I have published the chat app on NPM under name
+<a target="_blank" rel="noopener" href="https://www.npmjs.com/package/feathers-chat-app-gleb">feathers-chat-app-gleb</a>, but to make the example
+more realistic, I have included a dummy private NPM dependency.
+The dependency <code>@bahmutov/private-foo</code> comes from public GitHub repo
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/private-foo">private-foo</a> but the module has
+been published as <em>a private scoped module</em> on NPM registry. The chat application
+just prints the value exported by the private module</p>
+<figure class="highlight js"><figcaption><span>src/app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> privateFoo = <span class="built_in">require</span>(<span class="string">&#x27;@bahmutov/private-foo&#x27;</span>);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;I include&#x27;</span>, privateFoo);</span><br><span class="line"><span class="comment">// npm start</span></span><br><span class="line"><span class="comment">// I include private foo</span></span><br><span class="line"><span class="comment">// Feathers application started on localhost:3030</span></span><br></pre></td></tr></table></figure>
+
+<p>How can we deploy this application to Zeit using the <a target="_blank" rel="noopener" href="https://zeit.co/now">zeit now</a> tool?</p>
+<h2><span id="authentication-using-npm_token">Authentication using NPM_TOKEN</span></h2><p>First, let us try deploying the application as is.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">$ now -f</span><br><span class="line">&gt; Deploying <span class="string">&quot;/Users/irinakous/git/feathers-chat-app&quot;</span></span><br><span class="line">&gt; Using Node.js 6.2.1 (requested: `6`)</span><br><span class="line">&gt; Ready! https://feathers-chat-app-gleb-fhzggnzoij.now.sh (copied to clipboard) [2s]</span><br><span class="line">...</span><br><span class="line">NPM install errors (too fast too see)</span><br><span class="line">...</span><br><span class="line">&gt; Building</span><br><span class="line">&gt; ▲ npm install</span><br><span class="line">&gt; Installing package subarg@^1.0.0</span><br><span class="line">&gt; Installing package through2@^2.0.0</span><br><span class="line">&gt; Installing package xtend@^4.0.0</span><br><span class="line">&gt; Installing package bn.js@^4.0.0</span><br><span class="line">&gt; Installing package inherits@^2.0.1</span><br><span class="line">&gt; Installing package minimalistic-assert@^1.0.0</span><br><span class="line">&gt; Installing package duplexer2@~0.1.0</span><br><span class="line">&gt; Installing package readable-stream@^2.0.2</span><br><span class="line">&gt; Installing package acorn@^1.0.3</span><br><span class="line">&gt; Installing package defined@^1.0.0</span><br><span class="line">&gt; ▲ npm start</span><br><span class="line">&gt; module.js:442</span><br><span class="line">&gt;     throw err;</span><br><span class="line">&gt;     ^</span><br><span class="line">&gt; Error: Cannot find module <span class="string">&#x27;feathers&#x27;</span></span><br><span class="line">&gt;     at Function.Module._resolveFilename (module.js:440:15)</span><br><span class="line">&gt;     at Function.Module._load (module.js:388:25)</span><br><span class="line">&gt;     at Module.require (module.js:468:17)</span><br><span class="line">&gt;     at require (internal/module.js:20:19)</span><br><span class="line">&gt;     at Object.&lt;anonymous&gt; (/home/nowuser/src/src/app.js:4:21)</span><br></pre></td></tr></table></figure>
+
+<p>So the deployment fails, but the install log passes way too fast to see the
+problem. To read the exception message, let us record the terminal output using
+the awesome <a target="_blank" rel="noopener" href="https://asciinema.org/">asciinema</a> utility.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ asciinema rec</span><br><span class="line">$ now -f</span><br><span class="line">$ <span class="built_in">exit</span></span><br><span class="line">~ Asciicast recording finished.</span><br><span class="line">~ Press &lt;Enter&gt; to upload, &lt;Ctrl-C&gt; to cancel.</span><br><span class="line">https://asciinema.org/a/acp3tvh8mui1o7y6goox42t29</span><br></pre></td></tr></table></figure>
+
+<p>Opening the movie url, we can observe the detailed output, and even embed it
+below</p>
+<script type="text/javascript" src="https://asciinema.org/a/acp3tvh8mui1o7y6goox42t29.js" id="asciicast-acp3tvh8mui1o7y6goox42t29" async></script>
+
+<p>Now we can see the install error clearly</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">message: &#x27;Response code 404 (Not Found)&#x27;,</span><br><span class="line">host: &#x27;registry.npmjs.org&#x27;,</span><br><span class="line">method: &#x27;GET&#x27;,</span><br><span class="line">path: &#x27;/@bahmutov%2Fprivate-foo&#x27;,</span><br><span class="line">statusCode: 404</span><br></pre></td></tr></table></figure>
+
+<p>The install fails, as it should;
+the registry returns 404 when someone is requesting our
+private module. Can we copy the personal NPM auth token into the local
+<code>.npmrc</code> file to allow Zeit deploy to install the private module? If we keep
+the repo private, this could be acceptable solution. We can even git ignore
+the <code>.npmrc</code> file to avoid checking it into the repo (and even use
+a tool like <a target="_blank" rel="noopener" href="https://github.com/bahmutov/ban-sensitive-files">ban-sensitive-files</a> to prevent this
+from happening).</p>
+<p>Yet, running the <code>now</code> tool shows that the local <code>.npmrc</code> file is ignored
+and the private scoped module is still NOT installed. Hmm.</p>
+<h2><span id="shrink-packing">Shrink packing</span></h2><p>If we cannot install private dependencies from the NPM registry, we could try
+including the downloaded dependencies directly in the git repo. The best way
+to keep code dependencies together with source is <a target="_blank" rel="noopener" href="https://github.com/JamieMason/shrinkpack">shrinkpack</a>.</p>
+<p>First, use <code>npm shrinkwrap</code> command to &quot;fix&quot; the exact versions of all
+dependencies, including the private ones. We are excluding the dev dependencies
+though.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ npm prune</span><br><span class="line">$ npm shrinkwrap</span><br><span class="line">wrote npm-shrinkwrap.json</span><br></pre></td></tr></table></figure>
+
+<p>The written file <a target="_blank" rel="noopener" href="https://github.com/bahmutov/feathers-chat-app/blob/master/npm-shrinkwrap.json">npm-shrinkwrap.json</a> has every
+dependency resolution. Here is the start of the file.</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;feathers-chat-app-gleb&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;dependencies&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;@bahmutov/private-foo&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;from&quot;</span><span class="punctuation">:</span> <span class="string">&quot;@bahmutov/private-foo@*&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;accepts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1.3.3&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;from&quot;</span><span class="punctuation">:</span> <span class="string">&quot;accepts@&gt;=1.3.3&lt; 1.4.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;resolved&quot;</span><span class="punctuation">:</span> <span class="string">&quot;http://registry.npmjs.org/accepts/-/accepts-1.3.3.tgz&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Next, we will run the command to pack every resolved dependency back into
+the <code>.tar.gz</code> file (almost like it was downloaded from the NPM registry).</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ npm install -g shrinkpack</span><br><span class="line">$ shrinkpack</span><br><span class="line">i 231 dependencies <span class="keyword">in</span> npm-shrinkwrap.json</span><br><span class="line">i 0 need removing from ./node_shrinkwrap</span><br><span class="line">i 231 need adding to ./node_shrinkwrap</span><br><span class="line">i 209 are <span class="keyword">in</span> your npm cache</span><br><span class="line">i 22 need downloading</span><br><span class="line">i 1 have a missing <span class="string">&quot;resolved&quot;</span> property</span><br><span class="line">? @bahmutov/private-foo@1.0.0 has no <span class="string">&quot;dist.tarball&quot;</span> <span class="keyword">in</span></span><br><span class="line">  /git/feathers-chat-app/node_modules/@bahmutov/private-foo/package.json</span><br><span class="line">? @bahmutov/private-foo@1.0.0 contacting registry...</span><br><span class="line">✓ <span class="built_in">set</span> missing <span class="string">&quot;resolved&quot;</span> property <span class="keyword">for</span> @bahmutov/private-foo@1.0.0 to</span><br><span class="line">  https://registry.npmjs.org/@bahmutov/private-foo/-/private-foo-1.0.0.tgz</span><br><span class="line">...</span><br><span class="line">shrinkpack +231 -0 ↓22 ✓1 00:07</span><br></pre></td></tr></table></figure>
+
+<p>All the <code>.tar.gz</code> files were placed into <code>node_shrinkwrap</code> folder</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">ls</span> -l node_shrinkwrap/</span><br><span class="line">total 9880</span><br><span class="line">-rw-r--r--  1     576 Jul  1 08:52 @bahmutov-private-foo-1.0.0.tgz</span><br><span class="line">-rw-r--r--  1    5102 Jul  1 08:52 accepts-1.3.3.tgz</span><br><span class="line">-rw-r--r--  1  136743 Jul  1 08:52 acorn-1.2.2.tgz</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>The tool also updated the <code>npm-shrinkwrap.json</code> file, setting the paths
+to new <em>local</em> files</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;feathers-chat-app-gleb&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;dependencies&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;@bahmutov/private-foo&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;from&quot;</span><span class="punctuation">:</span> <span class="string">&quot;@bahmutov/private-foo@*&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;resolved&quot;</span><span class="punctuation">:</span> <span class="string">&quot;./node_shrinkwrap/@bahmutov-private-foo-1.0.0.tgz&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;accepts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1.3.3&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;from&quot;</span><span class="punctuation">:</span> <span class="string">&quot;accepts@&gt;=1.3.3&lt; 1.4.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;resolved&quot;</span><span class="punctuation">:</span> <span class="string">&quot;./node_shrinkwrap/accepts-1.3.3.tgz&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>We can check in the <code>node_shrinkwrap</code> folder into our Git repository, and
+it will make <code>npm install</code> instant from now on, because the registry will
+NOT be used - all the module resolutions are present locally after cloning.</p>
+<p>Trying <code>now</code> deployment command, and ... it does not work. The <code>now</code> command
+only uploads the JavaScript files, NOT the <code>.tar.gz</code> files. Even when I
+forced it to upload by moving the <code>node_shrinkwrap</code> folder into the <code>src</code>
+folder, the installation command did not resolve the local <code>.tar.gz</code> files.
+Maybe the <code>now</code> command does not respect the <code>npm-shrinkwrap.json</code>, or
+maybe there is some other reason. We need to find another way.</p>
+<h2><span id="bundling-the-server-code">Bundling the server code</span></h2><p>Our goal is to run the application. In the &quot;normal&quot; Node mode, each piece
+of JavaScript can be loaded from a separate file using <code>require(&lt;filename&gt;)</code>
+call. The <code>&lt;filename&gt;</code> is resolved relative to the path, or from the
+<code>node_modules</code> folder. If we cannot have some files loaded from the
+<code>node_modules</code> because the install failed, we can try &quot;bundling&quot; the source
+code into a single source file - just like we would for running an app
+inside a browser!</p>
+<p>I installed <a target="_blank" rel="noopener" href="https://github.com/substack/node-browserify#browserify">browserify</a> and used a simple
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/feathers-chat-app/blob/master/build.js">build.js</a> to pass options that build a bundle targeted for
+Node environment (instead of the browser).</p>
+<figure class="highlight js"><figcaption><span>build.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> fs = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>)</span><br><span class="line"><span class="keyword">var</span> browserify = <span class="built_in">require</span>(<span class="string">&#x27;browserify&#x27;</span>)</span><br><span class="line"><span class="keyword">var</span> insertGlobals = <span class="built_in">require</span>(<span class="string">&#x27;insert-module-globals&#x27;</span>)</span><br><span class="line"><span class="title function_">browserify</span>(<span class="string">&#x27;./src/index.js&#x27;</span>, &#123;</span><br><span class="line">    <span class="attr">builtins</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">commondir</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">insertGlobalVars</span>: &#123;</span><br><span class="line">        <span class="attr">__filename</span>: insertGlobals.<span class="property">vars</span>.<span class="property">__filename</span>,</span><br><span class="line">        <span class="attr">__dirname</span>: insertGlobals.<span class="property">vars</span>.<span class="property">__dirname</span>,</span><br><span class="line">        <span class="attr">process</span>: <span class="keyword">function</span>(<span class="params"></span>) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">browserField</span>: <span class="literal">false</span>,</span><br><span class="line">&#125;)</span><br><span class="line">.<span class="title function_">bundle</span>()</span><br><span class="line">.<span class="title function_">pipe</span>(fs.<span class="title function_">createWriteStream</span>(<span class="string">&#x27;./src/out.js&#x27;</span>))</span><br></pre></td></tr></table></figure>
+
+<p>Let us build the bundle and see if we can run the project <em>without</em>
+<code>node_modules</code> folder.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ node build.js</span><br><span class="line">$ <span class="built_in">ls</span> -l src/out.js</span><br><span class="line">-rw-r--r--  1  1575733 Jul  1 09:09 src/out.js</span><br><span class="line">$ node src/out.js</span><br><span class="line">I include private foo</span><br><span class="line">Feathers application started on localhost:3030</span><br><span class="line">^C</span><br><span class="line">$ <span class="built_in">mv</span> node_modules tmp</span><br><span class="line">$ node src/out.js</span><br><span class="line">I include private foo</span><br><span class="line">Feathers application started on localhost:3030</span><br><span class="line">^C</span><br></pre></td></tr></table></figure>
+
+<p>I also had to move folders <code>config</code> and <code>public</code> into <code>src</code> for deployment
+to include them.</p>
+<p>We have all the code needed inside a single file <code>src/out.js</code>. Let run use
+this bundle when running <code>now</code>. Oops, still there is a problem</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; Error: Cannot find module <span class="string">&#x27;/git/feathers-chat-app/src/config/default&#x27;</span></span><br><span class="line">&gt;     at Function.Module._resolveFilename (module.js:440:15)</span><br><span class="line">&gt;     at Function.Module._load (module.js:388:25)</span><br><span class="line">&gt;     at Module.require (module.js:468:17)</span><br><span class="line">&gt;     at require (internal/module.js:20:19)</span><br><span class="line">&gt;     at s (/home/nowuser/src/src/out.js:1:176)</span><br><span class="line">&gt;     at /home/nowuser/src/src/out.js:1:367</span><br><span class="line">&gt;     at EventEmitter.&lt;anonymous&gt; (/home/nowuser/src/src/out.js:20848:26)</span><br></pre></td></tr></table></figure>
+
+<p>The <a target="_blank" rel="noopener" href="https://github.com/feathersjs/feathers-configuration">feathers-configuration</a> module loads config
+JSON files by looking through the files in the <code>config</code> folder. This fails,
+because the browserify does not include these - there is no way it can know
+which files to include! So we need to hack around the config and just
+load the files we need for this case ourselves. Change the <code>src/app.js</code>
+to load the <code>config/default.json</code> ourselves and set the properties.</p>
+<figure class="highlight js"><figcaption><span>app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// app.configure(configuration(__dirname));</span></span><br><span class="line"><span class="keyword">const</span> defaults = <span class="built_in">require</span>(<span class="string">&#x27;./config/default&#x27;</span>)</span><br><span class="line"><span class="title class_">Object</span>.<span class="title function_">keys</span>(defaults).<span class="title function_">forEach</span>(<span class="function">(<span class="params">key</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// TODO adjust the paths, merge environment settings, etc</span></span><br><span class="line">  <span class="keyword">var</span> value = defaults[key]</span><br><span class="line">  <span class="keyword">function</span> <span class="title function_">isPath</span>(<span class="params">s</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="regexp">/^\./</span>.<span class="title function_">test</span>(s)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (<span class="title function_">isPath</span>(value)) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;resolving&#x27;</span>, value)</span><br><span class="line">    value = path.<span class="title function_">resolve</span>(__dirname, value)</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;resolved&#x27;</span>, value)</span><br><span class="line">  &#125;</span><br><span class="line">  app.<span class="title function_">set</span>(key, value);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>In the future I will refactor the <code>feathers-configuration</code> module to
+allow sending multiple config objects without loading them on the fly
+from the file system.</p>
+<p>Next, I removed <code>favicon</code> middleware, since the <code>.ico</code> file is not bundled
+into JavaScript</p>
+<figure class="highlight js"><figcaption><span>app.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">app</span><br><span class="line"><span class="comment">// .use(favicon( path.join(app.get(&#x27;public&#x27;), &#x27;favicon.ico&#x27;) ))</span></span><br><span class="line">  .<span class="title function_">use</span>(<span class="string">&#x27;/&#x27;</span>, <span class="title function_">serveStatic</span>( app.<span class="title function_">get</span>(<span class="string">&#x27;public&#x27;</span>) ))</span><br></pre></td></tr></table></figure>
+
+<p>At this point, the REST API is working on Zeit, which we can see
+if we try to grab the list of users, for example.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ http https://feathers-chat-app-gleb-kmljntdwmf.now.sh/users</span><br><span class="line">HTTP/1.1 401 Unauthorized</span><br><span class="line">X-Powered-By: Express</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;className&quot;</span>: <span class="string">&quot;not-authenticated&quot;</span>,</span><br><span class="line">    <span class="string">&quot;code&quot;</span>: 401,</span><br><span class="line">    <span class="string">&quot;errors&quot;</span>: &#123;&#125;,</span><br><span class="line">    <span class="string">&quot;message&quot;</span>: <span class="string">&quot;Authentication token missing.&quot;</span>,</span><br><span class="line">    <span class="string">&quot;name&quot;</span>: <span class="string">&quot;NotAuthenticated&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>But if we try to open the deployed site in the browser we get 404!
+Why do we not get served the HTML file <code>public/index.html</code>?</p>
+<h2><span id="bundling-the-mock-read-only-file-system">Bundling the mock read-only file system</span></h2><p>The deployed application does not include any non-javascript files
+from the <code>public</code> folder. We have the missing static pages there</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">ls</span> -l src/public/</span><br><span class="line">total 56</span><br><span class="line">-rw-r--r--  1  3295 Jun 19 10:26 app.js</span><br><span class="line">-rw-r--r--  1  3443 Jun 19 10:26 chat.html</span><br><span class="line">-rw-r--r--  1  5533 Jun 18 23:24 favicon.ico</span><br><span class="line">-rw-r--r--  1  1410 Jun 18 23:29 index.html</span><br><span class="line">-rw-r--r--  1  1357 Jun 18 23:32 login.html</span><br><span class="line">-rw-r--r--  1  1365 Jun 18 23:33 signup.html</span><br></pre></td></tr></table></figure>
+
+<p>Somehow we need to</p>
+<ol>
+<li>include the text contents of these files in the built bundle</li>
+<li>serve the bundled text for each file, as the server tries to read
+  it from its &quot;file system&quot;</li>
+</ol>
+<p>I love mocking environments using browserify, see blog posts
+<a href="../run-angular-in-web-worker">Angular in WebWorker</a> and
+<a href="../run-express-server-in-your-browser">Express in ServiceWorker</a>.
+Our current problem looks like a fun little challenge.</p>
+<p>The static folder in Feathers is served using the plain Express
+<a target="_blank" rel="noopener" href="https://github.com/expressjs/serve-static">serve-static</a> package,
+which uses <a target="_blank" rel="noopener" href="https://github.com/pillarjs/send">send</a> module to open
+a file stream to a file and pipe it back into the resource. If only these
+modules had a file system that pointed at contents from the bundle!</p>
+<p>Luckily there is module <a target="_blank" rel="noopener" href="https://github.com/tschaub/mock-fs">mock-fs</a> that
+does exactly this</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> mock = <span class="built_in">require</span>(<span class="string">&#x27;mock-fs&#x27;</span>);</span><br><span class="line"><span class="title function_">mock</span>(&#123;</span><br><span class="line">  <span class="string">&#x27;public/index.html&#x27;</span>: <span class="string">&#x27;hi there&#x27;</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>During the build step we can collect all HTML files to be bundled into a single
+file, then <code>require</code> this mock object when we bundle the code. We are going
+to turn on the mocking, and the server will have no choice but return the
+bundled responses. I have described the steps on a tiny example in separate
+repo <a target="_blank" rel="noopener" href="https://github.com/bahmutov/browserify-server">browserify-server</a>.
+First, the build collects all public HTML and JS files and puts the text
+into a single JSON object.</p>
+<figure class="highlight js"><figcaption><span>build.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> glob = <span class="built_in">require</span>(<span class="string">&#x27;glob&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> files = glob.<span class="title function_">sync</span>(<span class="string">&#x27;src/public/*.js&#x27;</span>).<span class="title function_">concat</span>(glob.<span class="title function_">sync</span>(<span class="string">&#x27;src/public/*.html&#x27;</span>))</span><br><span class="line"><span class="keyword">const</span> mockOptions = &#123;&#125;</span><br><span class="line">files.<span class="title function_">forEach</span>(<span class="function">(<span class="params">fullName</span>) =&gt;</span> &#123;</span><br><span class="line">  mockOptions[fullName] = <span class="title function_">read</span>(fullName, <span class="string">&#x27;utf8&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="keyword">const</span> publicFiles = <span class="string">&#x27;./public-bundle.json&#x27;</span></span><br><span class="line"><span class="title function_">write</span>(publicFiles,</span><br><span class="line">  <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(mockOptions, <span class="literal">null</span>, <span class="number">2</span>) + <span class="string">&#x27;\n&#x27;</span>, <span class="string">&#x27;utf8&#x27;</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;saved public files contents to&#x27;</span>, publicFiles)</span><br><span class="line"><span class="comment">// browserify commands ...</span></span><br><span class="line"><span class="title function_">browserify</span>(<span class="string">&#x27;./start.js&#x27;</span>, &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>We also change the entry file for browserify to <code>start.js</code>, which right
+away requires the original <code>index.js</code> file, and mocks the file system
+using the file created.</p>
+<figure class="highlight js"><figcaption><span>start.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span>(<span class="string">&#x27;./src/index&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> mockOptions = <span class="built_in">require</span>(<span class="string">&#x27;./public-bundle&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> mock = <span class="built_in">require</span>(<span class="string">&#x27;mock-&#x27;</span> + <span class="string">&#x27;fs&#x27;</span>)</span><br><span class="line"><span class="title function_">mock</span>(mockOptions)</span><br></pre></td></tr></table></figure>
+
+<p>To avoid getting into recursive bundling, I split the <code>mock-fs</code> module name
+in the <code>require(&#39;mock-&#39; + &#39;fs&#39;)</code> expression; this is a common trick to
+stop <code>browserify</code> from messing with things it should leave alone.</p>
+<p>We can find our HTML inside the bundle</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ grep <span class="string">&quot;&lt;title&gt;&quot;</span> src/out.js</span><br><span class="line"><span class="string">&quot;src/public/chat.html&quot;</span>: <span class="string">&quot;&lt;html&gt;\n&lt;head&gt; ...</span></span><br></pre></td></tr></table></figure>
+
+<p>We can even run the bundled code with the folder <code>src/public</code> removed</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">mv</span> src/public src/tmp</span><br><span class="line">$ npm start</span><br></pre></td></tr></table></figure>
+
+<p>Deploying the bundle to <code>zeit</code> and ... in production the module <code>mock-fs</code>
+is not found! Seems Zeit does not let you mock the file system.</p>
+<p>Ok, time to find one more work around.</p>
+<h2><span id="writing-the-temp-file-system">Writing the temp file system</span></h2><p>Zeit does allow you to write data into <code>/tmp</code> folder. This is where we write
+the messages database for example. We have the <code>public</code> folder bundled into
+our single application JavaScript file; we can just dump the files into the
+<code>/tmp</code> folder at the startup step. The server app then can serve
+the static files normally.</p>
+<p>The build file still collects all <code>.js</code> and <code>.html</code> files in the <code>public</code>
+folder, and dumps their contents into a single <code>.json</code> file</p>
+<figure class="highlight js"><figcaption><span>build.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">collectPublicFiles</span> () &#123;</span><br><span class="line">  <span class="keyword">const</span> glob = <span class="built_in">require</span>(<span class="string">&#x27;glob&#x27;</span>)</span><br><span class="line">  <span class="keyword">const</span> files = glob.<span class="title function_">sync</span>(<span class="string">&#x27;public/*.js&#x27;</span>).<span class="title function_">concat</span>(glob.<span class="title function_">sync</span>(<span class="string">&#x27;public/*.html&#x27;</span>))</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;public files\n&#x27;</span> + files.<span class="title function_">join</span>(<span class="string">&#x27;\n&#x27;</span>))</span><br><span class="line">  <span class="keyword">const</span> read = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>).<span class="property">readFileSync</span></span><br><span class="line">  <span class="keyword">const</span> mockOptions = &#123;&#125;</span><br><span class="line">  files.<span class="title function_">forEach</span>(<span class="function">(<span class="params">fullName</span>) =&gt;</span> &#123;</span><br><span class="line">    mockOptions[fullName] = <span class="title function_">read</span>(fullName, <span class="string">&#x27;utf8&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="keyword">return</span> mockOptions</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">mockPublicFiles</span> () &#123;</span><br><span class="line">  <span class="keyword">const</span> mockOptions = <span class="title function_">collectPublicFiles</span>()</span><br><span class="line">  <span class="comment">// console.log(mockOptions)</span></span><br><span class="line">  <span class="keyword">const</span> publicFiles = <span class="string">&#x27;./public-bundle.json&#x27;</span></span><br><span class="line">  <span class="title function_">write</span>(publicFiles,</span><br><span class="line">    <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(mockOptions, <span class="literal">null</span>, <span class="number">2</span>) + <span class="string">&#x27;\n&#x27;</span>, <span class="string">&#x27;utf8&#x27;</span>)</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;saved public files contents to&#x27;</span>, publicFiles)</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">mockPublicFiles</span>()</span><br><span class="line"><span class="title function_">browserify</span>(<span class="string">&#x27;./start.js&#x27;</span>, &#123;...&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Then <code>start.js</code> file dumps the collected contents into <code>/tmp</code> folder</p>
+<figure class="highlight js"><figcaption><span>start.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">writePublicFiles</span> () &#123;</span><br><span class="line">  <span class="keyword">const</span> mockOptions = <span class="built_in">require</span>(<span class="string">&#x27;./public-bundle&#x27;</span>)</span><br><span class="line">  <span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>)</span><br><span class="line">  <span class="keyword">const</span> outputFolder = <span class="string">&#x27;/tmp&#x27;</span></span><br><span class="line">  <span class="keyword">const</span> dirname = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>).<span class="property">dirname</span></span><br><span class="line">  <span class="keyword">const</span> inTemp = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>).<span class="property">join</span>.<span class="title function_">bind</span>(<span class="literal">null</span>, outputFolder)</span><br><span class="line">  <span class="keyword">const</span> mkdirp = <span class="built_in">require</span>(<span class="string">&#x27;mkdirp&#x27;</span>)</span><br><span class="line">  <span class="keyword">const</span> write = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>).<span class="property">writeFileSync</span></span><br><span class="line">  <span class="title class_">Object</span>.<span class="title function_">keys</span>(mockOptions).<span class="title function_">forEach</span>(<span class="function">(<span class="params">name</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> full = <span class="title function_">inTemp</span>(name)</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;writing file&#x27;</span>, full)</span><br><span class="line">    <span class="keyword">const</span> folder = <span class="title function_">dirname</span>(full)</span><br><span class="line">    mkdirp.<span class="title function_">sync</span>(folder)</span><br><span class="line">    <span class="title function_">write</span>(full, mockOptions[name], <span class="string">&#x27;utf8&#x27;</span>)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">writePublicFiles</span>()</span><br><span class="line"><span class="built_in">require</span>(<span class="string">&#x27;./src/index&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>Let us deploy and see if we finally got a happy server</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ now</span><br><span class="line">&gt; Ready! https://feathers-chat-app-gleb-yhqzmzizjz.now.sh (copied to clipboard) [2s]</span><br><span class="line">&gt; Upload [====================] 100% 0.0s</span><br><span class="line">&gt; Sync complete (1.51MB) [8s]</span><br><span class="line">&gt; ▲ npm run now-start</span><br><span class="line">&gt; writing file /tmp/public/app.js</span><br><span class="line">&gt; writing file /tmp/public/chat.html</span><br><span class="line">&gt; writing file /tmp/public/index.html</span><br><span class="line">&gt; writing file /tmp/public/login.html</span><br><span class="line">&gt; writing file /tmp/public/signup.html</span><br><span class="line">&gt; I include private foo</span><br><span class="line">&gt; Feathers application started on localhost:3030</span><br><span class="line">&gt; Deployment complete!</span><br></pre></td></tr></table></figure>
+
+<p>From the terminal let us fetch the index page</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ http https://feathers-chat-app-gleb-yhqzmzizjz.now.sh</span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Content-Type: text/html; charset=UTF-8</span><br><span class="line">&lt;html&gt;</span><br><span class="line">  &lt;<span class="built_in">head</span>&gt;</span><br><span class="line">    &lt;meta http-equiv=<span class="string">&quot;content-type&quot;</span> content=<span class="string">&quot;text/html; charset=utf-8&quot;</span>&gt;</span><br><span class="line">    &lt;title&gt;Feathers Chat&lt;/title&gt;</span><br><span class="line">    ...</span><br><span class="line">  &lt;/head&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>These are not tears of sadness, these are tears of happiness</p>
+</blockquote>
+<p>You can check the app yourself at the above url
+<a target="_blank" rel="noopener" href="https://feathers-chat-app-gleb-yhqzmzizjz.now.sh/">https://feathers-chat-app-gleb-yhqzmzizjz.now.sh</a>.</p>
+<p>As the final change, I added bundling and writing the config JSON files
+the same way to reuse the original <code>feathers-configuration</code> code.</p>
+<h2><span id="installing-nothing">Installing nothing</span></h2><p>To speed up the deploys, we can skip the dependency deployment on Zeit.
+We have already bundled everything into the single <code>src/out.js</code> file; there
+is no need to run <code>npm install</code> when deploying. We can write a simple
+script to empty the <code>dependencies</code> and <code>devDependencies</code> in <code>package.json</code></p>
+<figure class="highlight js"><figcaption><span>no-deps.js</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&#x27;use strict&#x27;</span></span><br><span class="line"><span class="keyword">const</span> pkg = <span class="built_in">require</span>(<span class="string">&#x27;./package.json&#x27;</span>)</span><br><span class="line">pkg.<span class="property">dependencies</span> = pkg.<span class="property">devDependencies</span> = []</span><br><span class="line"><span class="keyword">const</span> write = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>).<span class="property">writeFileSync</span></span><br><span class="line"><span class="title function_">write</span>(<span class="string">&#x27;./package.json&#x27;</span>, <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(pkg, <span class="literal">null</span>, <span class="number">2</span>) + <span class="string">&#x27;\n&#x27;</span>, <span class="string">&#x27;utf8&#x27;</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;removed dependencies from package.json&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>We will run the above script before the deployment, and will restore the
+<code>package.json</code> back to its full state after the deploy.</p>
+<figure class="highlight json"><figcaption><span>packate.json</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;now-start&quot;</span><span class="punctuation">:</span> <span class="string">&quot;node src/out.js&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;bundle&quot;</span><span class="punctuation">:</span> <span class="string">&quot;node build.js&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;predeploy&quot;</span><span class="punctuation">:</span> <span class="string">&quot;npm run bundle &amp;&amp; node no-deps.js&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;deploy&quot;</span><span class="punctuation">:</span> <span class="string">&quot;now&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;postdeploy&quot;</span><span class="punctuation">:</span> <span class="string">&quot;git checkout package.json&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Let us try this. Without removing the superfluous <code>node_modules</code> the bundling
+and deployment takes 60 seconds.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ time npm run plain-deploy</span><br><span class="line">&gt; Building</span><br><span class="line">&gt; ▲ npm install</span><br><span class="line">&gt; Installing package subarg@^1.0.0</span><br><span class="line">&gt; Installing package through2@^2.0.0</span><br><span class="line">&gt; Installing package xtend@^4.0.0</span><br><span class="line">...</span><br><span class="line">&gt; Deployment complete!</span><br><span class="line">real  0m59.948s</span><br></pre></td></tr></table></figure>
+
+<p>With just the bundling and moving just the single unchanged file it
+takes 25 seconds.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">$ time npm run deploy</span><br><span class="line">&gt; feathers-chat-app-gleb@1.0.0 predeploy /git/feathers-chat-app</span><br><span class="line">&gt; npm run bundle &amp;&amp; node no-deps.js</span><br><span class="line">&gt; feathers-chat-app-gleb@1.0.0 bundle /git/feathers-chat-app</span><br><span class="line">&gt; node build.js</span><br><span class="line">public files</span><br><span class="line">public/app.js</span><br><span class="line">public/chat.html</span><br><span class="line">public/index.html</span><br><span class="line">public/login.html</span><br><span class="line">public/signup.html</span><br><span class="line">saved public files contents to ./public-bundle.json</span><br><span class="line">removed dependencies from package.json</span><br><span class="line">&gt; feathers-chat-app-gleb@1.0.0 deploy /git/feathers-chat-app</span><br><span class="line">&gt; now</span><br><span class="line">&gt; Deploying <span class="string">&quot;/git/feathers-chat-app&quot;</span></span><br><span class="line">&gt; Using Node.js undefined (requested: `6`)</span><br><span class="line">&gt; Ready! https://feathers-chat-app-gleb-rjynpwiawt.now.sh (copied to clipboard) [2s]</span><br><span class="line">&gt; Upload [====================] 100% 0.0s</span><br><span class="line">&gt; Sync complete (837B) [989ms]</span><br><span class="line">&gt; Initializing…</span><br><span class="line">&gt; Building</span><br><span class="line">&gt; ▲ npm install</span><br><span class="line">&gt; Error &#123;</span><br><span class="line">  Error: ENOENT: no such file or directory, scandir <span class="string">&#x27;/home/nowuser/src/node_modules&#x27;</span></span><br><span class="line">&gt; I include private foo</span><br><span class="line">&gt; Feathers application started on localhost:3030</span><br><span class="line">&gt; Deployment complete!</span><br><span class="line">&gt; feathers-chat-app-gleb@1.0.0 postdeploy /git/feathers-chat-app</span><br><span class="line">&gt; git checkout package.json</span><br><span class="line">real  0m24.659s</span><br></pre></td></tr></table></figure>
+
+<p>Fast and simple.</p>
+<h2><span id="conclusion">Conclusion</span></h2><p>I wish Zeit had support for private modules, yet lack of this feature was a
+great opportunity for hacking together a work around. Notice that I had
+pursued multiple solutions that lead to a dead end. Yet every solution that did
+not work taught me something new. One just has to be patient and keep
+coming up with new ideas, chipping away at the problem.</p>
+<p>The final solution is a weird one; I am sure the original problem has to do
+with browserified bundle not being able to properly load the regular files
+due to some path mangling.
+I will not pursue this further, instead I hope to see the Zeit team
+implement installation of private NPM modules using proper authentication.</p>
+<p>You can find the code at
+<a target="_blank" rel="noopener" href="https://github.com/bahmutov/feathers-chat-app">bahmutov&#x2F;feathers-chat-app</a>
+and see the running application at
+<a target="_blank" rel="noopener" href="https://feathers-chat-app-gleb-rjynpwiawt.now.sh/">https://feathers-chat-app-gleb-rjynpwiawt.now.sh</a></p>
+<p>If you like hacking the code like me, read
+<a href="../better-hacker/">How to become a better hacker</a> blog post.</p>
+
+      
+    </div>
+
+    
+      <footer class="article-footer personal-links">
+  <p>
+    Follow Gleb Bahmutov <a target="_blank" rel="noopener" href="https://twitter.com/bahmutov">@bahmutov</a>,
+    see his projects at <a href="https://glebbahmutov.com">glebbahmutov.com</a>,
+    watch his Cypress <a target="_blank" rel="noopener" href="https://www.youtube.com/c/glebbahmutov/videos">videos</a>,
+    browse his <a target="_blank" rel="noopener" href="https://slides.com/bahmutov">presentations</a>
+  </p>
+  <p>
+    Want to know more about Cypress? Check out <a href="https://cypress.tips" target="_blank">cypress.tips</a>
+  </p>
+  <p>
+    Have a Cypress question? Want me to answer it? Consider supporting me via <a target="_blank" rel="noopener" href="https://github.com/sponsors/bahmutov">GitHub Sponsors</a> or by purchasing my <a target="_blank" rel="noopener" href="https://cypress.tips/courses">Cypress courses</a>.
+  </p>
+</footer>
+<script src="https://rawgit.com/toddmotto/linkjuice/702066a37124081e7ad1a972844a9a91115be05a/dist/linkjuice.js"></script>
+<script>
+function contentFn (node, icon) {
+  const s = '<a href="#' + node.id + '" class="linkjuice">' +
+    node.innerHTML + ' ' + icon + '</a>\n'
+  return s
+}
+linkjuice.init('.article-entry', {
+  selectors: ['h2 span'],
+  icon: '<span class="link-symbol">#</span>',
+  contentFn: contentFn
+});
+</script>
+
+    
+
+    <footer class="article-footer">
+      <a data-url="https://glebbahmutov.com/blog/deploying-private-npm-modules-to-zeit/" data-id="clxj6w7da006bbjn7furyfxsz" class="article-share-link">Share</a>
+      
+        <a href="https://glebbahmutov.com/blog/deploying-private-npm-modules-to-zeit/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/advice/" rel="tag">advice</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="../tags/vercel/" rel="tag">vercel</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="../cyclejs-frontendcamp/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          CycleJS FrontEnd Camp
+        
+      </div>
+    </a>
+  
+  
+    <a href="../parallel-end-to-end-testing/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Parallel end to end testing with Cypress, Docker and GitLab</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <style>
+#carbonads {
+  display: block;
+  overflow: hidden;
+  font-size: 11px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+#carbonads a {
+  color: #258fb8;
+  text-decoration: none;
+}
+
+#carbonads a:hover {
+  text-decoration: underline;
+}
+
+#carbonads span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.carbon-img {
+  float: left;
+  margin-right: 1em;
+}
+
+.carbon-img img { display: block; }
+
+.carbon-text {
+  display: block;
+  float: left;
+  text-align: left;
+  margin-top: 0.5em;
+}
+@media screen and (min-width: 1024px) {
+  .carbon-text {
+    max-width: calc(100% - 130px - 1em);
+  }
+}
+
+.carbon-poweredby {
+  /*position: absolute;
+  right: 0;
+  bottom: 0;*/
+  float: right;
+  display: block;
+  font-size: 11px;
+}
+</style>
+<div class="widget-wrap">
+  <div class="widget-title">&nbsp;</div>
+  <div class="widget">
+    <!-- Carbon Ads -->
+    <script async type="text/javascript"
+      src="//cdn.carbonads.com/carbon.js?zoneid=1673&serve=C6AILKT&placement=glebbahmutovcom"
+      id="_carbonads_js"></script>
+  </div>
+</div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="../categories/book-review/">book review</a><span class="category-list-count">15</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/climate/">climate</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/people/">people</a><span class="category-list-count">25</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/process/">process</a><span class="category-list-count">173</span></li><li class="category-list-item"><a class="category-list-link" href="../categories/products/">products</a><span class="category-list-count">565</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="../tags/11ty/" rel="tag">11ty</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/QUnit/" rel="tag">QUnit</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/a11y/" rel="tag">a11y</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/advice/" rel="tag">advice</a><span class="tag-list-count">120</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/algolia/" rel="tag">algolia</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angular/" rel="tag">angular</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs/" rel="tag">angularjs</a><span class="tag-list-count">58</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/angularjs2/" rel="tag">angularjs2</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/assertions/" rel="tag">assertions</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ast/" rel="tag">ast</a><span class="tag-list-count">8</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/boilerplate/" rel="tag">boilerplate</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/browser/" rel="tag">browser</a><span class="tag-list-count">22</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ci/" rel="tag">ci</a><span class="tag-list-count">35</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/circle/" rel="tag">circle</a><span class="tag-list-count">14</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/climate/" rel="tag">climate</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/code-coverage/" rel="tag">code coverage</a><span class="tag-list-count">16</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/concurrency/" rel="tag">concurrency</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cyclejs/" rel="tag">cyclejs</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress/" rel="tag">cypress</a><span class="tag-list-count">316</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/cypress-dashboard/" rel="tag">cypress dashboard</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/d3/" rel="tag">d3</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/db/" rel="tag">db</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/docker/" rel="tag">docker</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/documentation/" rel="tag">documentation</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/email/" rel="tag">email</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es6/" rel="tag">es6</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/es7/" rel="tag">es7</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/functional/" rel="tag">functional</a><span class="tag-list-count">70</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/generators/" rel="tag">generators</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/git/" rel="tag">git</a><span class="tag-list-count">15</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/github/" rel="tag">github</a><span class="tag-list-count">42</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/graphql/" rel="tag">graphql</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/grunt/" rel="tag">grunt</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/gulp/" rel="tag">gulp</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hiring/" rel="tag">hiring</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/hyperapp/" rel="tag">hyperapp</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/immutable/" rel="tag">immutable</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/interview/" rel="tag">interview</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jade/" rel="tag">jade</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/javascript/" rel="tag">javascript</a><span class="tag-list-count">166</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/jshint/" rel="tag">jshint</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/markdown/" rel="tag">markdown</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/model-based-testing/" rel="tag">model-based testing</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/modular-development/" rel="tag">modular development</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/netlify/" rel="tag">netlify</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/nodejs/" rel="tag">nodejs</a><span class="tag-list-count">85</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/performance/" rel="tag">performance</a><span class="tag-list-count">24</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/presentation/" rel="tag">presentation</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/promises/" rel="tag">promises</a><span class="tag-list-count">31</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/proposal/" rel="tag">proposal</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ramda/" rel="tag">ramda</a><span class="tag-list-count">28</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react/" rel="tag">react</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/react-native/" rel="tag">react native</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactive/" rel="tag">reactive</a><span class="tag-list-count">12</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/reactjs/" rel="tag">reactjs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/renovate/" rel="tag">renovate</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/screencast/" rel="tag">screencast</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/security/" rel="tag">security</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/sentry/" rel="tag">sentry</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/service-workers/" rel="tag">service workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/state-machine/" rel="tag">state machine</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/testing/" rel="tag">testing</a><span class="tag-list-count">194</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/tutorial/" rel="tag">tutorial</a><span class="tag-list-count">29</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/typescript/" rel="tag">typescript</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/ui/" rel="tag">ui</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vercel/" rel="tag">vercel</a><span class="tag-list-count">10</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/visual-testing/" rel="tag">visual testing</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/vuejs/" rel="tag">vuejs</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/web-workers/" rel="tag">web workers</a><span class="tag-list-count">6</span></li><li class="tag-list-item"><a class="tag-list-link" href="../tags/webpack/" rel="tag">webpack</a><span class="tag-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="../tags/11ty/" style="font-size: 10.34px;">11ty</a> <a href="../tags/QUnit/" style="font-size: 11.38px;">QUnit</a> <a href="../tags/a11y/" style="font-size: 10.69px;">a11y</a> <a href="../tags/advice/" style="font-size: 18.97px;">advice</a> <a href="../tags/algolia/" style="font-size: 10.69px;">algolia</a> <a href="../tags/angular/" style="font-size: 10.69px;">angular</a> <a href="../tags/angularjs/" style="font-size: 17.93px;">angularjs</a> <a href="../tags/angularjs2/" style="font-size: 10px;">angularjs2</a> <a href="../tags/assertions/" style="font-size: 12.76px;">assertions</a> <a href="../tags/ast/" style="font-size: 12.41px;">ast</a> <a href="../tags/boilerplate/" style="font-size: 14.48px;">boilerplate</a> <a href="../tags/browser/" style="font-size: 15.52px;">browser</a> <a href="../tags/ci/" style="font-size: 17.24px;">ci</a> <a href="../tags/circle/" style="font-size: 14.48px;">circle</a> <a href="../tags/climate/" style="font-size: 14.83px;">climate</a> <a href="../tags/code-coverage/" style="font-size: 15.17px;">code coverage</a> <a href="../tags/concurrency/" style="font-size: 10px;">concurrency</a> <a href="../tags/cyclejs/" style="font-size: 12.07px;">cyclejs</a> <a href="../tags/cypress/" style="font-size: 20px;">cypress</a> <a href="../tags/cypress-dashboard/" style="font-size: 14.14px;">cypress dashboard</a> <a href="../tags/d3/" style="font-size: 10.69px;">d3</a> <a href="../tags/db/" style="font-size: 14.14px;">db</a> <a href="../tags/docker/" style="font-size: 13.79px;">docker</a> <a href="../tags/documentation/" style="font-size: 11.72px;">documentation</a> <a href="../tags/email/" style="font-size: 10.69px;">email</a> <a href="../tags/es6/" style="font-size: 14.14px;">es6</a> <a href="../tags/es7/" style="font-size: 10px;">es7</a> <a href="../tags/functional/" style="font-size: 18.28px;">functional</a> <a href="../tags/generators/" style="font-size: 11.38px;">generators</a> <a href="../tags/git/" style="font-size: 14.83px;">git</a> <a href="../tags/github/" style="font-size: 17.59px;">github</a> <a href="../tags/graphql/" style="font-size: 11.38px;">graphql</a> <a href="../tags/grunt/" style="font-size: 12.07px;">grunt</a> <a href="../tags/gulp/" style="font-size: 10.69px;">gulp</a> <a href="../tags/hiring/" style="font-size: 11.38px;">hiring</a> <a href="../tags/hyperapp/" style="font-size: 12.07px;">hyperapp</a> <a href="../tags/immutable/" style="font-size: 11.38px;">immutable</a> <a href="../tags/interview/" style="font-size: 10.69px;">interview</a> <a href="../tags/jade/" style="font-size: 11.03px;">jade</a> <a href="../tags/javascript/" style="font-size: 19.31px;">javascript</a> <a href="../tags/jshint/" style="font-size: 10.69px;">jshint</a> <a href="../tags/markdown/" style="font-size: 13.45px;">markdown</a> <a href="../tags/model-based-testing/" style="font-size: 10px;">model-based testing</a> <a href="../tags/modular-development/" style="font-size: 16.21px;">modular development</a> <a href="../tags/netlify/" style="font-size: 11.03px;">netlify</a> <a href="../tags/nodejs/" style="font-size: 18.62px;">nodejs</a> <a href="../tags/performance/" style="font-size: 15.86px;">performance</a> <a href="../tags/presentation/" style="font-size: 12.07px;">presentation</a> <a href="../tags/promises/" style="font-size: 16.9px;">promises</a> <a href="../tags/proposal/" style="font-size: 10.34px;">proposal</a> <a href="../tags/ramda/" style="font-size: 16.21px;">ramda</a> <a href="../tags/react/" style="font-size: 12.07px;">react</a> <a href="../tags/react-native/" style="font-size: 11.72px;">react native</a> <a href="../tags/reactive/" style="font-size: 13.79px;">reactive</a> <a href="../tags/reactjs/" style="font-size: 11.38px;">reactjs</a> <a href="../tags/renovate/" style="font-size: 11.38px;">renovate</a> <a href="../tags/screencast/" style="font-size: 10px;">screencast</a> <a href="../tags/security/" style="font-size: 13.45px;">security</a> <a href="../tags/sentry/" style="font-size: 13.45px;">sentry</a> <a href="../tags/service-workers/" style="font-size: 11.72px;">service workers</a> <a href="../tags/state-machine/" style="font-size: 10px;">state machine</a> <a href="../tags/testing/" style="font-size: 19.66px;">testing</a> <a href="../tags/tutorial/" style="font-size: 16.55px;">tutorial</a> <a href="../tags/typescript/" style="font-size: 12.76px;">typescript</a> <a href="../tags/ui/" style="font-size: 10.34px;">ui</a> <a href="../tags/vercel/" style="font-size: 13.1px;">vercel</a> <a href="../tags/visual-testing/" style="font-size: 11.38px;">visual testing</a> <a href="../tags/vuejs/" style="font-size: 11.38px;">vuejs</a> <a href="../tags/web-workers/" style="font-size: 11.72px;">web workers</a> <a href="../tags/webpack/" style="font-size: 10.69px;">webpack</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/06/">June 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/04/">April 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/03/">March 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/02/">February 2024</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2024/01/">January 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/10/">October 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/09/">September 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/08/">August 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/06/">June 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/05/">May 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/04/">April 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/03/">March 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/02/">February 2023</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2023/01/">January 2023</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/12/">December 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/11/">November 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/10/">October 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/09/">September 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/08/">August 2022</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/07/">July 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/06/">June 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/05/">May 2022</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/04/">April 2022</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/03/">March 2022</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/02/">February 2022</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2022/01/">January 2022</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/12/">December 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/11/">November 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/10/">October 2021</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/09/">September 2021</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/08/">August 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/07/">July 2021</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/06/">June 2021</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/05/">May 2021</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/04/">April 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/03/">March 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/02/">February 2021</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2021/01/">January 2021</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/12/">December 2020</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/11/">November 2020</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/10/">October 2020</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/09/">September 2020</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/08/">August 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/07/">July 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/06/">June 2020</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/05/">May 2020</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/04/">April 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/03/">March 2020</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/02/">February 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2020/01/">January 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/12/">December 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/11/">November 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/10/">October 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/09/">September 2019</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/08/">August 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/07/">July 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/06/">June 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/05/">May 2019</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/04/">April 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/03/">March 2019</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/02/">February 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2019/01/">January 2019</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/12/">December 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/11/">November 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/10/">October 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/09/">September 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/08/">August 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/06/">June 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/04/">April 2018</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/03/">March 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/02/">February 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2018/01/">January 2018</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/12/">December 2017</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/11/">November 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/09/">September 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/08/">August 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/07/">July 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/06/">June 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/05/">May 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/04/">April 2017</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/03/">March 2017</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/02/">February 2017</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2017/01/">January 2017</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/12/">December 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/11/">November 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/10/">October 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/09/">September 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/08/">August 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/07/">July 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/06/">June 2016</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/04/">April 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/03/">March 2016</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/02/">February 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2016/01/">January 2016</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/12/">December 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/11/">November 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/10/">October 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/09/">September 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/08/">August 2015</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/07/">July 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/06/">June 2015</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/05/">May 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/04/">April 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/03/">March 2015</a><span class="archive-list-count">15</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/02/">February 2015</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2015/01/">January 2015</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/12/">December 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/11/">November 2014</a><span class="archive-list-count">19</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/10/">October 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/09/">September 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/08/">August 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/07/">July 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/06/">June 2014</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/05/">May 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/04/">April 2014</a><span class="archive-list-count">13</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/03/">March 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/02/">February 2014</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2014/01/">January 2014</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/12/">December 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/11/">November 2013</a><span class="archive-list-count">14</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/10/">October 2013</a><span class="archive-list-count">11</span></li><li class="archive-list-item"><a class="archive-list-link" href="../archives/2013/09/">September 2013</a><span class="archive-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="../pass-cypress-info-via-request-headers/">Pass Cypress Test Info Via Request Headers</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-alias-documentation/">Cypress Alias Documentation Trick</a>
+          </li>
+        
+          <li>
+            <a href="../flaky-iframe-test/">Flaky IFrame Online Store Test</a>
+          </li>
+        
+          <li>
+            <a href="../test-apps-that-use-central-state/">Cypress Tests For Apps That Use Central State</a>
+          </li>
+        
+          <li>
+            <a href="../cypress-flaky-tests-exercises/">Cypress Flaky Tests Exercises</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Gleb Bahmutov<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'betterworldbybettersoftware';
+  
+  var disqus_url = 'https://glebbahmutov.com/blog/deploying-private-npm-modules-to-zeit/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="../fancybox/jquery.fancybox.css">
+
+  
+<script src="../fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="../js/script.js"></script>
+
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+<script>
+(function centerMainOnAsideScroll () {
+  // when aside side bar scrolls outside the view
+  // it centers the main content.
+  const main = document.querySelector('#main')
+  const aside = document.querySelector('aside#sidebar')
+  console.assert(main, 'could not get #main')
+  console.assert(aside, 'could not get aside')
+  // initially the aside sidebar is visible
+  let asideVisible = true
+
+  function centerMain () {
+    console.log('adding class center-main')
+    main.classList.add('center-main')
+  }
+  function leftMain () {
+    main.classList.remove('center-main')
+  }
+
+  function callWhenAsideScrollsUp (becameInvisible, becameVisible) {
+    return function () {
+      const border = 50
+      const rect = aside.getBoundingClientRect()
+      if (asideVisible && rect.bottom < -border) {
+        asideVisible = false
+        becameInvisible()
+      }
+
+      if (!asideVisible && window.scrollY < border) {
+        asideVisible = true
+        becameVisible()
+      }
+    }
+  }
+  const throttleWaitMs = 250
+  const onScroll = _.throttle(
+    callWhenAsideScrollsUp(centerMain, leftMain),
+    throttleWaitMs
+  )
+  window.addEventListener('scroll', onScroll)
+}())
+</script>
+
+</body>
+</html>
